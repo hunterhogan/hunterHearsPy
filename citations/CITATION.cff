@@ -1,0 +1,24 @@
+abstract: An innovative collection of audio file processing tools.
+authors:
+- given-names: Hunter
+  family-names: Hogan
+  email: HunterHogan@pm.me
+cff-version: 1.2.0
+commit: 665932e3a5d3b1f01c37860f8dd70d33caf813ca
+contact:
+- given-names: Hunter
+  family-names: Hogan
+  email: HunterHogan@pm.me
+date-released: '2026-06-02'
+identifiers:
+- type: url
+  value: https://github.com/hunterhogan/hunterHearsPy/releases/tag/1.0.0
+  description: The URL for hunterHearsPy 1.0.0.
+license: CC-BY-NC-4.0
+message: Cite this software with the metadata in this file.
+repository: https://github.com/hunterhogan/hunterHearsPy.git
+repository-artifact: https://pypi.org/project/hunterhearspy/1.0.0/
+repository-code: https://github.com/hunterhogan/hunterHearsPy/releases/tag/1.0.0
+title: hunterHearsPy
+url: https://github.com/hunterhogan/hunterHearsPy
+version: 1.0.0

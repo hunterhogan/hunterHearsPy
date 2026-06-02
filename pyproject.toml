@@ -32,7 +32,12 @@ Issues = "https://github.com/hunterhogan/hunterHearsPy/issues"
 Repository = "https://github.com/hunterhogan/hunterHearsPy.git"
 
 [dependency-groups]
-dev = ["astToolkit", "pytest-cov", "scipy-stubs", "types-resampy"]
+dev = [
+  "astToolkit",
+  "pytest-cov",
+  "scipy-stubs",
+  "types-resampy",
+]
 pytorch = ["torch==2.10.0", "torchaudio==2.10.0"]
 testing = ["pytest", "pytest-mock", "pytest-xdist", "torch"]
 
