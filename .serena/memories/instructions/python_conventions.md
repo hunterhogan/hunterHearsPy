@@ -1,0 +1,29 @@
+# HH Python Conventions
+
+- Semiotics-first code: identifiers, organization, formatting, and paradigm choices communicate domain semantics. Prefer explicit semantics over terse syntax.
+- Use full words; no abbreviations/truncations/single-character identifiers, including bare `_`. Related identifiers should form a coherent domain vocabulary. Do not describe Python variables as constants.
+- Default identifier style is camelCase for variables, parameters, functions, methods, fixtures, mapping keys, and filesystem stems. Pytest test functions may use `test_*`; Python dunders keep required spelling.
+- Function/method names should be explicit Subject-Verb-Object with direction markers when helpful (`...To...`, encodes/decodes/converts/formats/interprets). Callables include verbs and explicit subjects.
+- Preserve proper-noun/domain casing exactly. Domain compound terms are atomic. Do not rename serialized/mapping keys unless the user opts in; public serialized interface renames need confirmation.
+- Filesystem semiotics: `path` means directory; `pathFilename` means file path; avoid bare `file` in identifiers. Prefer `pathlib.Path` objects; convert to `str` only at interface boundaries.
+- Avoid empty generic names (`result`, `output`, `temp`, `data`, `thing`, `value`) unless there is no stronger domain concept. `Target` may be used as a generic distinction token only when necessary.
+- Prefer Python-native APIs over subprocess, external config, and environment variables. `subprocess` is last resort for canonical external tools only (`git`, `ffmpeg`, etc.), not file/text/data convenience.
+- Prefer functional/transformational design, pure functions, immutable transformations, established libraries (`itertools`, `more_itertools`, `toolz`, `numpy`, `pandas`) over custom loops. Loops require algorithmic, existential, or measured performance justification.
+- Preserve named semantic abstractions; do not inline a domain rule just because the expression is equivalent.
+- Do not introduce `__all__` in this project. Use explicit package-root imports for the flat namespace instead.
+- Single Source of Truth: centralize domain constants, semantic adjustments, and configuration in explicit structures/modules.
+- Post-defensive code trusts invariants: no truthiness/emptiness/None/type fallback guards, no silent recovery, no artificial loop safety limits. Let no-op-capable vectorized/functional operations no-op. Added branches require branch-cost justification or user approval.
+- Exception handling rule: do not catch exceptions unless the catch has a concrete recovery, boundary translation, cleanup, or narrowing plan. Never catch an exception just to report/log/print that an exception occurred; let the original stack trace carry the diagnostic.
+- Single return point by default; multiple returns only for hot predicates, existential semantics, high restructuring cost, or demonstrable clarity.
+- Syntactic clarity: structure expressions for left-to-right parsing. Avoid deferred operators. In complex expressions, use explicit `operator.invert`, `operator.neg`, or `operator.getitem` when symbolic operators would be hidden.
+- Prefer `<`/`<=` comparison orientation; swap operands instead of using `>`/`>=` when semantics are preserved.
+- Replace repeated ambiguous literals/adjustments with semantic identifiers in `_semiotics.py`, `theTypes.py`, or module-level constants. Import semantic identifiers from public package APIs when available.
+- Formatting: read `.editorconfig` and `pyproject.toml` first. Do not use Black/yapf/autopep8 unless repo already does. Break lines at semantic boundaries, before binary operators, using parenthetical continuation. Never use more than one consecutive blank line.
+- Multi-line calls/ordered sequences use leading commas when argument/element order is significant; order-agnostic collections use trailing commas. Closing delimiter goes on its own line for multi-line expressions except import statements may close on final import line.
+- Strings: docstrings use triple double quotes; general literals use single quotes; f-strings and `.format()` templates use double quotes; regex raw strings only when necessary; never use raw strings for paths.
+- Types: annotations are design tools. Annotate function parameters/returns, class attrs, module bindings, and non-obvious locals at first authoritative assignment. Prefer PEP 585 builtins and PEP 604 unions. Use `collections.abc` abstractions for read-only parameters; concrete container types for returns.
+- Avoid `Any` and `object`; use unions, bounded `TypeVar`, `TypedDict`, `Protocol`, parameterized containers, or precise third-party types. Rare `Any` use requires real dynamic/variadic/third-party justification.
+- Do not create annotation-only statements; preserve unpacking and improve source function return types instead. Use `TYPE_CHECKING` for annotation-only imports and place that block after regular imports.
+- Use `TypedDict` for dicts with consistent keys, `Protocol` for shared structural interfaces, `@overload` when return type depends on input/flag value, and descriptive `TypeVar` names such as `TypeElement`.
+- Diagnostics: assign messages to `message: str` before `raise`, `warnings.warn`, logging, or print. Include observed runtime values and expected constraints; write first-person observations (`I received...`, `I could not find...`) and backtick identifiers. ANSI codes only for direct terminal output, never exceptions/logs.
+- Avoid terms `helper function`, `pipeline`, and `boilerplate` unless quoting or clarifying; use precise alternatives such as function, transformation sequence, processing chain, ceremony, or scaffolding.

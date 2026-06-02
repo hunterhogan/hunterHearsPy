@@ -1,0 +1,18 @@
+# HH Documentation Conventions
+
+- Do not add docstrings unless explicitly requested. If requested, use precise NumPy-style docstrings with the HH modifications below.
+- Docstring section order: summary line; `(AI generated docstring)` marker if applicable; non-technical description; technical sections when applicable; `Parameters`; `Returns` or `Yields`; judicious `Raises`; judicious `Warns`; `Other Parameters`; `See Also`; semantically named extended sections; `Examples`; `References`.
+- New AI-written docstrings include `(AI generated docstring)` on its own line after the summary and a blank line. When reformatting existing docstrings, do not add/remove that marker.
+- Public summary lines are implied `You can ...` sentences without saying `You can`: start with a verb, state what the reader can do/inspect/compute/obtain, tie opaque signature names to roles, keep short, end with a full stop.
+- Private summary lines use maintainer first-person role wording: `I use this ...` and explain architectural support (control flow, caching, validation, adaptation), not just local behavior.
+- Body starts with an explicit subject (`You can...`, `This function...`, `The identifier...`) and first explains purpose for non-specialists: what it is for, what value it acts on, what it returns/exposes. Put notation, dtype, broadcasting, cache, and expert mechanics in technical sections.
+- Function `Parameters`: exact signature names; type from signature; append `= defaultValue` when default exists; one indent level for descriptions; fixed value sets in braces with default first; PEP 585/604 style.
+- `Returns`/`Yields`: use a meaningful return identifier and `meaningfulName : returnType`; use `Yields` for generators.
+- `See Also` only when the reader could reasonably choose the referenced symbol instead. Do not use it for caller-callee, containment, dependency, or implementation-detail relationships. Same-module references use local backticked names; same-package cross-module references use full package path.
+- Extended section names must predict contents; never use `Notes`. Good names are concrete topics such as `Mathematics`, `PyTorch`, `Shape Transformation`, `Caching`, `Position Alignment`, `Sequence Trimming`, `Head-Axis Broadcasting`, or `Autocast Behavior`.
+- `Mathematics` sections are for formal notation: bridge Python identifiers to symbols, state notation, bridge back. Keep math out of summary/non-technical/parameters/returns.
+- `PyTorch` sections are for torch-specific broadcasting, buffers, autocast, device placement, or API behavior; if also mathematical, put notation in `Mathematics` too.
+- Examples must come from real codebase usage. Search for real invocations, select representative usage, simplify without inventing, and note when no real usage exists. Use fenced code blocks, not REPL prompts.
+- Module docstrings go before imports and include a `Contents` table listing all public functions/classes/exported identifiers, reflecting banner sections when present, alphabetical within sections, omitting private identifiers.
+- Package `__init__.py` docstrings describe the public package purpose and include public modules/subpackages with brief descriptions; omit private modules unless documented internal APIs.
+- Documentation prose: write for non-native speakers, machine translation, and AI assistants. Repeat identifiers instead of pronouns. Backtick identifiers, keywords, and code elements. Do not force English plurality onto identifiers. Say what ambiguous terms refer to. Never use `pipeline`; choose a precise term.

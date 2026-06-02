@@ -1,0 +1,70 @@
+[project]
+name = "hunterHearsPy"
+version = "1.0.0"
+description = "Audio processing."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "CC-BY-NC-4.0"
+license-files = ["LICEN[CS]E*"]
+authors = [{ name = "Hunter Hogan", email = "HunterHogan@pm.me" }]
+maintainers = [{ name = "Hunter Hogan", email = "HunterHogan@pm.me" }]
+keywords = []
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.14",
+  "Typing :: Typed",
+]
+dependencies = ["numpy", "resampy", "scipy", "soundfile", "tqdm"]
+optional-dependencies = { torch = ["torch"] }
+
+[project.urls]
+Context7 = "https://context7.com/hunterhogan/hunterhearspy"
+Donate = "https://www.patreon.com/integrated"
+Download = "https://pypi.org/project/hunterHearsPy"
+Homepage = "https://github.com/hunterhogan/hunterHearsPy"
+Issues = "https://github.com/hunterhogan/hunterHearsPy/issues"
+Repository = "https://github.com/hunterhogan/hunterHearsPy.git"
+
+[dependency-groups]
+dev = ["astToolkit", "pytest-cov", "scipy-stubs", "types-resampy"]
+pytorch = ["torch==2.10.0", "torchaudio==2.10.0"]
+testing = ["pytest", "pytest-mock", "pytest-xdist", "torch"]
+
+[build-system]
+requires = ["uv_build>=0.11.8,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.coverage]
+report = { exclude_lines = ["if TYPE_CHECKING:", "if __name__ == \"__main__\":"], ignore_errors = false }
+run = { branch = true, concurrency = ["multiprocessing"], data_file = "tests/coverage/.coverage", omit = [
+  "tests/*"
+], parallel = true, source = ["."] }
+
+[tool.pytest]
+addopts = ["--color=auto", "-n 4"]
+log_auto_indent = "On"
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.updateCitation]
+filenameCitationDOTcff = "CITATION.cff"
+pathFilenameCitationSSOT = "citations/CITATION.cff"
+
+[tool.uv]
+build-backend = { module-name = "hunterHearsPy", module-root = "src" }
+default-groups = ["dev", "testing"]
+
+[[tool.uv.index]]
+explicit = true
+name = "indexPytorch"
+url = "https://download.pytorch.org/whl/cu128"
+
+[tool.uv.sources]
+torch = { index = "indexPytorch", group = "pytorch" }
+torchaudio = { index = "indexPytorch", group = "pytorch" }
