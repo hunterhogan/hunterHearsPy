@@ -34,6 +34,7 @@ from __future__ import annotations
 from hunterHearsPy import (
 	ArraySpectrograms, ArrayWaveforms, halfsine, ParametersShortTimeFFT, ParametersSTFT, ParametersUniversal, Spectrogram, Waveform,
 	WaveformMetadata, WindowingFunction)
+from hunterMakesPy.filesystemToolkit import makeDirectorySafely
 from math import ceil as ceiling, log2 as log_base2
 from multiprocessing import set_start_method as multiprocessing_set_start_method
 from numpy import complex64, dtype, float32, floating, ndarray
@@ -48,7 +49,6 @@ if TYPE_CHECKING:
 	from collections.abc import Callable, Sequence
 	from os import PathLike
 
-# When to use multiprocessing.set_start_method https://github.com/hunterhogan/mapFolding/issues/6
 if __name__ == '__main__':
 	multiprocessing_set_start_method('spawn')
 
@@ -342,7 +342,7 @@ def writeWAV(pathFilename: str | PathLike[Any] | BinaryIO, waveform: Waveform, s
 	"""
 	if sampleRate is None:
 		sampleRate = parametersUniversal['sampleRate']
-	# makeDirsSafely(pathFilename)
+	makeDirectorySafely(pathFilename)
 	soundfile.write(file=pathFilename, data=waveform.T, samplerate=int(sampleRate), subtype='FLOAT', format='WAV')
 
 @overload  # stft 1 ndarray
