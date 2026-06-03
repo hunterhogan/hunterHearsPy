@@ -20,7 +20,14 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
   "Typing :: Typed",
 ]
-dependencies = ["numpy", "resampy", "scipy", "soundfile", "tqdm"]
+dependencies = [
+    "hunterMakesPy>=0.7.0",
+    "numpy",
+    "resampy",
+    "scipy",
+    "soundfile",
+    "tqdm",
+]
 optional-dependencies = { torch = ["torch"] }
 
 [project.urls]

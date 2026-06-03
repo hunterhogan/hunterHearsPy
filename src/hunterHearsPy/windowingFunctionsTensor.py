@@ -1,13 +1,12 @@
 """Create PyTorch tensor windowing functions."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from hunterHearsPy import cosineWings, equalPower, halfsine, tukey, WindowingFunction
-from torch.types import Device
-from typing import Any, TypeVar
+from hunterHearsPy import callableReturnsNDArray, cosineWings, equalPower, halfsine, tukey
+from typing import Any, TYPE_CHECKING
 import torch
 
-callableReturnsNDArray = TypeVar('callableReturnsNDArray', bound=Callable[..., WindowingFunction])
+if TYPE_CHECKING:
+    from torch.types import Device
 
 def _convertToTensor(*arguments: Any, callableTarget: callableReturnsNDArray, device: Device, **keywordArguments: Any) -> torch.Tensor:
     arrayTarget = callableTarget(*arguments, **keywordArguments)
@@ -29,7 +28,7 @@ def cosineWingsTensor(lengthWindow: int, ratioTaper: float | None=None, device: 
         Ratio of taper length to windowing-function length. The value must be between 0 and 1,
         inclusive.
     device : Device = torch.device(device='cpu')
-        PyTorch device for tensor allocation.
+        PyTorch device for `Tensor`.
 
     Returns
     -------
@@ -70,7 +69,7 @@ def equalPowerTensor(lengthWindow: int, ratioTaper: float | None=None, device: D
         Ratio of taper length to windowing-function length. The value must be between 0 and 1,
         inclusive.
     device : Device = torch.device(device='cpu')
-        PyTorch device for tensor allocation.
+        PyTorch device for `Tensor`.
 
     Returns
     -------
@@ -107,7 +106,7 @@ def halfsineTensor(lengthWindow: int, device: Device | None=None) -> torch.Tenso
     lengthWindow : int
         Total length of the windowing function.
     device : Device = torch.device(device='cpu')
-        PyTorch device for tensor allocation.
+        PyTorch device for `Tensor`.
 
     Returns
     -------
@@ -150,7 +149,7 @@ def tukeyTensor(lengthWindow: int, ratioTaper: float | None=None, device: Device
         Additional keyword arguments. `alpha` overrides `ratioTaper` when provided, matching SciPy's
         API.
     device : Device = torch.device(device='cpu')
-        PyTorch device for tensor allocation.
+        PyTorch device for `Tensor`.
 
     Returns
     -------

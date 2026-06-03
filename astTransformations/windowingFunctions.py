@@ -1,9 +1,8 @@
-"""Generate PyTorch tensor windowing functions from existing windowing functions.
+"""Generate PyTorch tensor windowing functions from NumPy windowing functions.
 
-(AI generated docstring)
-
-This module programmatically creates PyTorch tensor versions of windowing functions by transforming existing functions from the `windowingFunctions` module. It generates functions that return PyTorch tensors instead of NumPy arrays.
-
+This module programmatically creates PyTorch tensor versions of windowing functions by transforming
+existing functions from the `windowingFunctions` module. It generates functions that return PyTorch
+tensors instead of NumPy arrays.
 """
 from __future__ import annotations
 
@@ -23,23 +22,23 @@ pathFilenameDestination = Path('src', packageName, moduleDestination + '.py')
 ingredientsModule = IngredientsModule()
 
 ingredientsModule.imports.addImportFrom_asStr('__future__', 'annotations')
+ingredientsModule.imports.addImportFrom_asStr(packageName, 'callableReturnsNDArray')
 
-ingredientsModule.appendPrologue(statement=Make.Assign([Make.Name('callableReturnsNDArray', ast.Store())]
-			, value=Make.Call(Make.Name('TypeVar')
-				, listParameters=[Make.Constant('callableReturnsNDArray')]
-				, list_keyword=[Make.keyword('bound', Make.Subscript(Make.Name('Callable'), Make.Tuple([Make.Constant(...), Make.Name('WindowingFunction')])))])))
-ingredientsModule.imports.addImportFrom_asStr('collections.abc', 'Callable')
-ingredientsModule.imports.addImportFrom_asStr('typing', 'TypeVar')
-ingredientsModule.imports.addImportFrom_asStr(packageName, 'WindowingFunction')
+ingredientsModule.appendPrologue(statement=Make.If(test=Make.Name('TYPE_CHECKING')
+								, body=[Make.ImportFrom('torch.types', [Make.alias('Device')])]))
 
-ingredientsModule.appendPrologue(statement=Make.FunctionDef('_convertToTensor'
+ingredientsModule.appendPrologue(statement=Make.FunctionDef(
+	'_convertToTensor'
 	, Make.arguments(vararg=Make.arg('arguments', annotation=Make.Name('Any'))
-		, kwonlyargs=[Make.arg('callableTarget', annotation=Make.Name('callableReturnsNDArray')), Make.arg('device', annotation=Make.Name('Device'))]
+		, kwonlyargs=[Make.arg('callableTarget', annotation=Make.Name('callableReturnsNDArray'))
+				, Make.arg('device', annotation=Make.Name('Device'))]
 		, kw_defaults=[None, None]
 		, kwarg=Make.arg('keywordArguments', annotation=Make.Name('Any'))
 	)
 	, body=[Make.Assign([Make.Name('arrayTarget', ast.Store())]
-				, value=Make.Call(Make.Name('callableTarget'), listParameters=[Make.Starred(value=Make.Name('arguments'))], list_keyword=[Make.keyword(None, value=Make.Name('keywordArguments'))])
+				, value=Make.Call(Make.Name('callableTarget')
+					, listParameters=[Make.Starred(value=Make.Name('arguments'))]
+					, list_keyword=[Make.keyword(None, value=Make.Name('keywordArguments'))])
 			)
 		, Make.Return(Make.Call(Make.Attribute(Make.Name('torch'), 'tensor'), list_keyword=[
 					Make.keyword('data', value=Make.Name('arrayTarget'))
@@ -52,14 +51,16 @@ ingredientsModule.appendPrologue(statement=Make.FunctionDef('_convertToTensor'
 
 dictionaryFunctionDef: dict[str, ast.FunctionDef] = makeDictionaryFunctionDef(parseLogicalPath2astModule('.'.join([packageName, moduleSource])))
 
+ImaIndent: str = ' ' * 4
+ImaReturnsSection: str = f"\n{ImaIndent}Returns"
+docstringDevice: str = f"{ImaIndent}device : Device = torch.device(device='cpu')\n{ImaIndent}{ImaIndent}PyTorch device for `Tensor`.\n"
+
 for callableIdentifier, astFunctionDef in dictionaryFunctionDef.items():
 	if callableIdentifier.startswith('_'):
 		continue
 
-	ImaIndent: str = ' ' * 4
-	ImaReturnsSection: str = f"\n{ImaIndent}Returns"
-	docstringDevice: str = f"{ImaIndent}device : Device = torch.device(device='cpu')\n{ImaIndent}{ImaIndent}PyTorch device for tensor allocation.\n"
-	docstring: ast.Expr = Make.Expr(Make.Constant(raiseIfNone(ast.get_docstring(astFunctionDef, clean=False), errorMessage="Where's the windowing function docstring?")
+	docstring: ast.Expr = Make.Expr(Make.Constant(
+		raiseIfNone(ast.get_docstring(astFunctionDef, clean=False), errorMessage="Where's the windowing function docstring?")
 						.replace('\t', ImaIndent).replace(ImaReturnsSection, docstringDevice + ImaReturnsSection)))
 
 	ingredientsModule.imports.addImportFrom_asStr(packageName, callableIdentifier)
@@ -79,14 +80,16 @@ for callableIdentifier, astFunctionDef in dictionaryFunctionDef.items():
 		, argumentSpecification
 		, body=[docstring
 			, Make.Assign([Make.Name('device', ast.Store())]
-				, value=Make.Or.join([Make.Name('device'), Make.Call(Make.Attribute(Make.Name('torch'), 'device'), list_keyword=[Make.keyword('device', value=Make.Constant('cpu'))])])
+				, value=Make.Or.join([Make.Name('device')
+									, Make.Call(Make.Attribute(Make.Name('torch'), 'device')
+										, list_keyword=[Make.keyword('device', value=Make.Constant('cpu'))])])
 			)
 			, Make.Return(Make.Call(Make.Name('_convertToTensor'), listParameters=args, list_keyword=list_keyword))]
 		, returns=Make.Attribute(Make.Name('torch'), 'Tensor')
 	))
 
-ingredientsModule.imports.addImportFrom_asStr('torch.types', 'Device')
 ingredientsModule.imports.addImportFrom_asStr('typing', 'Any')
+ingredientsModule.imports.addImportFrom_asStr('typing', 'TYPE_CHECKING')
 ingredientsModule.imports.addImport_asStr('torch')
 
 ingredientsModule.write_astModule(pathFilenameDestination, packageName)

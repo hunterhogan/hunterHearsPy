@@ -16,10 +16,10 @@ from typing import Any, TYPE_CHECKING, TypeAlias, TypedDict, TypeVar
 if TYPE_CHECKING:
 	from scipy.signal._short_time_fft import _FFTMode, _PadType, _ScaleTo
 
-个 = TypeVar('个', covariant=True)
 ArrayType = TypeVar('ArrayType', bound=ndarray[tuple[Any, ...], dtype[Any]], covariant=True)
 WindowingFunctionDtype: TypeAlias = floating[Any]
 WindowingFunction: TypeAlias = ndarray[tuple[int], dtype[WindowingFunctionDtype]]
+callableReturnsNDArray = TypeVar('callableReturnsNDArray', bound=Callable[..., WindowingFunction])
 WaveformDtype: TypeAlias = floating[Any]
 Waveform: TypeAlias = ndarray[tuple[int, int], dtype[WaveformDtype]]
 """Two-axes NumPy `ndarray` representing audio waveforms.
