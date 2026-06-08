@@ -9,24 +9,24 @@ arrays shaped `(channels, samples)`. All spectrograms are complex 64-bit float
 Contents
 --------
 Functions
-    getWaveformMetadata
-        Retrieve metadata for a collection of audio waveform files.
-    loadSpectrograms
-        Load spectrograms from a list of audio files.
-    loadWaveforms
-        Load a list of audio files into a single stacked NumPy array.
-    readAudioFile
-        Read an audio file and return stereo waveform data as a NumPy array.
-    resampleWaveform
-        Resample a waveform array to a target sample rate.
-    spectrogramToWAV
-        Write a complex spectrogram to a WAV file.
-    stft
-        Perform Short-Time Fourier Transform or its inverse on waveform or spectrogram data.
-    waveformSpectrogramWaveform
-        Decorate a spectrogram-processing callable to accept and return waveforms.
-    writeWAV
-        Write a waveform array to a WAV file.
+	getWaveformMetadata
+		Retrieve metadata for a collection of audio waveform files.
+	loadSpectrograms
+		Load spectrograms from a list of audio files.
+	loadWaveforms
+		Load a list of audio files into a single stacked NumPy array.
+	readAudioFile
+		Read an audio file and return stereo waveform data as a NumPy array.
+	resampleWaveform
+		Resample a waveform array to a target sample rate.
+	spectrogramToWAV
+		Write a complex spectrogram to a WAV file.
+	stft
+		Perform Short-Time Fourier Transform or its inverse on waveform or spectrogram data.
+	waveformSpectrogramWaveform
+		Decorate a spectrogram-processing callable to accept and return waveforms.
+	writeWAV
+		Write a waveform array to a WAV file.
 
 """
 from __future__ import annotations
@@ -138,19 +138,18 @@ def getWaveformMetadata(listPathFilenames: Sequence[str | PathLike[str]], sample
 def readAudioFile(pathFilename: str | PathLike[Any] | BinaryIO, sampleRate: float | None = None) -> Waveform:
 	"""Read an audio file and return stereo waveform data as a NumPy array.
 
-	You can use this function to load any audio file that `soundfile` [1] supports. The
-	returned `Waveform` [2] is always shaped `(channels, samples)` where `channels` is `2`.
-	When the source file is mono, `readAudioFile` duplicates the single channel to produce
-	a stereo array. When `sampleRate` differs from the file's native sample rate,
-	`readAudioFile` resamples using `resampleWaveform`.
+	You can use this function to load any audio file that `soundfile` [1] supports. The returned
+	`Waveform` [2] is always shaped `(channels, samples)` where `channels` is `2`. When the source
+	file is mono, `readAudioFile` duplicates the single channel to produce a stereo array. When
+	`sampleRate` differs from the file's native sample rate, `readAudioFile` resamples using
+	`resampleWaveform`.
 
 	Parameters
 	----------
 	pathFilename : str | PathLike[Any] | BinaryIO
 		Path to the audio file or a binary stream compatible with `soundfile` [1].
-	sampleRate : float | None = None
-		Target sample rate of the returned `Waveform` [2] in Hz. Defaults to `44100`
-		when `None`.
+	sampleRate : float | None = 44100
+		Target sample rate of the returned `Waveform` [2] in Hz. Defaults to `44100` when `None`.
 
 	Returns
 	-------
@@ -188,6 +187,7 @@ def readAudioFile(pathFilename: str | PathLike[Any] | BinaryIO, sampleRate: floa
 	axisTime = 0
 	axisChannels = 1
 	waveform = cast('Waveform', resampleWaveform(waveform, sampleRateDesired=sampleRate, sampleRateSource=sampleRateSource, axisTime=axisTime))
+	# TODO In my audio ecosystem, must I force a minimum of 2 channels, or can I merely force an axis for time, even if the axis is length=1?
 	if waveform.shape[axisChannels] == 1:
 		waveform = cast('Waveform', numpy.repeat(waveform, 2, axis=axisChannels))
 	return cast('Waveform', numpy.transpose(waveform, axes=(axisChannels, axisTime)))
@@ -352,10 +352,10 @@ def stft(arrayTarget: Waveform, *, sampleRate: float | None = None, lengthHop: i
 def stft(arrayTarget: ArrayWaveforms, *, sampleRate: float | None = None, lengthHop: int | None = None, windowingFunction: WindowingFunction | None = None, lengthWindowingFunction: int | None = None, lengthFFT: int | None = None, inverse: Literal[False] = False, lengthWaveform: None = None, indexingAxis: int = -1) -> ArraySpectrograms: ...
 
 @overload  # istft 1 ndarray
-def stft(arrayTarget: Spectrogram, *, sampleRate: float | None = None, lengthHop: int | None = None, windowingFunction: WindowingFunction | None = None, lengthWindowingFunction: int | None = None, lengthFFT: int | None = None, inverse: Literal[True] = True, lengthWaveform: int, indexingAxis: None = None) -> Waveform: ...
+def stft(arrayTarget: Spectrogram, *, sampleRate: float | None = None, lengthHop: int | None = None, windowingFunction: WindowingFunction | None = None, lengthWindowingFunction: int | None = None, lengthFFT: int | None = None, inverse: Literal[True], lengthWaveform: int, indexingAxis: None = None) -> Waveform: ...
 
 @overload  # istft many ndarray
-def stft(arrayTarget: ArraySpectrograms, *, sampleRate: float | None = None, lengthHop: int | None = None, windowingFunction: WindowingFunction | None = None, lengthWindowingFunction: int | None = None, lengthFFT: int | None = None, inverse: Literal[True] = True, lengthWaveform: int, indexingAxis: int = -1) -> ArrayWaveforms: ...
+def stft(arrayTarget: ArraySpectrograms, *, sampleRate: float | None = None, lengthHop: int | None = None, windowingFunction: WindowingFunction | None = None, lengthWindowingFunction: int | None = None, lengthFFT: int | None = None, inverse: Literal[True], lengthWaveform: int, indexingAxis: int = -1) -> ArrayWaveforms: ...
 
 def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrograms
 		, *
