@@ -4,21 +4,21 @@ authors:
   family-names: Hogan
   email: HunterHogan@pm.me
 cff-version: 1.2.0
-commit: b412d095c07aebdb7e8e110ff3109b02ab96899d
+commit: 1b517e2a91400b3dae4ac31e6c59d85657631709
 contact:
 - given-names: Hunter
   family-names: Hogan
   email: HunterHogan@pm.me
-date-released: '2026-06-03'
+date-released: '2026-06-08'
 identifiers:
 - type: url
-  value: https://github.com/hunterhogan/hunterHearsPy/releases/tag/1.0.1
-  description: The URL for hunterHearsPy 1.0.1.
+  value: https://github.com/hunterhogan/hunterHearsPy/releases/tag/1.0.3
+  description: The URL for hunterHearsPy 1.0.3.
 license: CC-BY-NC-4.0
 message: Cite this software with the metadata in this file.
 repository: https://github.com/hunterhogan/hunterHearsPy.git
-repository-artifact: https://pypi.org/project/hunterhearspy/1.0.1/
-repository-code: https://github.com/hunterhogan/hunterHearsPy/releases/tag/1.0.1
+repository-artifact: https://pypi.org/project/hunterhearspy/1.0.3/
+repository-code: https://github.com/hunterhogan/hunterHearsPy/releases/tag/1.0.3
 title: hunterHearsPy
 url: https://github.com/hunterhogan/hunterHearsPy
-version: 1.0.1
+version: 1.0.3
