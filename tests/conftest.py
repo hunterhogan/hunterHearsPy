@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from hunterHearsPy import loadWaveforms, readAudioFile
 from numpy import dtype, float32, ndarray
 from pathlib import Path
 from typing import Any, ClassVar, Final, TYPE_CHECKING
-from hunterHearsPy import ArrayWaveforms, loadWaveforms, readAudioFile, Waveform
 import numpy
 import pathlib
 import pytest
@@ -18,6 +18,7 @@ except ImportError:
 
 if TYPE_CHECKING:
 	from collections.abc import Callable, Generator
+	from hunterHearsPy import ArrayWaveforms, Waveform
 	from numpy.typing import NDArray
 
 atolDEFAULT: Final[float] = 1e-7
@@ -25,8 +26,8 @@ rtolDEFAULT: Final[float] = 1e-7
 amplitudeNorm: Final[float] = 1.0
 
 # SSOT for test data paths and filenames
-pathDataSamples = pathlib.Path("tests/dataSamples")
-pathTmpRoot: pathlib.Path = pathDataSamples / "tmp"
+pathDataSamples = pathlib.Path('tests/dataSamples')
+pathTmpRoot: pathlib.Path = pathDataSamples / 'tmp'
 
 registerOfTemporaryFilesystemObjects: set[pathlib.Path] = set()
 
@@ -43,9 +44,10 @@ def registrarDeletesTmpObjects() -> None:
 			elif pathTmp.is_dir():
 				shutil.rmtree(pathTmp, ignore_errors=True)
 		except Exception as ERRORmessage:
-			print(f"Warning: Failed to clean up {pathTmp}: {ERRORmessage}")  # noqa: T201
+			print(f'Warning: Failed to clean up {pathTmp}: {ERRORmessage}')  # noqa: T201
 			registerOfTemporaryFilesystemObjects.clear()
-@pytest.fixture(scope="session", autouse=True)
+
+@pytest.fixture(scope='session', autouse=True)
 def setupTeardownTmpObjects() -> Generator[None]:
 	"""Auto-fixture to setup test data directories and cleanup after."""
 	pathDataSamples.mkdir(exist_ok=True)
@@ -66,7 +68,7 @@ def pathFilenameTmpTesting(request: pytest.FixtureRequest) -> pathlib.Path:
 	try:
 		extension: str = request.param
 	except AttributeError:
-		extension = ".txt"
+		extension = '.txt'
 
 	uuidHex: str = uuid.uuid4().hex
 	subpath: str = uuidHex[0:-8]
@@ -89,16 +91,16 @@ def mockTemporaryFiles(monkeypatch: pytest.MonkeyPatch, pathTmpTesting: pathlib.
 @pytest.fixture
 def setupDirectoryStructure(pathTmpTesting: pathlib.Path) -> pathlib.Path:
 	"""Create a complex directory structure for testing findRelativePath."""
-	baseDirectory = pathTmpTesting / "base"
+	baseDirectory = pathTmpTesting / 'base'
 	baseDirectory.mkdir()
 
 	# Create nested directories
-	for subdir in ["dir1/subdir1", "dir2/subdir2", "dir3/subdir3"]:
+	for subdir in ['dir1/subdir1', 'dir2/subdir2', 'dir3/subdir3']:
 		(baseDirectory / subdir).mkdir(parents=True)
 
 	# Create some files
-	(baseDirectory / "dir1/file1.txt").touch()
-	(baseDirectory / "dir2/file2.txt").touch()
+	(baseDirectory / 'dir1/file1.txt').touch()
+	(baseDirectory / 'dir2/file2.txt').touch()
 
 	return baseDirectory
 
@@ -107,11 +109,7 @@ def setupDirectoryStructure(pathTmpTesting: pathlib.Path) -> pathlib.Path:
 @pytest.fixture
 def tableSample() -> tuple[list[list[int | str]], list[str]]:
 	tableColumns: list[str] = ['columnA', 'columnB']
-	tableRows: list[list[int | str]] = [
-		[5, 'N'],
-		[8, 'E'],
-		[13, 'S']
-	]
+	tableRows: list[list[int | str]] = [[5, 'N'], [8, 'E'], [13, 'S']]
 	return tableRows, tableColumns
 
 @pytest.fixture
@@ -136,7 +134,7 @@ if torch is not None and torch.cuda.is_available():
 @pytest.fixture(params=listDevices)
 def device(request: pytest.FixtureRequest) -> str:
 	if torch is None:
-		pytest.skip("torch is not installed")
+		pytest.skip('torch is not installed')
 	return request.param
 
 toleranceUniversal: Final[float] = 0.1
@@ -144,13 +142,13 @@ LUFSnormalizeTarget: Final[float] = -16.0
 atolUniversal = 1e-5
 rtolUniversal = 1e-5
 
-pathDataSamples = Path("tests/dataSamples/labeled")
+pathDataSamples = Path('tests/dataSamples/labeled')
 
 listFilenamesSameShape = [
-    "WAV_44100_ch2_sec5_Sine_Copy0.wav",
-    "WAV_44100_ch2_sec5_Sine_Copy1.wav",
-    "WAV_44100_ch2_sec5_Sine_Copy2.wav",
-    "WAV_44100_ch2_sec5_Sine_Copy3.wav",
+	'WAV_44100_ch2_sec5_Sine_Copy0.wav',
+	'WAV_44100_ch2_sec5_Sine_Copy1.wav',
+	'WAV_44100_ch2_sec5_Sine_Copy2.wav',
+	'WAV_44100_ch2_sec5_Sine_Copy3.wav',
 ]
 
 @pytest.fixture
@@ -159,13 +157,13 @@ def listPathFilenamesArrayWaveforms() -> list[Path]:
 
 @pytest.fixture
 def array44100_ch2_sec5_Sine(listPathFilenamesArrayWaveforms: list[Path]) -> ArrayWaveforms:
-    """
-    Load the four WAV files with the same shape into an array.
+	"""
+	Load the four WAV files with the same shape into an array.
 
-    Returns:
-        arrayWaveforms: Array of waveforms with shape (channels, samples, count_of_waveforms)
-    """
-    return loadWaveforms(listPathFilenamesArrayWaveforms)
+	Returns:
+		arrayWaveforms: Array of waveforms with shape (channels, samples, count_of_waveforms)
+	"""
+	return loadWaveforms(listPathFilenamesArrayWaveforms)
 
 class WaveformAndMetadata:
 	_cacheWaveforms: ClassVar[dict[Path, Waveform]] = {}
@@ -185,10 +183,12 @@ class WaveformAndMetadata:
 			else:
 				try:
 					with soundfile.SoundFile(self.pathFilename) as readSoundFile:
-						ImaSoundFile: ndarray[tuple[int, int], dtype[float32]] = readSoundFile.read(dtype='float32', always_2d=True).astype(float32)
+						ImaSoundFile: ndarray[tuple[int, int], dtype[float32]] = readSoundFile.read(dtype='float32', always_2d=True).astype(
+							float32
+						)
 				except soundfile.LibsndfileError as ERRORmessage:
 					if 'System error' in str(ERRORmessage):
-						message = f"File not found: {self.pathFilename}"
+						message = f'File not found: {self.pathFilename}'
 						raise FileNotFoundError(message) from ERRORmessage
 					else:  # noqa: RET506
 						raise
@@ -199,12 +199,14 @@ class WaveformAndMetadata:
 def ingestSampleData() -> list[WaveformAndMetadata]:
 	"""Parse LUFS*.wav filenames and create WaveformData objects without loading waveforms."""
 	listWaveformData: list[WaveformAndMetadata] = []
-	for pathFilename in pathDataSamples.glob("LUFS*.wav"):
-		LUFSAsStr, sampleRateAsStr, channelsTotalAsStr, ID = pathFilename.stem.split("_", maxsplit=3)
-		LUFS = -float(LUFSAsStr[len('LUFS'):])
+	for pathFilename in pathDataSamples.glob('LUFS*.wav'):
+		LUFSAsStr, sampleRateAsStr, channelsTotalAsStr, ID = pathFilename.stem.split('_', maxsplit=3)
+		LUFS = -float(LUFSAsStr[len('LUFS') :])
 		sampleRate = float(sampleRateAsStr)
-		channelsTotal = int(channelsTotalAsStr[len('ch'):])
-		listWaveformData.append(WaveformAndMetadata(pathFilename=pathFilename, LUFS=LUFS, sampleRate=sampleRate, channelsTotal=channelsTotal, ID=ID))
+		channelsTotal = int(channelsTotalAsStr[len('ch') :])
+		listWaveformData.append(
+			WaveformAndMetadata(pathFilename=pathFilename, LUFS=LUFS, sampleRate=sampleRate, channelsTotal=channelsTotal, ID=ID)
+		)
 	return listWaveformData
 
 def sampleData() -> list[WaveformAndMetadata]:
@@ -221,12 +223,10 @@ def sampleData48000() -> list[WaveformAndMetadata]:
 def uniformTestFailureMessage(expected: Any, actual: Any, functionName: str, *arguments: Any, **keywordArguments: Any) -> str:
 	"""Format assertion message for any test comparison."""
 	listArgumentComponents: list[str] = [str(parameter) for parameter in arguments]
-	listKeywordComponents: list[str] = [f"{key}={value}" for key, value in keywordArguments.items()]
+	listKeywordComponents: list[str] = [f'{key}={value}' for key, value in keywordArguments.items()]
 	joinedArguments: str = ', '.join(listArgumentComponents + listKeywordComponents)
 
-	return (f"\nTesting: `{functionName}({joinedArguments})`\n"
-			f"Expected: {expected}\n"
-			f"Got: {actual}")
+	return f'\nTesting: `{functionName}({joinedArguments})`\nExpected: {expected}\nGot: {actual}'
 
 def standardizedEqualTo(expected: Any, functionTarget: Callable[..., Any], *arguments: Any, **keywordArguments: Any) -> None:
 	"""Template for most tests to compare the actual outcome with the expected outcome, including expected errors."""
@@ -241,9 +241,18 @@ def standardizedEqualTo(expected: Any, functionTarget: Callable[..., Any], *argu
 		messageActual: str = type(actualError).__name__
 		actual = type(actualError)
 
-	assert actual == expected, uniformTestFailureMessage(messageExpected, messageActual, functionTarget.__name__, *arguments, **keywordArguments)  # ty:ignore[unresolved-attribute]
+	assert actual == expected, uniformTestFailureMessage(
+		messageExpected, messageActual, functionTarget.__name__, *arguments, **keywordArguments
+	)  # ty:ignore[unresolved-attribute]
 
-def prototype_numpyAllClose(expected: NDArray[Any] | type[Exception], atol: float | None, rtol: float | None, functionTarget: Callable[..., Any], *arguments: Any, **keywordArguments: Any) -> None:
+def prototype_numpyAllClose(
+	expected: NDArray[Any] | type[Exception],
+	atol: float | None,
+	rtol: float | None,
+	functionTarget: Callable[..., Any],
+	*arguments: Any,
+	**keywordArguments: Any,
+) -> None:
 	"""Template for tests using numpy.allclose comparison."""
 	if atol is None:
 		atol = atolDEFAULT
@@ -254,13 +263,17 @@ def prototype_numpyAllClose(expected: NDArray[Any] | type[Exception], atol: floa
 	except Exception as actualError:
 		messageActual: str = type(actualError).__name__
 		actual = type(actualError)
-		messageExpected = expected if isinstance(expected, type) else "array-like result"
-		assert actual == expected, uniformTestFailureMessage(messageExpected, messageActual, functionTarget.__name__, *arguments, **keywordArguments)  # ty:ignore[unresolved-attribute]
+		messageExpected = expected if isinstance(expected, type) else 'array-like result'
+		assert actual == expected, uniformTestFailureMessage(
+			messageExpected, messageActual, functionTarget.__name__, *arguments, **keywordArguments
+		)  # ty:ignore[unresolved-attribute]
 	else:
 		if isinstance(expected, type):
-			message = f"Expected an exception of type {expected.__name__}, but got a result"
+			message = f'Expected an exception of type {expected.__name__}, but got a result'
 			raise AssertionError(message)
-		assert numpy.allclose(actual, expected, rtol, atol), uniformTestFailureMessage(expected, actual, functionTarget.__name__, *arguments, **keywordArguments)  # ty:ignore[unresolved-attribute]
+		assert numpy.allclose(actual, expected, rtol, atol), uniformTestFailureMessage(
+			expected, actual, functionTarget.__name__, *arguments, **keywordArguments
+		)  # ty:ignore[unresolved-attribute]
 
 def prototype_numpyArrayEqual(expected: NDArray[Any], functionTarget: Callable[..., Any], *arguments: Any, **keywordArguments: Any) -> None:
 	"""Template for tests using numpy.array_equal comparison."""
@@ -269,38 +282,42 @@ def prototype_numpyArrayEqual(expected: NDArray[Any], functionTarget: Callable[.
 	except Exception as actualError:
 		messageActual: str = type(actualError).__name__
 		actual = type(actualError)
-		messageExpected = expected if isinstance(expected, type) else "array-like result"
-		assert actual == expected, uniformTestFailureMessage(messageExpected, messageActual, functionTarget.__name__, *arguments, **keywordArguments)  # ty:ignore[unresolved-attribute]
+		messageExpected = expected if isinstance(expected, type) else 'array-like result'
+		assert actual == expected, uniformTestFailureMessage(
+			messageExpected, messageActual, functionTarget.__name__, *arguments, **keywordArguments
+		)  # ty:ignore[unresolved-attribute]
 	else:
-		assert numpy.array_equal(actual, expected), uniformTestFailureMessage(expected, actual, functionTarget.__name__, *arguments, **keywordArguments)  # ty:ignore[unresolved-attribute]
+		assert numpy.array_equal(actual, expected), uniformTestFailureMessage(
+			expected, actual, functionTarget.__name__, *arguments, **keywordArguments
+		)  # ty:ignore[unresolved-attribute]
 
 """Section: Audio file fixtures for testing readAudioFile, writeWAV, and related functions"""
 
-pathDataSamplesRoot = pathlib.Path("tests/dataSamples")
+pathDataSamplesRoot = pathlib.Path('tests/dataSamples')
 
 @pytest.fixture
 def waveformMono16kHz() -> WaveformAndMetadata:
 	"""Fixture providing mono 16kHz waveform for readAudioFile testing."""
-	pathFilename = pathDataSamplesRoot / "testWooWooMono16kHz32integerClipping9sec.wav"
-	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=16000.0, channelsTotal=1, ID="mono16kHz")
+	pathFilename = pathDataSamplesRoot / 'testWooWooMono16kHz32integerClipping9sec.wav'
+	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=16000.0, channelsTotal=1, ID='mono16kHz')
 
 @pytest.fixture
 def waveformStereo44kHz() -> WaveformAndMetadata:
 	"""Fixture providing stereo 44.1kHz waveform for readAudioFile testing."""
-	pathFilename = pathDataSamplesRoot / "testSine2ch5sec.wav"
-	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID="stereo44kHz")
+	pathFilename = pathDataSamplesRoot / 'testSine2ch5sec.wav'
+	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereo44kHz')
 
 @pytest.fixture
 def waveformMono96kHz() -> WaveformAndMetadata:
 	"""Fixture providing mono 96kHz waveform for resampleWaveform testing."""
-	pathFilename = pathDataSamplesRoot / "testParkMono96kHz32float12.1sec.wav"
-	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=96000.0, channelsTotal=1, ID="mono96kHz")
+	pathFilename = pathDataSamplesRoot / 'testParkMono96kHz32float12.1sec.wav'
+	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=96000.0, channelsTotal=1, ID='mono96kHz')
 
 @pytest.fixture
 def waveformStereo48kHz() -> WaveformAndMetadata:
 	"""Fixture providing stereo 48kHz waveform for testing."""
-	pathFilename = pathDataSamplesRoot / "testTrain2ch48kHz6.3sec.wav"
-	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=48000.0, channelsTotal=2, ID="stereo48kHz")
+	pathFilename = pathDataSamplesRoot / 'testTrain2ch48kHz6.3sec.wav'
+	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=48000.0, channelsTotal=2, ID='stereo48kHz')
 
 @pytest.fixture
 def listWaveformsSameStereoShape() -> list[WaveformAndMetadata]:
@@ -308,8 +325,10 @@ def listWaveformsSameStereoShape() -> list[WaveformAndMetadata]:
 	basePath = pathDataSamplesRoot
 	listWaveforms: list[WaveformAndMetadata] = []
 	for indexCopy in [1, 2, 3, 4]:
-		pathFilename = basePath / f"testSine2ch5secCopy{indexCopy}.wav"
-		waveformData = WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID=f"stereoCopy{indexCopy}")
+		pathFilename = basePath / f'testSine2ch5secCopy{indexCopy}.wav'
+		waveformData = WaveformAndMetadata(
+			pathFilename=pathFilename, LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID=f'stereoCopy{indexCopy}'
+		)
 		listWaveforms.append(waveformData)
 	return listWaveforms
 
@@ -319,20 +338,22 @@ def listWaveformsSameMonoShape() -> list[WaveformAndMetadata]:
 	basePath = pathDataSamplesRoot
 	listWaveforms: list[WaveformAndMetadata] = []
 	for indexCopy in [1, 2, 3]:
-		pathFilename = basePath / f"testWooWooMono16kHz32integerClipping9secCopy{indexCopy}.wav"
-		waveformData = WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=16000.0, channelsTotal=1, ID=f"monoCopy{indexCopy}")
+		pathFilename = basePath / f'testWooWooMono16kHz32integerClipping9secCopy{indexCopy}.wav'
+		waveformData = WaveformAndMetadata(
+			pathFilename=pathFilename, LUFS=-23.0, sampleRate=16000.0, channelsTotal=1, ID=f'monoCopy{indexCopy}'
+		)
 		listWaveforms.append(waveformData)
 	return listWaveforms
 
 @pytest.fixture
 def pathFilenameVideoForErrorTesting() -> pathlib.Path:
 	"""Fixture providing video file path for testing error conditions."""
-	return pathDataSamplesRoot / "testVideo11sec.mkv"
+	return pathDataSamplesRoot / 'testVideo11sec.mkv'
 
 @pytest.fixture
 def pathFilenameNonexistentForErrorTesting() -> pathlib.Path:
 	"""Fixture providing nonexistent file path for testing error conditions."""
-	return pathDataSamplesRoot / "fileDoesNotExist.wav"
+	return pathDataSamplesRoot / 'fileDoesNotExist.wav'
 
 """Section: Spectrogram testing fixtures and parameters"""
 
@@ -354,24 +375,32 @@ def sampleRateTarget(request: pytest.FixtureRequest) -> int:
 @pytest.fixture
 def waveformDataStereo44kHz() -> WaveformAndMetadata:
 	"""Fixture providing stereo 44.1kHz waveform data for spectrogram testing."""
-	pathFilename = pathDataSamplesRoot / "testSine2ch5sec.wav"
-	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID="stereo44kHz")
+	pathFilename = pathDataSamplesRoot / 'testSine2ch5sec.wav'
+	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereo44kHz')
 
 @pytest.fixture
 def waveformDataMono16kHz() -> WaveformAndMetadata:
 	"""Fixture providing mono 16kHz waveform data for spectrogram testing."""
-	pathFilename = pathDataSamplesRoot / "testWooWooMono16kHz32integerClipping9sec.wav"
-	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=16000.0, channelsTotal=1, ID="mono16kHz")
+	pathFilename = pathDataSamplesRoot / 'testWooWooMono16kHz32integerClipping9sec.wav'
+	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=16000.0, channelsTotal=1, ID='mono16kHz')
 
 @pytest.fixture
 def listWaveformDataSameStereoShape() -> list[WaveformAndMetadata]:
 	"""Fixture providing multiple stereo waveforms with same shape for spectrogram testing."""
 	basePath = pathDataSamplesRoot
 	return [
-		WaveformAndMetadata(pathFilename=basePath / "testSine2ch5secCopy1.wav", LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID="stereoCopy1"),
-		WaveformAndMetadata(pathFilename=basePath / "testSine2ch5secCopy2.wav", LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID="stereoCopy2"),
-		WaveformAndMetadata(pathFilename=basePath / "testSine2ch5secCopy3.wav", LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID="stereoCopy3"),
-		WaveformAndMetadata(pathFilename=basePath / "testSine2ch5secCopy4.wav", LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID="stereoCopy4"),
+		WaveformAndMetadata(
+			pathFilename=basePath / 'testSine2ch5secCopy1.wav', LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereoCopy1'
+		),
+		WaveformAndMetadata(
+			pathFilename=basePath / 'testSine2ch5secCopy2.wav', LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereoCopy2'
+		),
+		WaveformAndMetadata(
+			pathFilename=basePath / 'testSine2ch5secCopy3.wav', LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereoCopy3'
+		),
+		WaveformAndMetadata(
+			pathFilename=basePath / 'testSine2ch5secCopy4.wav', LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereoCopy4'
+		),
 	]
 
 @pytest.fixture

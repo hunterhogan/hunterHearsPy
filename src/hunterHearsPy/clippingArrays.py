@@ -24,12 +24,14 @@ References
 """
 from __future__ import annotations
 
-from numpy import absolute, complexfloating, float64, floating, multiply, ones_like
-from typing import Any, TYPE_CHECKING
+from numpy import absolute, float64, multiply, ones_like
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
 	from hunterHearsPy import ArrayType
+	from numpy import complexfloating, floating
 	from numpy.typing import ArrayLike, NDArray
+	from typing import Any
 
 def applyHardLimit(arrayTarget: ArrayType, comparand: ArrayLike = 1.0) -> ArrayType:
 	"""Clip the elements of `arrayTarget` to the magnitude bounds defined by `comparand`.
