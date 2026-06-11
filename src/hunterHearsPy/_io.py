@@ -1,94 +1,72 @@
-# pyright: reportUnnecessaryComparison=false
-# pyright: reportUnusedVariable=false
 # ty:ignore[invalid-assignment]
+# TODO If the typing stays like it is, I think ^^^ this is wrong.
+
 from __future__ import annotations
 
-from hunterHearsPy import parametersUniversal, resampleWaveform, universalDtypeWaveform
+from hunterHearsPy import FileDescriptorOrPath, resampleWaveform, setting
 from hunterMakesPy.filesystemToolkit import makeDirectorySafely
 from multiprocessing import set_start_method as multiprocessing_set_start_method
-from typing import cast, TYPE_CHECKING
-import numpy
+from typing import TYPE_CHECKING
 import soundfile
 
 if TYPE_CHECKING:
 	from hunterHearsPy import Waveform
-	from os import PathLike
-	from typing import Any, BinaryIO
 
 if __name__ == '__main__':
 	multiprocessing_set_start_method('spawn')
 
-def readAudioFile(pathFilename: str | PathLike[Any] | BinaryIO, sampleRate: float | None = None) -> Waveform:
-	"""Read an audio file and return stereo waveform data as a NumPy array.
+# TODO. The typing has too many moving parts.
+# 1. This function: that should be the easiest--if I get the other parts right.
+# 2. `SoundFile.read(dtype=setting.dtype_str` is dynamic, and the static checker is using the type of
+#    the field, `dtype_str: soundfile_dtype_str`, `Literal["float64", "float32", "int32", "int16"]`
+# 3. `Soundfile.read` has decent typing, but I have total control because I have a custom stub file in
+#    `stubFileNotFound`.
+# 4. `resampy` only returns float dtype
+
+# This is a general purpose function: it is not a subroutine of _arrays.
+def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRate: float | None = None) -> Waveform:
+	"""Read an audio file and return waveform data as a NumPy array.
 
 	You can use this function to load any audio file that `soundfile` [1] supports. The returned
-	`Waveform` [2] is always shaped `(channels, samples)` where `channels` is `2`. When the source
-	file is mono, `readAudioFile` duplicates the single channel to produce a stereo array. When
-	`sampleRate` differs from the file's native sample rate, `readAudioFile` resamples using
-	`resampleWaveform`.
+	`Waveform` [2] is always shaped `(channels, samples)`. When `sampleRate` differs from the file's
+	native sample rate, `readAudioFile` resamples using `resampleWaveform`.
 
 	Parameters
 	----------
-	pathFilename : str | PathLike[Any] | BinaryIO
-		Path to the audio file or a binary stream compatible with `soundfile` [1].
+	pathFilename : FileDescriptorOrPath
+		Path to the audio file or a binary stream.
 	sampleRate : float | None = 44100
-		Target sample rate of the returned `Waveform` [2] in Hz. Defaults to `44100` when `None`.
+		Target sample rate of the returned `Waveform` [2] in Hz. Defaults to `setting.sampleRate`,
+		which is probably 44100 when `None`.
 
 	Returns
 	-------
 	waveform : Waveform
-		Stereo audio data shaped `(2, samples)` as `float32`.
-
-	Raises
-	------
-	FileNotFoundError
-		When `pathFilename` does not exist on the filesystem.
-	RuntimeError
-		When `pathFilename` is an unsupported or corrupted audio format.
-
-	References
-	----------
-	[1] soundfile — audio library based on libsndfile
-		https://python-soundfile.readthedocs.io/en/0.12.1/
-
-	[2] `Waveform`
-
+		Audio data shaped `(channels, samples)` as `setting.dtypeWaveform`.
 	"""
-	if sampleRate is None:
-		sampleRate = parametersUniversal['sampleRate']
-	try:
-		with soundfile.SoundFile(str(pathFilename)) as readSoundFile:
-			sampleRateSource: int = readSoundFile.samplerate
-			waveform: Waveform = readSoundFile.read(dtype='float32', always_2d=True).astype(universalDtypeWaveform)
-	except soundfile.LibsndfileError as ERRORmessage:
-		if 'System error' in str(ERRORmessage):
-			message = f"File not found: {pathFilename}"
-			raise FileNotFoundError(message) from ERRORmessage
-		raise RuntimeError from ERRORmessage
+	sampleRate = sampleRate or setting.sampleRate
+	with soundfile.SoundFile(pathFilename) as readSoundFile:
+		sampleRateSource: int = readSoundFile.samplerate
+		waveform: Waveform = readSoundFile.read(dtype=setting.dtype_str, always_2d=True)
+	waveform = waveform.T  # Transpose to shape (channels, samples).
 
-	axisTime = 0
-	axisChannels = 1
-	waveform = cast('Waveform', resampleWaveform(waveform, sampleRateDesired=sampleRate, sampleRateSource=sampleRateSource, axisTime=axisTime))
-	# TODO In my audio ecosystem, must I force a minimum of 2 channels, or can I merely force an axis for time, even if the axis is length=1?
-	if waveform.shape[axisChannels] == 1:
-		waveform = cast('Waveform', numpy.repeat(waveform, 2, axis=axisChannels))
-	return cast('Waveform', numpy.transpose(waveform, axes=(axisChannels, axisTime)))
+	return resampleWaveform(waveform, sampleRateDesired=sampleRate, sampleRateSource=sampleRateSource)
 
-def writeWAV(pathFilename: str | PathLike[Any] | BinaryIO, waveform: Waveform, sampleRate: float | None = None) -> None:
+def writeWAV(pathFilename: FileDescriptorOrPath, waveform: Waveform, sampleRate: float | None = None) -> None:
 	"""Write a waveform array to a WAV file.
 
 	You can use this function to save a `Waveform` [1] or any compatible NumPy array to a
 	32-bit float WAV file. `writeWAV` creates any missing parent directories before writing
-	using `makeDirsSafely` from `hunterMakesPy` [2].
+	using `makeDirectorySafely` from `hunterMakesPy` [2].
 
 	Parameters
 	----------
-	pathFilename : str | PathLike[Any] | BinaryIO
+	pathFilename : FileDescriptorOrPath
 		Destination path for the WAV file, or a binary stream.
 	waveform : Waveform
 		Audio data shaped `(channels, samples)` or `(samples,)`.
 	sampleRate : float | None = None
-		Sample rate of `waveform` in Hz. Defaults to `44100` when `None`.
+		Sample rate of `waveform` in Hz. Defaults to `setting.sampleRate`, which is probably 44100 when `None`.
 
 	File Overwrite and Format
 	-------------------------
@@ -99,14 +77,12 @@ def writeWAV(pathFilename: str | PathLike[Any] | BinaryIO, waveform: Waveform, s
 	----------
 	[1] `Waveform`
 
-	[2] hunterMakesPy — makeDirsSafely
+	[2] hunterMakesPy — makeDirectorySafely
 		https://context7.com/hunterhogan/huntermakespy
-
 	[3] soundfile — audio library based on libsndfile
 		https://python-soundfile.readthedocs.io/en/0.12.1/
-
 	"""
-	if sampleRate is None:
-		sampleRate = parametersUniversal['sampleRate']
+	sampleRate = sampleRate or setting.sampleRate
 	makeDirectorySafely(pathFilename)
+	# TODO Expand subtype in universal parameters and in the function parameters.
 	soundfile.write(file=pathFilename, data=waveform.T, samplerate=int(sampleRate), subtype='FLOAT', format='WAV')

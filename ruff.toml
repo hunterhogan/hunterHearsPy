@@ -78,7 +78,7 @@ ignore = [
   "S403",
 ]
 select = ["ALL"]
-task-tags = ["DEVELOPMENT", "NOTE", "SEMIOTICS", "TODO"]
+task-tags = ["DEVELOPMENT", "FailEarly", "NOTE", "SEMIOTICS", "TODO"]
 
 [lint.flake8-comprehensions]
 allow-dict-calls-with-keyword-arguments = true

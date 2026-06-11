@@ -2,20 +2,24 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from numpy import complexfloating, dtype, floating, ndarray
+from numpy import complexfloating, dtype, float32, float64, floating, int16, int32, integer, ndarray
+from soundfile import FileDescriptorOrPath as FileDescriptorOrPath  # noqa: TC002
 from typing import Any, TYPE_CHECKING, TypeAlias, TypedDict, TypeVar
+import numpy
 
 if TYPE_CHECKING:
 	from scipy.signal._short_time_fft import _FFTMode, _PadType, _ScaleTo
 
-ArrayType = TypeVar('ArrayType', bound=ndarray[tuple[Any, ...], dtype[Any]], covariant=True)
-WindowingFunctionDtype: TypeAlias = floating[Any]
-WindowingFunction: TypeAlias = ndarray[tuple[int], dtype[WindowingFunctionDtype]]
-callableReturnsNDArray = TypeVar('callableReturnsNDArray', bound=Callable[..., WindowingFunction])
-WaveformDtype: TypeAlias = floating[Any]
+ArrayTypeVariable = TypeVar('ArrayTypeVariable', bound=ndarray[tuple[int, ...] | tuple[int, int], dtype[floating[Any]]], covariant=True)
+
+# DEVELOPMENT refactoring. Below here, the objects have not yet been reviewed.
+WaveformDtype: TypeAlias = float32 | float64
 Waveform: TypeAlias = ndarray[tuple[int, int], dtype[WaveformDtype]]
 """A NumPy `ndarray` of audio waveform data with shape (channels, samples); for mono audio, `channels` = 1."""
 
+WindowingFunctionDtype: TypeAlias = floating[Any]
+WindowingFunction: TypeAlias = ndarray[tuple[int], dtype[WindowingFunctionDtype]]
+callableReturnsNDArray = TypeVar('callableReturnsNDArray', bound=Callable[..., WindowingFunction])
 ArrayWaveforms: TypeAlias = ndarray[tuple[int, int, int], dtype[WaveformDtype]]
 """A NumPy `ndarray` containing `ndarray` of type `Waveform` indexed on the last axis: shape is (channels, samples, `Waveform`)."""
 
@@ -50,7 +54,7 @@ class ParametersUniversal(TypedDict):
 class WaveformMetadata(TypedDict):
 	"""Metadata describing waveform file properties and processing state."""
 
-	pathFilename: str
+	pathFilename: FileDescriptorOrPath
 	lengthWaveform: int
 	samplesLeading: int
 	samplesTrailing: int

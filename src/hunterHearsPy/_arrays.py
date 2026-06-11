@@ -3,10 +3,7 @@
 # ruff: noqa: F841 ERA001
 from __future__ import annotations
 
-from hunterHearsPy import parametersUniversal, universalDtypeSpectrogram, universalDtypeWaveform
-from hunterHearsPy._fft import stft
-from hunterHearsPy._io import readAudioFile
-from hunterHearsPy.theTypes import WaveformMetadata
+from hunterHearsPy import parameters, readAudioFile, setting, stft, universalDtypeSpectrogram, universalDtypeWaveform, WaveformMetadata
 from multiprocessing import set_start_method as multiprocessing_set_start_method
 from tqdm.auto import tqdm
 from typing import cast, TYPE_CHECKING
@@ -105,8 +102,7 @@ def loadWaveforms(listPathFilenames: Sequence[str | PathLike[str]], sampleRateTa
 
 	[2] `WaveformMetadata`
 	"""
-	if sampleRateTarget is None:
-		sampleRateTarget = parametersUniversal['sampleRate']
+	sampleRateTarget = sampleRateTarget or setting.sampleRate
 
 	axisOrderMapping: dict[str, int] = {'indexingAxis': -1, 'axisTime': -2, 'axisChannels': 0}
 	axesSizes: dict[str, int] = dict.fromkeys(axisOrderMapping.keys(), 1)
@@ -115,7 +111,7 @@ def loadWaveforms(listPathFilenames: Sequence[str | PathLike[str]], sampleRateTa
 
 	countWaveforms: int = len(listPathFilenames)
 	axesSizes['indexingAxis'] = countWaveforms
-	countChannels: int = 2
+	countChannels: int = 2  # TODO .max()
 	axesSizes['axisChannels'] = countChannels
 
 	axisTime: int = -1
@@ -220,7 +216,7 @@ def loadSpectrograms(listPathFilenames: Sequence[str | PathLike[str]], sampleRat
 
 	"""
 	if sampleRateTarget is None:
-		sampleRateTarget = parametersUniversal['sampleRate']
+		sampleRateTarget = parameters['sampleRate']
 
 	max_workersHARDCODED: int = 3
 	max_workers = max_workersHARDCODED

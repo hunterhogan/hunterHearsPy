@@ -1,13 +1,15 @@
-# ruff: noqa: D100
+# ruff: noqa: D100 D101
 from __future__ import annotations
 
-from hunterHearsPy import ParametersUniversal, tukey
-from hunterMakesPy import PackageSettings
+from hunterHearsPy import FileDescriptorOrPath, ParametersUniversal, tukey
+from hunterMakesPy import PackageSettings, raiseIfNone
 from numpy import complex64, float32
-from typing import TYPE_CHECKING
+from typing import Literal, TYPE_CHECKING
+import dataclasses
 
 if TYPE_CHECKING:
 	from hunterHearsPy import ParametersShortTimeFFT, ParametersSTFT
+	from numpy.typing import DTypeLike
 
 settingsPackage = PackageSettings('hunterHearsPy')
 
@@ -20,8 +22,41 @@ settingsPackage = PackageSettings('hunterHearsPy')
 # system as a placeholder.
 # Finally, I want to be able to override the universal settings as needed on a per-call basis.
 
+# No librosa.
+# Adapters for torch, but the work is done by NumPy, scipy, or other packages I trust.
+
+@dataclasses.dataclass(slots=True)
+class UniversalParameters:
+	dtype_str: Literal['float32', 'float64']
+	dtypeSpectrogram: DTypeLike
+	dtypeWaveform: DTypeLike
+	sampleRate: float
+
 #================== Hardcoded =====================================================================
 
+dtypeSpectrogramHARDCODED: DTypeLike = complex64
+dtypeWaveformHARDCODED: DTypeLike = float32
+dtype_strHARDCODED: Literal['float32', 'float64'] = raiseIfNone(dtypeWaveformHARDCODED.__name__  # FailEarly A simple way to assure that the dtype string is consistent with the dtype object without using assert.
+	if dtypeWaveformHARDCODED.__name__ in {'float32', 'float64'} else None)  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType, reportAssignmentType] # ty:ignore[invalid-assignment]
+sampleRateHARDCODED: float = 44100
+
+#================== Process yet to be invented to implement user settings =========================
+
+dtype_str: Literal['float32', 'float64'] = dtype_strHARDCODED
+dtypeSpectrogram: DTypeLike = dtypeSpectrogramHARDCODED
+dtypeWaveform: DTypeLike = dtypeWaveformHARDCODED
+sampleRate: float = sampleRateHARDCODED
+
+#================== "Data basket" à la `mapFolding` ===============================================
+
+setting = UniversalParameters(
+	dtype_str=dtype_str,
+	dtypeSpectrogram=dtypeSpectrogram,
+	dtypeWaveform=dtypeWaveform,
+	sampleRate=sampleRate,
+)
+
+#======= # TODO old system to be converted
 universalDtypeWaveform = float32
 universalDtypeSpectrogram = complex64
 parametersShortTimeFFTUniversal: ParametersShortTimeFFT = {'fft_mode': 'onesided'}
@@ -37,8 +72,6 @@ parametersDEFAULT = ParametersUniversal(
 	, windowingFunction=windowingFunctionCallableDEFAULT(lengthWindowingFunctionDEFAULT),
 )
 
-setParametersUniversal = None
-
 windowingFunctionCallableUniversal = windowingFunctionCallableDEFAULT
-if not setParametersUniversal:
-	parametersUniversal: ParametersUniversal = parametersDEFAULT
+
+parameters: ParametersUniversal = parametersDEFAULT

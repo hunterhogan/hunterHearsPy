@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from hunterHearsPy.theTypes import (
-	ArraySpectrograms as ArraySpectrograms, ArrayType as ArrayType, ArrayWaveforms as ArrayWaveforms,
-	callableReturnsNDArray as callableReturnsNDArray, NormalizationReverter as NormalizationReverter,
-	ParametersShortTimeFFT as ParametersShortTimeFFT, ParametersSTFT as ParametersSTFT, ParametersUniversal as ParametersUniversal,
-	Spectrogram as Spectrogram, SpectrogramDtype as SpectrogramDtype, Waveform as Waveform, WaveformDtype as WaveformDtype,
-	WaveformMetadata as WaveformMetadata, WindowingFunction as WindowingFunction, WindowingFunctionDtype as WindowingFunctionDtype)
+	ArraySpectrograms as ArraySpectrograms, ArrayTypeVariable as ArrayTypeVariable, ArrayWaveforms as ArrayWaveforms,
+	callableReturnsNDArray as callableReturnsNDArray, FileDescriptorOrPath as FileDescriptorOrPath,
+	NormalizationReverter as NormalizationReverter, ParametersShortTimeFFT as ParametersShortTimeFFT, ParametersSTFT as ParametersSTFT,
+	ParametersUniversal as ParametersUniversal, Spectrogram as Spectrogram, SpectrogramDtype as SpectrogramDtype, Waveform as Waveform,
+	WaveformDtype as WaveformDtype, WaveformMetadata as WaveformMetadata, WindowingFunction as WindowingFunction,
+	WindowingFunctionDtype as WindowingFunctionDtype)
 
 # isort: split
 from hunterHearsPy.windowingFunctions import cosineWings as cosineWings, equalPower as equalPower, halfsine as halfsine, tukey as tukey
@@ -21,12 +22,9 @@ with suppress(ModuleNotFoundError):  # noqa: RUF067
 
 # isort: split
 from hunterHearsPy.theSSOT import (
-	lengthWindowingFunctionDEFAULT as lengthWindowingFunctionDEFAULT, parametersDEFAULT as parametersDEFAULT,
-	parametersShortTimeFFTUniversal as parametersShortTimeFFTUniversal, parametersSTFTUniversal as parametersSTFTUniversal,
-	parametersUniversal as parametersUniversal, setParametersUniversal as setParametersUniversal,
-	universalDtypeSpectrogram as universalDtypeSpectrogram, universalDtypeWaveform as universalDtypeWaveform,
-	windowingFunctionCallableDEFAULT as windowingFunctionCallableDEFAULT,
-	windowingFunctionCallableUniversal as windowingFunctionCallableUniversal)
+	parameters as parameters, parametersShortTimeFFTUniversal as parametersShortTimeFFTUniversal,
+	parametersSTFTUniversal as parametersSTFTUniversal, setting as setting, universalDtypeSpectrogram as universalDtypeSpectrogram,
+	universalDtypeWaveform as universalDtypeWaveform, windowingFunctionCallableUniversal as windowingFunctionCallableUniversal)
 
 # isort: split
 from hunterHearsPy._resample import resampleWaveform as resampleWaveform

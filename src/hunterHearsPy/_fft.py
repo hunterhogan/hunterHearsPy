@@ -34,8 +34,7 @@ Functions
 """
 from __future__ import annotations
 
-from hunterHearsPy import (
-	parametersShortTimeFFTUniversal, parametersSTFTUniversal, parametersUniversal, windowingFunctionCallableUniversal, writeWAV)
+from hunterHearsPy import parameters, parametersShortTimeFFTUniversal, parametersSTFTUniversal, windowingFunctionCallableUniversal, writeWAV
 from math import ceil as ceiling, log2 as log_base2
 from multiprocessing import set_start_method as multiprocessing_set_start_method
 from scipy.signal import ShortTimeFFT
@@ -140,17 +139,17 @@ def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrogram
 
 	"""
 	if sampleRate is None:
-		sampleRate = parametersUniversal['sampleRate']
+		sampleRate = parameters['sampleRate']
 	if lengthHop is None:
-		lengthHop = parametersUniversal['lengthHop']
+		lengthHop = parameters['lengthHop']
 
 	if windowingFunction is None:
 		if lengthWindowingFunction is not None and windowingFunctionCallableUniversal:
 			windowingFunction = windowingFunctionCallableUniversal(lengthWindowingFunction)
 		else:
-			windowingFunction = parametersUniversal['windowingFunction']
+			windowingFunction = parameters['windowingFunction']
 		if lengthFFT is None:
-			lengthFFTSherpa = parametersUniversal['lengthFFT']
+			lengthFFTSherpa = parameters['lengthFFT']
 			if lengthFFTSherpa >= windowingFunction.size:
 				lengthFFT = lengthFFTSherpa
 
@@ -216,7 +215,7 @@ def spectrogramToWAV(spectrogram: Spectrogram, pathFilename: str | PathLike[Any]
 
 	"""
 	if sampleRate is None:
-		sampleRate = parametersUniversal['sampleRate']
+		sampleRate = parameters['sampleRate']
 
 	waveform: Waveform = stft(spectrogram, inverse=True, lengthWaveform=lengthWaveform, sampleRate=sampleRate, **parametersSTFT)
 	writeWAV(pathFilename, waveform, sampleRate)
