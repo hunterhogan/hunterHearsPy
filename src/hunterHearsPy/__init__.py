@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from hunterHearsPy.theTypes import (
 	ArraySpectrograms as ArraySpectrograms, ArrayTypeVariable as ArrayTypeVariable, ArrayWaveforms as ArrayWaveforms,
-	callableReturnsNDArray as callableReturnsNDArray, FileDescriptorOrPath as FileDescriptorOrPath,
+	callableReturnsNDArray as callableReturnsNDArray, FileDescriptorOrPath as FileDescriptorOrPath, Floater as Floater,
 	NormalizationReverter as NormalizationReverter, OptionsAlign as OptionsAlign, ParametersShortTimeFFT as ParametersShortTimeFFT,
 	ParametersSTFT as ParametersSTFT, ParametersUniversal as ParametersUniversal, ShapeTypeVariable as ShapeTypeVariable,
 	Spectrogram as Spectrogram, SpectrogramDtype as SpectrogramDtype, Waveform as Waveform, WaveformAxes as WaveformAxes,

@@ -58,6 +58,8 @@ setting = UniversalParameters(
 	sampleRate=sampleRate,
 )
 
+#------------------ Evolving idea for standardizing axes -------------------------------------------
+
 def getAxis() -> dict[str, WaveformAxes]:
 	return dict(
 		channel=WaveformAxes(number=axisChannel, size=0)
