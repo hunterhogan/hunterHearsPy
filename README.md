@@ -64,6 +64,72 @@ processor = waveformSpectrogramWaveform(boost_low_frequencies)
 processed_waveform = processor(original_waveform)
 ```
 
+## Development
+
+I want:
+
+- consistent waveforms,
+- consistent spectrograms, and
+- efficient, reliable transformations.
+
+Therefore, I want one package, this package, to manage those objectives with a single source of truth for configurable universal settings.
+
+- I need good default universal settings.
+- I need an easy way to change a universal setting.
+- I want _ad hoc_ overrides for some or all universal settings.
+
+I don't know a good way to implement user-configurable universal settings. Therefore, as I normally do, I will use my HARDCODED system as a placeholder.
+
+### Semiotics
+
+- channel, rarely channels.
+- time is more generic than samples and often preferred.
+- array is generic.
+- when talking about a NumPy `ndarray`, write `ndarray` not array.
+- sampleRate is giving me problems in the "ingest" functions. Regularly review these semiotics until the system is clear.
+
+### Preferred packages
+
+- NumPy
+- scipy
+- hunterMakesPy
+- tqdm (for status messages)
+- cytoolz via the [Z0Z_tools](https://github.com/hunterhogan/Z0Z_tools) package (until it finds a forever home)
+- more_itertools
+- `astToolKit`
+- `pytest`
+
+### Probably won't need
+
+- `analyzeAudio`
+- `gmpy2`
+- `numba`
+- `platformdirs`
+- `sympy`
+- `torch-einops-kit`
+
+### Not using `PyTorch` for "business" logic
+
+- But, I must have `torch` compatibility.
+- At a minimum, a transformation to and from `torch` that the user must call.
+- `astToolkit` easily creates real `torch` APIs and identifiers, however, for the `windowingFunctions` module in `windowingFunctionsTensor`.
+
+### Not using librosa
+
+- Dependency bloated.
+- Slow.
+- Less precise than I want.
+- I generally dislike the API and identifiers.
+
+### Disfavored packages
+
+- `pandas`
+
+### More vectorization
+
+- Few or no `for` loops.
+- Few or no `for` object comprehensions.
+
 ## Installation
 
 ```bash

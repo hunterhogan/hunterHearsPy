@@ -1,15 +1,158 @@
+# pyright: reportArgumentType=false
+# pyright: reportUnknownArgumentType=false
+# pyright: reportUnknownLambdaType=false
+# ruff: noqa: T201, DOC201, PERF203, RUF076
+# ty:ignore[invalid-argument-type]
 from __future__ import annotations
 
 from hunterHearsPy import getWaveformMetadata, loadWaveforms, readAudioFile, resampleWaveform, writeWAV
-from tests.conftest import prototype_numpyArrayEqual, WaveformAndMetadata
+from pathlib import Path
+from tests.conftest import pathDataSamples, prototype_numpyArrayEqual, WaveformAndMetadata
 from typing import Any, Final, TYPE_CHECKING
 import io
 import numpy
 import pytest
+import shutil
 import soundfile
+import uuid
 
 if TYPE_CHECKING:
-	from pathlib import Path
+	from collections.abc import Generator
+
+"""Section: Audio file fixtures for testing readAudioFile, writeWAV, and related functions"""
+pathTmpRoot: Path = pathDataSamples / 'tmp'
+
+registerOfTemporaryFilesystemObjects: set[Path] = set()
+
+def registrarRecordsTmpObject(path: Path) -> None:
+	"""The registrar adds a tmp file to the register."""
+	registerOfTemporaryFilesystemObjects.add(path)
+
+def registrarDeletesTmpObjects() -> None:
+	"""The registrar cleans up tmp files in the register."""
+	for pathTmp in sorted(registerOfTemporaryFilesystemObjects, reverse=True):
+		try:
+			if pathTmp.is_file():
+				pathTmp.unlink(missing_ok=True)
+			elif pathTmp.is_dir():
+				shutil.rmtree(pathTmp, ignore_errors=True)
+		except Exception as ERRORmessage:
+			print(f'Warning: Failed to clean up {pathTmp}: {ERRORmessage}')
+			registerOfTemporaryFilesystemObjects.clear()
+
+@pytest.fixture(scope='session', autouse=True)
+def setupTeardownTmpObjects() -> Generator[None]:
+	"""Auto-fixture to setup test data directories and cleanup after."""
+	pathDataSamples.mkdir(exist_ok=True)
+	pathTmpRoot.mkdir(exist_ok=True)
+	yield
+	registrarDeletesTmpObjects()
+
+@pytest.fixture
+def pathTmpTesting(request: pytest.FixtureRequest) -> Path:
+	pathTmp = pathTmpRoot / str(uuid.uuid4().hex)
+	pathTmp.mkdir(parents=True, exist_ok=False)
+
+	registrarRecordsTmpObject(pathTmp)
+	return pathTmp
+
+@pytest.fixture
+def pathFilenameTmpTesting(request: pytest.FixtureRequest) -> Path:
+	try:
+		extension: str = request.param
+	except AttributeError:
+		extension = '.txt'
+
+	uuidHex: str = uuid.uuid4().hex
+	subpath: str = uuidHex[0:-8]
+	filenameStem: str = uuidHex[-8:None]
+
+	pathFilenameTmp = Path(pathTmpRoot, subpath, filenameStem + extension)
+	pathFilenameTmp.parent.mkdir(parents=True, exist_ok=False)
+
+	registrarRecordsTmpObject(pathFilenameTmp)
+	return pathFilenameTmp
+
+@pytest.fixture
+def mockTemporaryFiles(monkeypatch: pytest.MonkeyPatch, pathTmpTesting: Path) -> None:
+	"""Mock all temporary filesystem operations to use pathTmpTesting."""
+	monkeypatch.setattr('tempfile.mkdtemp', lambda *a, **k: str(pathTmpTesting))
+	monkeypatch.setattr('tempfile.gettempdir', lambda: str(pathTmpTesting))
+	monkeypatch.setattr('tempfile.mkstemp', lambda *a, **k: (0, str(pathTmpTesting)))
+
+@pytest.fixture
+def setupDirectoryStructure(pathTmpTesting: Path) -> Path:
+	"""Create a complex directory structure for testing findRelativePath."""
+	baseDirectory = pathTmpTesting / 'base'
+	baseDirectory.mkdir()
+
+	for subdir in ['dir1/subdir1', 'dir2/subdir2', 'dir3/subdir3']:
+		(baseDirectory / subdir).mkdir(parents=True)
+
+	(baseDirectory / 'dir1/file1.txt').touch()
+	(baseDirectory / 'dir2/file2.txt').touch()
+
+	return baseDirectory
+
+@pytest.fixture
+def waveformMono16kHz() -> WaveformAndMetadata:
+	"""Fixture providing mono 16kHz waveform for readAudioFile testing."""
+	pathFilename = pathDataSamples / 'testWooWooMono16kHz32integerClipping9sec.wav'
+	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=16000.0, channelsTotal=1, ID='mono16kHz')
+
+@pytest.fixture
+def waveformStereo44kHz() -> WaveformAndMetadata:
+	"""Fixture providing stereo 44.1kHz waveform for readAudioFile testing."""
+	pathFilename = pathDataSamples / 'testSine2ch5sec.wav'
+	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereo44kHz')
+
+@pytest.fixture
+def waveformMono96kHz() -> WaveformAndMetadata:
+	"""Fixture providing mono 96kHz waveform for resampleWaveform testing."""
+	pathFilename = pathDataSamples / 'testParkMono96kHz32float12.1sec.wav'
+	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=96000.0, channelsTotal=1, ID='mono96kHz')
+
+@pytest.fixture
+def waveformStereo48kHz() -> WaveformAndMetadata:
+	"""Fixture providing stereo 48kHz waveform for testing."""
+	pathFilename = pathDataSamples / 'testTrain2ch48kHz6.3sec.wav'
+	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=48000.0, channelsTotal=2, ID='stereo48kHz')
+
+@pytest.fixture
+def listWaveformsSameStereoShape() -> list[WaveformAndMetadata]:
+	"""Fixture providing multiple stereo waveforms with same shape for loadWaveforms testing."""
+	basePath = pathDataSamples
+	listWaveforms: list[WaveformAndMetadata] = []
+	for indexCopy in [1, 2, 3, 4]:
+		pathFilename = basePath / f'testSine2ch5secCopy{indexCopy}.wav'
+		waveformData = WaveformAndMetadata(
+			pathFilename=pathFilename, LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID=f'stereoCopy{indexCopy}'
+		)
+		listWaveforms.append(waveformData)
+	return listWaveforms
+
+@pytest.fixture
+def listWaveformsSameMonoShape() -> list[WaveformAndMetadata]:
+	"""Fixture providing multiple mono waveforms with same shape for loadWaveforms testing."""
+	basePath = pathDataSamples
+	listWaveforms: list[WaveformAndMetadata] = []
+	for indexCopy in [1, 2, 3]:
+		pathFilename = basePath / f'testWooWooMono16kHz32integerClipping9secCopy{indexCopy}.wav'
+		waveformData = WaveformAndMetadata(
+			pathFilename=pathFilename, LUFS=-23.0, sampleRate=16000.0, channelsTotal=1, ID=f'monoCopy{indexCopy}'
+		)
+		listWaveforms.append(waveformData)
+	return listWaveforms
+
+@pytest.fixture
+def pathFilenameVideoForErrorTesting() -> Path:
+	"""Fixture providing video file path for testing error conditions."""
+	return pathDataSamples / 'testVideo11sec.mkv'
+
+@pytest.fixture
+def pathFilenameNonexistentForErrorTesting() -> Path:
+	"""Fixture providing nonexistent file path for testing error conditions."""
+	return pathDataSamples / 'fileDoesNotExist.wav'
 
 # Constants for test validation
 CHANNELS_STEREO: Final[int] = 2

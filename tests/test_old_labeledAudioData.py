@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from hunterHearsPy import readAudioFile
-from tests.conftest import sampleData, sampleData44100, sampleData48000, WaveformAndMetadata
+from tests.conftest import ingestSampleData, sampleData, WaveformAndMetadata
 from typing import Final
 import numpy
 import pytest
@@ -9,6 +9,11 @@ import pytest
 # Constants for test validation
 TOLERANCE_LUFS: Final[float] = 3.0  # LUFS measurement tolerance
 LUFS_LOWER_BOUND: Final[float] = -100.0  # Reasonable lower bound for LUFS
+def sampleData44100() -> list[WaveformAndMetadata]:
+	return [dataSample for dataSample in ingestSampleData() if dataSample.sampleRate == 44100]
+
+def sampleData48000() -> list[WaveformAndMetadata]:
+	return [dataSample for dataSample in ingestSampleData() if dataSample.sampleRate == 48000]
 
 @pytest.mark.parametrize('waveformData', sampleData44100())
 def test_readLabeledAudioFiles44100(waveformData: WaveformAndMetadata) -> None:

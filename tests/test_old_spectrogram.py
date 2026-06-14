@@ -1,9 +1,11 @@
+# pyright: reportUnknownLambdaType=false
+# pyright: reportUnknownArgumentType=false
+# ruff: noqa: DOC201
 """test_waveform or test_spectrogram? if a spectrogram is involved at any point, then test_spectrogram."""
-
 from __future__ import annotations
 
 from hunterHearsPy import loadSpectrograms, readAudioFile, stft, waveformSpectrogramWaveform
-from tests.conftest import prototype_numpyAllClose, standardizedEqualTo, uniformTestFailureMessage, WaveformAndMetadata
+from tests.conftest import pathDataSamples, prototype_numpyAllClose, standardizedEqualTo, uniformTestFailureMessage, WaveformAndMetadata
 from typing import Any, Final, TYPE_CHECKING
 import numpy
 import pytest
@@ -13,8 +15,61 @@ if TYPE_CHECKING:
 
 expectedSpectrogramDimensions: Final[int] = 4
 
+"""Section: Spectrogram testing fixtures and parameters"""
+
+@pytest.fixture(params=[1024, 2048, 4096])
+def lengthWindowingFunctionSTFT(request: pytest.FixtureRequest) -> int:
+	"""Fixture providing different windowing function lengths for STFT testing."""
+	return request.param
+
+@pytest.fixture(params=[256, 512, 1024])
+def lengthHopSTFT(request: pytest.FixtureRequest) -> int:
+	"""Fixture providing different hop lengths for STFT testing."""
+	return request.param
+
+@pytest.fixture(params=[22050, 44100, 48000])
+def sampleRateDesired(request: pytest.FixtureRequest) -> int:
+	"""Fixture providing different target sample rates for spectrogram testing."""
+	return request.param
+
+@pytest.fixture
+def waveformDataStereo44kHz() -> WaveformAndMetadata:
+	"""Fixture providing stereo 44.1kHz waveform data for spectrogram testing."""
+	pathFilename = pathDataSamples / 'testSine2ch5sec.wav'
+	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereo44kHz')
+
+@pytest.fixture
+def waveformDataMono16kHz() -> WaveformAndMetadata:
+	"""Fixture providing mono 16kHz waveform data for spectrogram testing."""
+	pathFilename = pathDataSamples / 'testWooWooMono16kHz32integerClipping9sec.wav'
+	return WaveformAndMetadata(pathFilename=pathFilename, LUFS=-23.0, sampleRate=16000.0, channelsTotal=1, ID='mono16kHz')
+
+@pytest.fixture
+def listWaveformDataSameStereoShape() -> list[WaveformAndMetadata]:
+	"""Fixture providing multiple stereo waveforms with same shape for spectrogram testing."""
+	basePath = pathDataSamples
+	return [
+		WaveformAndMetadata(
+			pathFilename=basePath / 'testSine2ch5secCopy1.wav', LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereoCopy1'
+		)
+		, WaveformAndMetadata(
+			pathFilename=basePath / 'testSine2ch5secCopy2.wav', LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereoCopy2'
+		)
+		, WaveformAndMetadata(
+			pathFilename=basePath / 'testSine2ch5secCopy3.wav', LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereoCopy3'
+		)
+		, WaveformAndMetadata(
+			pathFilename=basePath / 'testSine2ch5secCopy4.wav', LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereoCopy4'
+		)
+	]
+
+@pytest.fixture
+def listPathFilenamesFromWaveformData(listWaveformDataSameStereoShape: list[WaveformAndMetadata]) -> list[Path]:
+	"""Convert WaveformAndMetadata objects to path list for loadSpectrograms testing."""
+	return [waveformData.pathFilename for waveformData in listWaveformDataSameStereoShape]
+
 @pytest.mark.parametrize('sampleRateDesired', [22050, 44100, 48000])
-def test_loadSpectrograms_acceptssampleRateDesired(listPathFilenamesFromWaveformData: list[Path], sampleRateDesired: int) -> None:
+def test_loadSpectrograms_acceptsSampleRateDesired(listPathFilenamesFromWaveformData: list[Path], sampleRateDesired: int) -> None:
 	"""Test that loadSpectrograms accepts different target sample rates and produces valid spectrograms."""
 	arraySpectrograms, dictionaryWaveformMetadata = loadSpectrograms(listPathFilenamesFromWaveformData, sampleRateDesired)
 

@@ -20,8 +20,8 @@ if TYPE_CHECKING:
 #    the field, `dtype_str: soundfile_dtype_str`, `Literal["float64", "float32", "int32", "int16"]`
 # 3. `Soundfile.read` has decent typing, but I have total control because I have a custom stub file in
 #    `stubFileNotFound`.
-# 4. the `resampy` types, which was ironically annotated by me, demands float input and returns float
-#    output, but I now realize that I didn't test anything or look at the code.
+# 4. the `resampy` typing, which was ironically annotated by me, demands float input and returns float
+#    output, but I now realize that I didn't test anything or see if the code enforced that.
 
 # This is a general purpose function: it is not a subroutine of _arrays.
 def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRateDesired: float | None = None) -> Waveform:

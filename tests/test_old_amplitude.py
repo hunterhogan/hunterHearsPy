@@ -1,9 +1,36 @@
 from __future__ import annotations
 
-from hunterHearsPy import ArrayWaveforms, normalizeArrayWaveforms, normalizeWaveform, Waveform
-from tests.conftest import amplitudeNorm, rtolDEFAULT, sampleData
+from hunterHearsPy import ArrayWaveforms, loadWaveforms, normalizeArrayWaveforms, normalizeWaveform, Waveform
+from tests.conftest import pathDataSamples_labeled, rtolDEFAULT, sampleData
+from typing import Final, TYPE_CHECKING
 import numpy
 import pytest
+
+if TYPE_CHECKING:
+	from pathlib import Path
+
+amplitudeNorm: Final[float] = 1.0
+
+listFilenamesSameShape = [
+	'WAV_44100_ch2_sec5_Sine_Copy0.wav',
+	'WAV_44100_ch2_sec5_Sine_Copy1.wav',
+	'WAV_44100_ch2_sec5_Sine_Copy2.wav',
+	'WAV_44100_ch2_sec5_Sine_Copy3.wav',
+]
+
+@pytest.fixture
+def listPathFilenamesArrayWaveforms() -> list[Path]:
+	return [pathDataSamples_labeled / filename for filename in listFilenamesSameShape]
+
+@pytest.fixture
+def array44100_ch2_sec5_Sine(listPathFilenamesArrayWaveforms: list[Path]) -> ArrayWaveforms:
+	"""
+	Load the four WAV files with the same shape into an array.
+
+	Returns:
+		arrayWaveforms: Array of waveforms with shape (channels, samples, count_of_waveforms)
+	"""
+	return loadWaveforms(listPathFilenamesArrayWaveforms)
 
 @pytest.mark.parametrize(
 	'ID, waveform, sampleRate, LUFS, channelsTotal',

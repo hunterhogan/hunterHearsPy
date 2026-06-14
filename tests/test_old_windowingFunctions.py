@@ -1,3 +1,7 @@
+# ruff: noqa: RUF069
+# pyright: reportArgumentType=false
+# ty:ignore[invalid-argument-type]
+# ty:ignore[unresolved-attribute]
 from __future__ import annotations
 
 from hunterHearsPy import cosineWings, equalPower, halfsine, tukey
@@ -13,6 +17,26 @@ from hunterHearsPy import cosineWingsTensor, equalPowerTensor, halfsineTensor, t
 if TYPE_CHECKING:
 	from collections.abc import Callable
 	from torch import Tensor
+
+"""Section: Windowing function testing utilities"""
+
+@pytest.fixture(params=[256, 1024, 1024 * 8, 44100, 44100 * 11])
+def lengthWindow(request: pytest.FixtureRequest) -> int:
+	return request.param
+
+@pytest.fixture(params=[0.0, 0.1, 0.5, 1.0])
+def ratioTaper(request: pytest.FixtureRequest) -> float:
+	return request.param
+
+listDevices: list[str] = ['cpu']
+if torch is not None and torch.cuda.is_available():
+	listDevices.append('cuda')
+
+@pytest.fixture(params=listDevices)
+def device(request: pytest.FixtureRequest) -> str:
+	if torch is None:
+		pytest.skip('torch is not installed')
+	return request.param
 
 @pytest.mark.parametrize('ratioTaper', [0.0, 0.1, 0.5, 1.0])
 def test_cosineWingsArray(ratioTaper: float, lengthWindow: int) -> None:
@@ -82,34 +106,27 @@ def prototype_tensorEquivalent(
 
 	assert tensor.device.type == device, uniformTestFailureMessage(
 		device, tensor.device.type, f'{functionTensorTarget.__name__} device check'
-	)  # ty:ignore[unresolved-attribute]
+	)
 	assert tensor.dtype == torch.float32, uniformTestFailureMessage(
 		torch.float32, tensor.dtype, f'{functionTensorTarget.__name__} dtype check'
-	)  # ty:ignore[unresolved-attribute]
+	)
 	assert tensor.shape == torch.Size([ndarray.shape[0]]), uniformTestFailureMessage(
 		ndarray.shape, tensor.shape, f'{functionTensorTarget.__name__} shape check'
-	)  # ty:ignore[unresolved-attribute]
+	)
 
 	# Convert tensor to numpy for comparison with original array
 	tensorAsNumpy = tensor.cpu().numpy()
 	assert numpy.allclose(ndarray, tensorAsNumpy), uniformTestFailureMessage(
 		'Arrays to match', "Arrays don't match", f'{functionTensorTarget.__name__} vs {functionNdarrayOriginal.__name__}'
-	)  # ty:ignore[unresolved-attribute]
+	)
 
 def test_windowing_tensors_equivalence(device: str, lengthWindow: int) -> None:
 	"""
 	Verify all tensor-based windowing functions produce equivalent results to their numpy counterparts.
 	"""
-	# Test cosineWingsTensor
 	prototype_tensorEquivalent(cosineWings, cosineWingsTensor, device, lengthWindow, ratioTaper=0.5)
-
-	# Test equalPowerTensor
 	prototype_tensorEquivalent(equalPower, equalPowerTensor, device, lengthWindow, ratioTaper=0.3)
-
-	# Test halfsineTensor
 	prototype_tensorEquivalent(halfsine, halfsineTensor, device, lengthWindow)
-
-	# Test tukeyTensor
 	prototype_tensorEquivalent(tukey, tukeyTensor, device, lengthWindow, ratioTaper=0.7)
 
 def test_tensor_special_cases(device: str) -> None:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from hunterHearsPy import moveToAxisOfOperation
+from numpy import int64
 from tests.conftest import uniformTestFailureMessage
 from typing import TYPE_CHECKING
 import numpy
@@ -8,6 +9,11 @@ import pytest
 
 if TYPE_CHECKING:
 	from numpy.typing import NDArray
+
+@pytest.fixture
+def arrayAxisOperation() -> NDArray[int64]:
+	"""You can use this fixture to test axis movement with deterministic integer data."""  # noqa: DOC201
+	return ((numpy.arange(2 * 3 * 5 * 7, dtype=int64) + 5) * 3).reshape((2, 3, 5, 7))
 
 @pytest.mark.parametrize('axisSource, axisOfOperation', [(0, -1), (1, -1), (2, 0), (-1, 1)])
 def test_moveToAxisOfOperation_movesAxisAndPreservesOriginalArray(

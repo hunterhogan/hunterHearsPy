@@ -177,6 +177,7 @@ def _getSpectrogram(waveform: Waveform, metadata: WaveformMetadata, sampleRateDe
 
 	"""
 	waveform[:, metadata['samplesStart']:metadata['samplesStop']] = readAudioFile(metadata['pathFilename'], sampleRateDesired)
+	# TODO Think about: this is one of the only places where padding with non-zero values could be desirable.
 	return stft(waveform, sampleRate=sampleRateDesired, **parametersSTFT)
 
 def loadSpectrograms(listPathFilenames: Sequence[FileDescriptorOrPath], sampleRateDesired: float | None = None, **parametersSTFT: Any) -> tuple[ArraySpectrograms, dict[int, WaveformMetadata]]:
