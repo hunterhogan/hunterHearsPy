@@ -40,7 +40,7 @@ Repository = "https://github.com/hunterhogan/hunterHearsPy.git"
 
 [dependency-groups]
 dev = ["astToolkit", "pytest-cov", "scipy-stubs", "types-resampy"]
-pytorch = ["torch==2.10.0", "torchaudio==2.10.0"]
+pytorch = ["torch==2.10.0"]
 testing = ["pytest", "pytest-mock", "pytest-xdist", "torch"]
 
 [build-system]
@@ -68,10 +68,19 @@ build-backend = { module-name = "hunterHearsPy", module-root = "src" }
 default-groups = ["dev", "testing"]
 
 [[tool.uv.index]]
+# NOTE I use this to install torch+cuda on my computer that doesn't have cuda. 2026-06-13
+# `uv sync --group pytorch` OR `uv sync --all-groups` will trigger the following.
+# dependency-groups.pytorch amends the dependencies: `torch`, limitation `==2.10.0`, group = "pytorch".
+# At this point, the default source, pypi, is the highest priority on the `torch` sources list. (LIFO)
+# tool.uv.sources sees '`torch`, group = "pytorch"' so pushes "indexPytorch" on top the `torch` sources list.
+# tool.uv.index translates "indexPytorch" to the url of a package index.
+# uv queries the package index for all `torch` that match all limitations.
+# If the package index returns any matches, uv will install the "best" match.
+# Because the package index only has cuda 12.8 versions, uv installs torch+cu128.
+# I picked torch==2.10.0 + cuda 12.8 because that is the pre-installed package on Google Colab T4.
 explicit = true
 name = "indexPytorch"
 url = "https://download.pytorch.org/whl/cu128"
 
 [tool.uv.sources]
-torch = { index = "indexPytorch", group = "pytorch" }
-torchaudio = { index = "indexPytorch", group = "pytorch" }
+torch = { group = "pytorch", index = "indexPytorch" }

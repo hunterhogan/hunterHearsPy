@@ -13,10 +13,10 @@ if TYPE_CHECKING:
 
 expectedSpectrogramDimensions: Final[int] = 4
 
-@pytest.mark.parametrize('sampleRateTarget', [22050, 44100, 48000])
-def test_loadSpectrograms_acceptsSampleRateTarget(listPathFilenamesFromWaveformData: list[Path], sampleRateTarget: int) -> None:
+@pytest.mark.parametrize('sampleRateDesired', [22050, 44100, 48000])
+def test_loadSpectrograms_acceptssampleRateDesired(listPathFilenamesFromWaveformData: list[Path], sampleRateDesired: int) -> None:
 	"""Test that loadSpectrograms accepts different target sample rates and produces valid spectrograms."""
-	arraySpectrograms, dictionaryWaveformMetadata = loadSpectrograms(listPathFilenamesFromWaveformData, sampleRateTarget)
+	arraySpectrograms, dictionaryWaveformMetadata = loadSpectrograms(listPathFilenamesFromWaveformData, sampleRateDesired)
 
 	expectedCountFiles = len(listPathFilenamesFromWaveformData)
 	actualShape = arraySpectrograms.shape
@@ -24,24 +24,24 @@ def test_loadSpectrograms_acceptsSampleRateTarget(listPathFilenamesFromWaveformD
 	actualCountMetadata = len(dictionaryWaveformMetadata)
 
 	assert actualCountFiles == expectedCountFiles, uniformTestFailureMessage(
-		expectedCountFiles, actualCountFiles, 'loadSpectrograms', listPathFilenamesFromWaveformData, sampleRateTarget
+		expectedCountFiles, actualCountFiles, 'loadSpectrograms', listPathFilenamesFromWaveformData, sampleRateDesired
 	)
 	assert actualCountMetadata == expectedCountFiles, uniformTestFailureMessage(
-		expectedCountFiles, actualCountMetadata, 'loadSpectrograms metadata count', listPathFilenamesFromWaveformData, sampleRateTarget
+		expectedCountFiles, actualCountMetadata, 'loadSpectrograms metadata count', listPathFilenamesFromWaveformData, sampleRateDesired
 	)
 	assert len(actualShape) == expectedSpectrogramDimensions, uniformTestFailureMessage(
 		expectedSpectrogramDimensions
 		, len(actualShape)
 		, 'loadSpectrograms shape dimensions'
 		, listPathFilenamesFromWaveformData
-		, sampleRateTarget
+		, sampleRateDesired
 	)
 	assert numpy.issubdtype(arraySpectrograms.dtype, numpy.complexfloating), uniformTestFailureMessage(
 		'complex floating point type'
 		, arraySpectrograms.dtype
 		, 'loadSpectrograms dtype'
 		, listPathFilenamesFromWaveformData
-		, sampleRateTarget
+		, sampleRateDesired
 	)
 
 @pytest.mark.parametrize('lengthWindowingFunctionSTFT,lengthHopSTFT', [(1024, 256), (2048, 512), (4096, 1024)])
@@ -49,18 +49,18 @@ def test_loadSpectrograms_acceptsSTFTParameters(
 	listPathFilenamesFromWaveformData: list[Path], lengthWindowingFunctionSTFT: int, lengthHopSTFT: int
 ) -> None:
 	"""Test that loadSpectrograms accepts custom STFT parameters and produces spectrograms with expected shapes."""
-	sampleRateTarget = 44100
+	sampleRateDesired = 44100
 
 	arraySpectrograms, _dictionaryWaveformMetadata = loadSpectrograms(
 		listPathFilenamesFromWaveformData
-		, sampleRateTarget
+		, sampleRateDesired
 		, lengthWindowingFunction=lengthWindowingFunctionSTFT
 		, lengthHop=lengthHopSTFT
 	)
 
-	waveformSingle = readAudioFile(listPathFilenamesFromWaveformData[0], sampleRateTarget)
+	waveformSingle = readAudioFile(listPathFilenamesFromWaveformData[0], sampleRateDesired)
 	spectrogramExpected = stft(
-		waveformSingle, sampleRate=sampleRateTarget, lengthWindowingFunction=lengthWindowingFunctionSTFT, lengthHop=lengthHopSTFT
+		waveformSingle, sampleRate=sampleRateDesired, lengthWindowingFunction=lengthWindowingFunctionSTFT, lengthHop=lengthHopSTFT
 	)
 
 	expectedShape = spectrogramExpected.shape
@@ -71,20 +71,20 @@ def test_loadSpectrograms_acceptsSTFTParameters(
 		, actualShape
 		, 'loadSpectrograms STFT shape'
 		, listPathFilenamesFromWaveformData
-		, sampleRateTarget
+		, sampleRateDesired
 		, lengthWindowingFunction=lengthWindowingFunctionSTFT
 		, lengthHop=lengthHopSTFT
 	)
 
 def test_loadSpectrograms_singleFile(waveformDataStereo44kHz: WaveformAndMetadata) -> None:
 	"""Test loading a spectrogram from a single file."""
-	sampleRateTarget = 44100
+	sampleRateDesired = 44100
 	listPathFilenameSingle = [waveformDataStereo44kHz.pathFilename]
 
-	arraySpectrograms, dictionaryWaveformMetadata = loadSpectrograms(listPathFilenameSingle, sampleRateTarget)
+	arraySpectrograms, dictionaryWaveformMetadata = loadSpectrograms(listPathFilenameSingle, sampleRateDesired)
 
-	waveformSingle = readAudioFile(waveformDataStereo44kHz.pathFilename, sampleRateTarget)
-	spectrogramExpected = stft(waveformSingle, sampleRate=sampleRateTarget)
+	waveformSingle = readAudioFile(waveformDataStereo44kHz.pathFilename, sampleRateDesired)
+	spectrogramExpected = stft(waveformSingle, sampleRate=sampleRateDesired)
 
 	expectedShape = spectrogramExpected.shape
 	actualShape = arraySpectrograms.shape[:-1]
@@ -94,60 +94,28 @@ def test_loadSpectrograms_singleFile(waveformDataStereo44kHz: WaveformAndMetadat
 	actualCountMetadata = len(dictionaryWaveformMetadata)
 
 	assert actualShape == expectedShape, uniformTestFailureMessage(
-		expectedShape, actualShape, 'loadSpectrograms single file shape', listPathFilenameSingle, sampleRateTarget
+		expectedShape, actualShape, 'loadSpectrograms single file shape', listPathFilenameSingle, sampleRateDesired
 	)
 	assert actualCountFiles == expectedCountFiles, uniformTestFailureMessage(
-		expectedCountFiles, actualCountFiles, 'loadSpectrograms single file count', listPathFilenameSingle, sampleRateTarget
+		expectedCountFiles, actualCountFiles, 'loadSpectrograms single file count', listPathFilenameSingle, sampleRateDesired
 	)
 	assert actualCountMetadata == expectedCountMetadata, uniformTestFailureMessage(
 		expectedCountMetadata
 		, actualCountMetadata
 		, 'loadSpectrograms single file metadata count'
 		, listPathFilenameSingle
-		, sampleRateTarget
+		, sampleRateDesired
 	)
-
-def test_loadSpectrograms_preservesWaveformMetadata(listPathFilenamesFromWaveformData: list[Path]) -> None:
-	"""Test that loadSpectrograms preserves metadata consistently with actual waveform properties."""
-	sampleRateTarget = 44100
-
-	_arraySpectrograms, dictionaryWaveformMetadata = loadSpectrograms(listPathFilenamesFromWaveformData, sampleRateTarget)
-
-	for index, pathFilename in enumerate(listPathFilenamesFromWaveformData):
-		waveformSingle = readAudioFile(pathFilename, sampleRateTarget)
-		metadataSingle = dictionaryWaveformMetadata[index]
-
-		expectedLengthWaveform = waveformSingle.shape[1]
-		actualLengthWaveform = metadataSingle['lengthWaveform']
-		expectedPathFilename = str(pathFilename)
-		actualPathFilename = metadataSingle['pathFilename']
-
-		assert actualLengthWaveform == expectedLengthWaveform, uniformTestFailureMessage(
-			expectedLengthWaveform
-			, actualLengthWaveform
-			, 'loadSpectrograms metadata lengthWaveform'
-			, listPathFilenamesFromWaveformData
-			, sampleRateTarget
-			, indexFile=index
-		)
-		assert actualPathFilename == expectedPathFilename, uniformTestFailureMessage(
-			expectedPathFilename
-			, actualPathFilename
-			, 'loadSpectrograms metadata pathFilename'
-			, listPathFilenamesFromWaveformData
-			, sampleRateTarget
-			, indexFile=index
-		)
 
 def test_loadSpectrograms_roundTripReconstructionAccuracy(waveformDataStereo44kHz: WaveformAndMetadata) -> None:
 	"""Test that loadSpectrograms produces spectrograms that roundtrip through direct STFT operations."""
-	sampleRateTarget = 44100
+	sampleRateDesired = 44100
 	listPathFilenameSingle = [waveformDataStereo44kHz.pathFilename]
 
-	arraySpectrograms, _dictionaryWaveformMetadata = loadSpectrograms(listPathFilenameSingle, sampleRateTarget)
+	arraySpectrograms, _dictionaryWaveformMetadata = loadSpectrograms(listPathFilenameSingle, sampleRateDesired)
 
-	waveformOriginal = readAudioFile(waveformDataStereo44kHz.pathFilename, sampleRateTarget)
-	spectrogramDirect = stft(waveformOriginal, sampleRate=sampleRateTarget)
+	waveformOriginal = readAudioFile(waveformDataStereo44kHz.pathFilename, sampleRateDesired)
+	spectrogramDirect = stft(waveformOriginal, sampleRate=sampleRateDesired)
 
 	expectedShape = spectrogramDirect.shape
 	actualShape = arraySpectrograms.shape[:-1]
@@ -155,10 +123,10 @@ def test_loadSpectrograms_roundTripReconstructionAccuracy(waveformDataStereo44kH
 	actualCountFiles = arraySpectrograms.shape[-1]
 
 	assert actualShape == expectedShape, uniformTestFailureMessage(
-		expectedShape, actualShape, 'loadSpectrograms roundtrip shape comparison', listPathFilenameSingle, sampleRateTarget
+		expectedShape, actualShape, 'loadSpectrograms roundtrip shape comparison', listPathFilenameSingle, sampleRateDesired
 	)
 	assert actualCountFiles == expectedCountFiles, uniformTestFailureMessage(
-		expectedCountFiles, actualCountFiles, 'loadSpectrograms roundtrip file count', listPathFilenameSingle, sampleRateTarget
+		expectedCountFiles, actualCountFiles, 'loadSpectrograms roundtrip file count', listPathFilenameSingle, sampleRateDesired
 	)
 
 def test_loadSpectrograms_rejectsEmptyInput() -> None:

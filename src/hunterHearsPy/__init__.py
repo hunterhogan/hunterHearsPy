@@ -4,8 +4,9 @@ from __future__ import annotations
 from hunterHearsPy.theTypes import (
 	ArraySpectrograms as ArraySpectrograms, ArrayTypeVariable as ArrayTypeVariable, ArrayWaveforms as ArrayWaveforms,
 	callableReturnsNDArray as callableReturnsNDArray, FileDescriptorOrPath as FileDescriptorOrPath,
-	NormalizationReverter as NormalizationReverter, ParametersShortTimeFFT as ParametersShortTimeFFT, ParametersSTFT as ParametersSTFT,
-	ParametersUniversal as ParametersUniversal, Spectrogram as Spectrogram, SpectrogramDtype as SpectrogramDtype, Waveform as Waveform,
+	NormalizationReverter as NormalizationReverter, OptionsAlign as OptionsAlign, ParametersShortTimeFFT as ParametersShortTimeFFT,
+	ParametersSTFT as ParametersSTFT, ParametersUniversal as ParametersUniversal, ShapeTypeVariable as ShapeTypeVariable,
+	Spectrogram as Spectrogram, SpectrogramDtype as SpectrogramDtype, Waveform as Waveform, WaveformAxes as WaveformAxes,
 	WaveformDtype as WaveformDtype, WaveformMetadata as WaveformMetadata, WindowingFunction as WindowingFunction,
 	WindowingFunctionDtype as WindowingFunctionDtype)
 
@@ -22,9 +23,9 @@ with suppress(ModuleNotFoundError):  # noqa: RUF067
 
 # isort: split
 from hunterHearsPy.theSSOT import (
-	parameters as parameters, parametersShortTimeFFTUniversal as parametersShortTimeFFTUniversal,
-	parametersSTFTUniversal as parametersSTFTUniversal, setting as setting, universalDtypeSpectrogram as universalDtypeSpectrogram,
-	universalDtypeWaveform as universalDtypeWaveform, windowingFunctionCallableUniversal as windowingFunctionCallableUniversal)
+	getAxis as getAxis, parameters as parameters, parametersShortTimeFFTUniversal as parametersShortTimeFFTUniversal,
+	parametersSTFTUniversal as parametersSTFTUniversal, setting as setting,
+	windowingFunctionCallableUniversal as windowingFunctionCallableUniversal)
 
 # isort: split
 from hunterHearsPy._resample import resampleWaveform as resampleWaveform

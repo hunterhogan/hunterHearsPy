@@ -34,7 +34,8 @@ Functions
 """
 from __future__ import annotations
 
-from hunterHearsPy import parameters, parametersShortTimeFFTUniversal, parametersSTFTUniversal, windowingFunctionCallableUniversal, writeWAV
+from hunterHearsPy import (
+	parameters, parametersShortTimeFFTUniversal, parametersSTFTUniversal, setting, windowingFunctionCallableUniversal, writeWAV)
 from math import ceil as ceiling, log2 as log_base2
 from multiprocessing import set_start_method as multiprocessing_set_start_method
 from scipy.signal import ShortTimeFFT
@@ -138,8 +139,7 @@ def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrogram
 	[6] `WindowingFunction`
 
 	"""
-	if sampleRate is None:
-		sampleRate = parameters['sampleRate']
+	sampleRate = sampleRate or setting.sampleRate
 	if lengthHop is None:
 		lengthHop = parameters['lengthHop']
 
@@ -214,8 +214,7 @@ def spectrogramToWAV(spectrogram: Spectrogram, pathFilename: str | PathLike[Any]
 	[2] `Waveform`
 
 	"""
-	if sampleRate is None:
-		sampleRate = parameters['sampleRate']
+	sampleRate = sampleRate or setting.sampleRate
 
 	waveform: Waveform = stft(spectrogram, inverse=True, lengthWaveform=lengthWaveform, sampleRate=sampleRate, **parametersSTFT)
 	writeWAV(pathFilename, waveform, sampleRate)

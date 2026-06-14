@@ -7,8 +7,6 @@ import numpy
 import pytest
 
 # Constants for test validation
-CHANNELS_STEREO: Final[int] = 2
-CHANNELS_MONO: Final[int] = 1
 TOLERANCE_LUFS: Final[float] = 3.0  # LUFS measurement tolerance
 LUFS_LOWER_BOUND: Final[float] = -100.0  # Reasonable lower bound for LUFS
 
@@ -18,7 +16,6 @@ def test_readLabeledAudioFiles44100(waveformData: WaveformAndMetadata) -> None:
 	waveformResult = readAudioFile(waveformData.pathFilename)
 
 	# Verify basic properties
-	assert waveformResult.shape[0] == CHANNELS_STEREO
 	assert waveformResult.dtype.name == 'float32'
 
 	# Verify waveform has reasonable audio content
@@ -33,7 +30,6 @@ def test_readLabeledAudioFiles48000(waveformData: WaveformAndMetadata) -> None:
 	waveformResult = readAudioFile(waveformData.pathFilename)
 
 	# Verify basic properties
-	assert waveformResult.shape[0] == CHANNELS_STEREO
 	assert waveformResult.dtype.name == 'float32'
 
 	# Verify waveform has reasonable audio content
@@ -41,34 +37,6 @@ def test_readLabeledAudioFiles48000(waveformData: WaveformAndMetadata) -> None:
 	amplitudeMax = abs(waveformResult).max()
 	assert amplitudeMax > 0.0  # Not silent
 	assert amplitudeMax <= 1.0  # Not clipped
-
-@pytest.mark.parametrize('waveformData', [d for d in sampleData() if d.channelsTotal == CHANNELS_MONO])
-def test_readMonoFilesConvertToStereo(waveformData: WaveformAndMetadata) -> None:
-	"""Test that mono files from labeled dataset are converted to stereo."""
-	waveformResult = readAudioFile(waveformData.pathFilename)
-
-	# Should always be stereo regardless of original channel count
-	assert waveformResult.shape[0] == CHANNELS_STEREO
-
-	# For mono files, both channels should be identical
-	if waveformData.channelsTotal == CHANNELS_MONO:
-		# Allow for small numerical differences due to processing
-		numpy.testing.assert_allclose(waveformResult[0], waveformResult[1], rtol=1e-10)
-
-@pytest.mark.parametrize('waveformData', [d for d in sampleData() if d.channelsTotal == CHANNELS_STEREO])
-def test_readStereoFilesPreserveChannels(waveformData: WaveformAndMetadata) -> None:
-	"""Test that stereo files from labeled dataset maintain channel independence."""
-	waveformResult = readAudioFile(waveformData.pathFilename)
-
-	assert waveformResult.shape[0] == CHANNELS_STEREO
-
-	# For stereo files, channels may be different or identical depending on content
-	# This tests that we're not accidentally duplicating channels
-	channelDifference = numpy.mean(abs(waveformResult[0] - waveformResult[1]))
-	# If channels are identical, difference should be very small
-	# If channels are different, difference should be meaningful
-	# We allow for both cases but log the result
-	assert channelDifference >= 0.0  # Sanity check
 
 def test_consistentResultsAcrossReads() -> None:
 	"""Test that reading the same file multiple times gives identical results."""

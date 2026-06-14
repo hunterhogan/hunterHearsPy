@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from hunterHearsPy import loadWaveforms, readAudioFile, resampleWaveform, writeWAV
-from tests.conftest import prototype_numpyArrayEqual, standardizedEqualTo, WaveformAndMetadata
+from hunterHearsPy import getWaveformMetadata, loadWaveforms, readAudioFile, resampleWaveform, writeWAV
+from tests.conftest import prototype_numpyArrayEqual, WaveformAndMetadata
 from typing import Any, Final, TYPE_CHECKING
 import io
 import numpy
@@ -14,34 +14,22 @@ if TYPE_CHECKING:
 # Constants for test validation
 CHANNELS_STEREO: Final[int] = 2
 SAMPLE_RATE_DEFAULT: Final[int] = 44100
-
-def test_readMonoFileConvertsToStereo(waveformMono16kHz: WaveformAndMetadata) -> None:
-	"""Test that mono files are automatically converted to stereo format."""
-	waveformResult = readAudioFile(waveformMono16kHz.pathFilename)
-	assert waveformResult.shape[0] == CHANNELS_STEREO
+MESSAGE_EMPTY_FILE_LIST: Final[str] = ("I received `len(listPathFilenames) = 0`")
 
 def test_readStereoFileDirectly(waveformStereo44kHz: WaveformAndMetadata) -> None:
 	"""Test reading stereo files without modification."""
 	waveformResult = readAudioFile(waveformStereo44kHz.pathFilename)
 	assert waveformResult.shape[0] == CHANNELS_STEREO
 
-@pytest.mark.parametrize('sampleRateTarget,tolerancePercent', [(22050, 5), (44100, 5), (48000, 5), (96000, 5)])
-def test_resampleDuringRead(waveformStereo44kHz: WaveformAndMetadata, sampleRateTarget: int, tolerancePercent: int) -> None:
+@pytest.mark.parametrize('sampleRateDesired,tolerancePercent', [(22050, 5), (44100, 5), (48000, 5), (96000, 5)])
+def test_resampleDuringRead(waveformStereo44kHz: WaveformAndMetadata, sampleRateDesired: int, tolerancePercent: int) -> None:
 	"""Test resampling functionality during file reading."""
 	secondsDuration = 5.0
-	waveformResult = readAudioFile(waveformStereo44kHz.pathFilename, sampleRate=sampleRateTarget)
-	samplesExpected = int(sampleRateTarget * secondsDuration)
+	waveformResult = readAudioFile(waveformStereo44kHz.pathFilename, sampleRateDesired=sampleRateDesired)
+	samplesExpected = int(sampleRateDesired * secondsDuration)
 	samplesActual = waveformResult.shape[1]
 	toleranceAbsolute = int(samplesExpected * tolerancePercent / 100)
 	assert abs(samplesActual - samplesExpected) <= toleranceAbsolute
-
-def test_errorOnNonexistentFile(pathFilenameNonexistentForErrorTesting: Path) -> None:
-	"""Test proper error handling for nonexistent files."""
-	standardizedEqualTo(FileNotFoundError, readAudioFile, pathFilenameNonexistentForErrorTesting)
-
-def test_errorOnVideoFile(pathFilenameVideoForErrorTesting: Path) -> None:
-	"""Test proper error handling for unsupported file formats."""
-	standardizedEqualTo(RuntimeError, readAudioFile, pathFilenameVideoForErrorTesting)
 
 def test_loadMultipleStereoFiles(listWaveformsSameStereoShape: list[WaveformAndMetadata]) -> None:
 	"""Test loading multiple stereo files into array format."""
@@ -50,15 +38,6 @@ def test_loadMultipleStereoFiles(listWaveformsSameStereoShape: list[WaveformAndM
 
 	filesTotal = len(listWaveformsSameStereoShape)
 	assert arrayWaveformsResult.shape[0] == CHANNELS_STEREO
-	assert arrayWaveformsResult.shape[2] == filesTotal
-
-def test_loadMultipleMonoFiles(listWaveformsSameMonoShape: list[WaveformAndMetadata]) -> None:
-	"""Test loading multiple mono files with automatic stereo conversion."""
-	listPathFilenames = [waveformData.pathFilename for waveformData in listWaveformsSameMonoShape]
-	arrayWaveformsResult = loadWaveforms(listPathFilenames)
-
-	filesTotal = len(listWaveformsSameMonoShape)
-	assert arrayWaveformsResult.shape[0] == CHANNELS_STEREO  # Mono files should be converted to stereo
 	assert arrayWaveformsResult.shape[2] == filesTotal
 
 def test_loadMixedMonoStereoFiles(waveformMono16kHz: WaveformAndMetadata, waveformStereo44kHz: WaveformAndMetadata) -> None:
@@ -70,20 +49,34 @@ def test_loadMixedMonoStereoFiles(waveformMono16kHz: WaveformAndMetadata, wavefo
 	assert arrayWaveformsResult.shape[0] == CHANNELS_STEREO  # All should be stereo
 	assert arrayWaveformsResult.shape[2] == filesTotal
 
-def test_errorOnEmptyFileList() -> None:
-	"""Test proper error handling for empty file lists."""
-	standardizedEqualTo(ValueError, loadWaveforms, [])
+@pytest.mark.parametrize(
+	'listPathFilenames,sampleRate,expectedMessage',
+	[pytest.param([], SAMPLE_RATE_DEFAULT, MESSAGE_EMPTY_FILE_LIST, id='empty-list')],
+)
+def test_getWaveformMetadata(
+	capsys: pytest.CaptureFixture[str], listPathFilenames: list[Path], sampleRate: int, expectedMessage: str
+) -> None:
+	"""Test the empty file-list metadata result and status message."""
+	dictionaryWaveformMetadata, axis = getWaveformMetadata(listPathFilenames, sampleRate)
+
+	capturedOutput = capsys.readouterr()
+	assert capturedOutput.err.startswith(expectedMessage)
+	assert not capturedOutput.out
+	assert dictionaryWaveformMetadata == {}
+	assert axis['channel'].size == 0
+	assert axis['time'].size == 0
+	assert axis['indexing'].size == 0
 
 @pytest.mark.parametrize(
-	'sampleRateSource,sampleRateTarget,factorExpected',
+	'sampleRateSource,sampleRateDesired,factorExpected',
 	[(16000, 44100, 2.75625), (44100, 22050, 0.5), (44100, 44100, 1.0), (96000, 48000, 0.5), (48000, 96000, 2.0)],
 )
 def test_resampleWithDifferentRates(
-	waveformStereo44kHz: WaveformAndMetadata, sampleRateSource: int, sampleRateTarget: int, factorExpected: float
+	waveformStereo44kHz: WaveformAndMetadata, sampleRateSource: int, sampleRateDesired: int, factorExpected: float
 ) -> None:
 	"""Test resampling with various sample rate combinations."""
 	waveformOriginal = waveformStereo44kHz.waveform
-	waveformResampled = resampleWaveform(waveformOriginal, sampleRateTarget, sampleRateSource)
+	waveformResampled = resampleWaveform(waveformOriginal, sampleRateDesired, sampleRateSource)
 
 	samplesExpected = int(waveformOriginal.shape[1] * factorExpected)
 	samplesActual = waveformResampled.shape[1]

@@ -1,11 +1,14 @@
+# ty:ignore[unresolved-attribute]
+# pyright: reportUnknownLambdaType=false
+# pyright: reportUnknownArgumentType=false
+# ruff: noqa: T201 DOC201 PERF203 DOC501
 from __future__ import annotations
 
 from hunterHearsPy import loadWaveforms, readAudioFile
-from numpy import dtype, float32, ndarray
+from numpy import float32, int64
 from pathlib import Path
-from typing import Any, ClassVar, Final, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy
-import pathlib
 import pytest
 import shutil
 import soundfile
@@ -19,19 +22,23 @@ except ImportError:
 if TYPE_CHECKING:
 	from collections.abc import Callable, Generator
 	from hunterHearsPy import ArrayWaveforms, Waveform
+	from numpy import dtype, ndarray
 	from numpy.typing import NDArray
+	from typing import Any, ClassVar, Final
 
 atolDEFAULT: Final[float] = 1e-7
 rtolDEFAULT: Final[float] = 1e-7
 amplitudeNorm: Final[float] = 1.0
 
 # SSOT for test data paths and filenames
-pathDataSamples = pathlib.Path('tests/dataSamples')
-pathTmpRoot: pathlib.Path = pathDataSamples / 'tmp'
+pathDataSamples = Path('tests/dataSamples')
+pathDataSamplesRoot = Path('tests/dataSamples')
 
-registerOfTemporaryFilesystemObjects: set[pathlib.Path] = set()
+pathTmpRoot: Path = pathDataSamples / 'tmp'
 
-def registrarRecordsTmpObject(path: pathlib.Path) -> None:
+registerOfTemporaryFilesystemObjects: set[Path] = set()
+
+def registrarRecordsTmpObject(path: Path) -> None:
 	"""The registrar adds a tmp file to the register."""
 	registerOfTemporaryFilesystemObjects.add(path)
 
@@ -44,7 +51,7 @@ def registrarDeletesTmpObjects() -> None:
 			elif pathTmp.is_dir():
 				shutil.rmtree(pathTmp, ignore_errors=True)
 		except Exception as ERRORmessage:
-			print(f'Warning: Failed to clean up {pathTmp}: {ERRORmessage}')  # noqa: T201
+			print(f'Warning: Failed to clean up {pathTmp}: {ERRORmessage}')
 			registerOfTemporaryFilesystemObjects.clear()
 
 @pytest.fixture(scope='session', autouse=True)
@@ -56,7 +63,7 @@ def setupTeardownTmpObjects() -> Generator[None]:
 	registrarDeletesTmpObjects()
 
 @pytest.fixture
-def pathTmpTesting(request: pytest.FixtureRequest) -> pathlib.Path:
+def pathTmpTesting(request: pytest.FixtureRequest) -> Path:
 	pathTmp = pathTmpRoot / str(uuid.uuid4().hex)
 	pathTmp.mkdir(parents=True, exist_ok=False)
 
@@ -64,7 +71,7 @@ def pathTmpTesting(request: pytest.FixtureRequest) -> pathlib.Path:
 	return pathTmp
 
 @pytest.fixture
-def pathFilenameTmpTesting(request: pytest.FixtureRequest) -> pathlib.Path:
+def pathFilenameTmpTesting(request: pytest.FixtureRequest) -> Path:
 	try:
 		extension: str = request.param
 	except AttributeError:
@@ -74,37 +81,32 @@ def pathFilenameTmpTesting(request: pytest.FixtureRequest) -> pathlib.Path:
 	subpath: str = uuidHex[0:-8]
 	filenameStem: str = uuidHex[-8:None]
 
-	pathFilenameTmp = pathlib.Path(pathTmpRoot, subpath, filenameStem + extension)
+	pathFilenameTmp = Path(pathTmpRoot, subpath, filenameStem + extension)
 	pathFilenameTmp.parent.mkdir(parents=True, exist_ok=False)
 
 	registrarRecordsTmpObject(pathFilenameTmp)
 	return pathFilenameTmp
 
 @pytest.fixture
-def mockTemporaryFiles(monkeypatch: pytest.MonkeyPatch, pathTmpTesting: pathlib.Path) -> None:
+def mockTemporaryFiles(monkeypatch: pytest.MonkeyPatch, pathTmpTesting: Path) -> None:
 	"""Mock all temporary filesystem operations to use pathTmpTesting."""
-	monkeypatch.setattr('tempfile.mkdtemp', lambda *a, **k: str(pathTmpTesting))  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
+	monkeypatch.setattr('tempfile.mkdtemp', lambda *a, **k: str(pathTmpTesting))
 	monkeypatch.setattr('tempfile.gettempdir', lambda: str(pathTmpTesting))
-	monkeypatch.setattr('tempfile.mkstemp', lambda *a, **k: (0, str(pathTmpTesting)))  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
+	monkeypatch.setattr('tempfile.mkstemp', lambda *a, **k: (0, str(pathTmpTesting)))
 
-# Fixtures
 @pytest.fixture
-def setupDirectoryStructure(pathTmpTesting: pathlib.Path) -> pathlib.Path:
+def setupDirectoryStructure(pathTmpTesting: Path) -> Path:
 	"""Create a complex directory structure for testing findRelativePath."""
 	baseDirectory = pathTmpTesting / 'base'
 	baseDirectory.mkdir()
 
-	# Create nested directories
 	for subdir in ['dir1/subdir1', 'dir2/subdir2', 'dir3/subdir3']:
 		(baseDirectory / subdir).mkdir(parents=True)
 
-	# Create some files
 	(baseDirectory / 'dir1/file1.txt').touch()
 	(baseDirectory / 'dir2/file2.txt').touch()
 
 	return baseDirectory
-
-# Fixtures
 
 @pytest.fixture
 def tableSample() -> tuple[list[list[int | str]], list[str]]:
@@ -113,9 +115,9 @@ def tableSample() -> tuple[list[list[int | str]], list[str]]:
 	return tableRows, tableColumns
 
 @pytest.fixture
-def arrayAxisOperation() -> NDArray[numpy.int64]:
+def arrayAxisOperation() -> NDArray[int64]:
 	"""You can use this fixture to test axis movement with deterministic integer data."""
-	return ((numpy.arange(2 * 3 * 5 * 7, dtype=numpy.int64) + 5) * 3).reshape((2, 3, 5, 7))
+	return ((numpy.arange(2 * 3 * 5 * 7, dtype=int64) + 5) * 3).reshape((2, 3, 5, 7))
 
 """Section: Windowing function testing utilities"""
 
@@ -243,15 +245,15 @@ def standardizedEqualTo(expected: Any, functionTarget: Callable[..., Any], *argu
 
 	assert actual == expected, uniformTestFailureMessage(
 		messageExpected, messageActual, functionTarget.__name__, *arguments, **keywordArguments
-	)  # ty:ignore[unresolved-attribute]
+	)
 
 def prototype_numpyAllClose(
-	expected: NDArray[Any] | type[Exception],
-	atol: float | None,
-	rtol: float | None,
-	functionTarget: Callable[..., Any],
-	*arguments: Any,
-	**keywordArguments: Any,
+	expected: NDArray[Any] | type[Exception]
+	, atol: float | None
+	, rtol: float | None
+	, functionTarget: Callable[..., Any]
+	, *arguments: Any
+	, **keywordArguments: Any
 ) -> None:
 	"""Template for tests using numpy.allclose comparison."""
 	if atol is None:
@@ -266,14 +268,14 @@ def prototype_numpyAllClose(
 		messageExpected = expected if isinstance(expected, type) else 'array-like result'
 		assert actual == expected, uniformTestFailureMessage(
 			messageExpected, messageActual, functionTarget.__name__, *arguments, **keywordArguments
-		)  # ty:ignore[unresolved-attribute]
+		)
 	else:
 		if isinstance(expected, type):
 			message = f'Expected an exception of type {expected.__name__}, but got a result'
 			raise AssertionError(message)
 		assert numpy.allclose(actual, expected, rtol, atol), uniformTestFailureMessage(
 			expected, actual, functionTarget.__name__, *arguments, **keywordArguments
-		)  # ty:ignore[unresolved-attribute]
+		)
 
 def prototype_numpyArrayEqual(expected: NDArray[Any], functionTarget: Callable[..., Any], *arguments: Any, **keywordArguments: Any) -> None:
 	"""Template for tests using numpy.array_equal comparison."""
@@ -285,15 +287,13 @@ def prototype_numpyArrayEqual(expected: NDArray[Any], functionTarget: Callable[.
 		messageExpected = expected if isinstance(expected, type) else 'array-like result'
 		assert actual == expected, uniformTestFailureMessage(
 			messageExpected, messageActual, functionTarget.__name__, *arguments, **keywordArguments
-		)  # ty:ignore[unresolved-attribute]
+		)
 	else:
 		assert numpy.array_equal(actual, expected), uniformTestFailureMessage(
 			expected, actual, functionTarget.__name__, *arguments, **keywordArguments
-		)  # ty:ignore[unresolved-attribute]
+		)
 
 """Section: Audio file fixtures for testing readAudioFile, writeWAV, and related functions"""
-
-pathDataSamplesRoot = pathlib.Path('tests/dataSamples')
 
 @pytest.fixture
 def waveformMono16kHz() -> WaveformAndMetadata:
@@ -346,12 +346,12 @@ def listWaveformsSameMonoShape() -> list[WaveformAndMetadata]:
 	return listWaveforms
 
 @pytest.fixture
-def pathFilenameVideoForErrorTesting() -> pathlib.Path:
+def pathFilenameVideoForErrorTesting() -> Path:
 	"""Fixture providing video file path for testing error conditions."""
 	return pathDataSamplesRoot / 'testVideo11sec.mkv'
 
 @pytest.fixture
-def pathFilenameNonexistentForErrorTesting() -> pathlib.Path:
+def pathFilenameNonexistentForErrorTesting() -> Path:
 	"""Fixture providing nonexistent file path for testing error conditions."""
 	return pathDataSamplesRoot / 'fileDoesNotExist.wav'
 
@@ -368,7 +368,7 @@ def lengthHopSTFT(request: pytest.FixtureRequest) -> int:
 	return request.param
 
 @pytest.fixture(params=[22050, 44100, 48000])
-def sampleRateTarget(request: pytest.FixtureRequest) -> int:
+def sampleRateDesired(request: pytest.FixtureRequest) -> int:
 	"""Fixture providing different target sample rates for spectrogram testing."""
 	return request.param
 
@@ -391,16 +391,16 @@ def listWaveformDataSameStereoShape() -> list[WaveformAndMetadata]:
 	return [
 		WaveformAndMetadata(
 			pathFilename=basePath / 'testSine2ch5secCopy1.wav', LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereoCopy1'
-		),
-		WaveformAndMetadata(
+		)
+		, WaveformAndMetadata(
 			pathFilename=basePath / 'testSine2ch5secCopy2.wav', LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereoCopy2'
-		),
-		WaveformAndMetadata(
+		)
+		, WaveformAndMetadata(
 			pathFilename=basePath / 'testSine2ch5secCopy3.wav', LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereoCopy3'
-		),
-		WaveformAndMetadata(
+		)
+		, WaveformAndMetadata(
 			pathFilename=basePath / 'testSine2ch5secCopy4.wav', LUFS=-23.0, sampleRate=44100.0, channelsTotal=2, ID='stereoCopy4'
-		),
+		)
 	]
 
 @pytest.fixture
