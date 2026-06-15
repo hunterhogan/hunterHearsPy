@@ -1,13 +1,16 @@
+# pyright: reportUnknownMemberType=false
 # pyright: reportArgumentType=false
+# pyright: reportCallIssue=false
 # pyright: reportUnknownArgumentType=false
 # pyright: reportUnknownLambdaType=false
+# pyright: reportUnknownVariableType=false
+# ty:ignore[no-matching-overload]
 # ruff: noqa: T201, DOC201, PERF203, RUF076
-# ty:ignore[invalid-argument-type]
 from __future__ import annotations
 
 from hunterHearsPy import getWaveformMetadata, loadWaveforms, readAudioFile, resampleWaveform, writeWAV
 from pathlib import Path
-from tests.conftest import pathDataSamples, prototype_numpyArrayEqual, WaveformAndMetadata
+from tests.conftest import prototype_numpyArrayEqual, WaveformAndMetadata
 from typing import Any, Final, TYPE_CHECKING
 import io
 import numpy
@@ -18,6 +21,8 @@ import uuid
 
 if TYPE_CHECKING:
 	from collections.abc import Generator
+
+pathDataSamples = Path('tests/dataSamples/old')
 
 """Section: Audio file fixtures for testing readAudioFile, writeWAV, and related functions"""
 pathTmpRoot: Path = pathDataSamples / 'tmp'
@@ -200,7 +205,7 @@ def test_getWaveformMetadata(
 	capsys: pytest.CaptureFixture[str], listPathFilenames: list[Path], sampleRate: int, expectedMessage: str
 ) -> None:
 	"""Test the empty file-list metadata result and status message."""
-	dictionaryWaveformMetadata, axis = getWaveformMetadata(listPathFilenames, sampleRate)
+	dictionaryWaveformMetadata, axis = getWaveformMetadata(listPathFilenames, sampleRate, 'start')
 
 	capturedOutput = capsys.readouterr()
 	assert capturedOutput.err.startswith(expectedMessage)

@@ -28,12 +28,12 @@ from numpy import absolute, float64, multiply, ones_like
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-	from hunterHearsPy import ArrayTypeVariable
+	from hunterHearsPy import 形ndarray
 	from numpy import complexfloating, floating
 	from numpy.typing import ArrayLike, NDArray
 	from typing import Any
 
-def applyHardLimit(arrayTarget: ArrayTypeVariable, comparand: ArrayLike = 1.0) -> ArrayTypeVariable:
+def applyHardLimit(arrayTarget: 形ndarray, comparand: ArrayLike = 1.0) -> 形ndarray:
 	"""Clip the elements of `arrayTarget` to the magnitude bounds defined by `comparand`.
 
 	This function applies a hard amplitude limit element-wise to `arrayTarget`. Elements whose
@@ -43,7 +43,7 @@ def applyHardLimit(arrayTarget: ArrayTypeVariable, comparand: ArrayLike = 1.0) -
 
 	Parameters
 	----------
-	arrayTarget : ArrayTypeVariable
+	arrayTarget : 形ndarray
 		The array to clip. Modified in place.
 	comparand : ArrayLike = 1.0
 		The magnitude threshold. Elements of `arrayTarget` whose magnitude strictly exceeds the
@@ -51,7 +51,7 @@ def applyHardLimit(arrayTarget: ArrayTypeVariable, comparand: ArrayLike = 1.0) -
 
 	Returns
 	-------
-	arrayClipped : ArrayTypeVariable
+	arrayClipped : 形ndarray
 		A reference to the modified `arrayTarget`.
 
 	See Also
@@ -77,10 +77,10 @@ def applyHardLimit(arrayTarget: ArrayTypeVariable, comparand: ArrayLike = 1.0) -
 	return arrayTarget
 
 def applyHardLimitComplexValued(
-	arrayTarget: ArrayTypeVariable,
+	arrayTarget: 形ndarray,
 	comparand: NDArray[floating[Any] | complexfloating[Any, Any]],
 	penalty: float = 1.0
-	) -> ArrayTypeVariable:
+	) -> 形ndarray:
 	"""Clip the elements of complex-valued `arrayTarget` by scaling magnitudes to stay within `comparand`.
 
 	This function applies a magnitude-based hard limit to each element of `arrayTarget`. When the
@@ -139,7 +139,7 @@ def applyHardLimitComplexValued(
 	maskTrueAboveThreshold = magnitudeComparand - magnitudeArrayTarget < 0.0
 
 	arrayCoefficients_Float64: NDArray[float64] = magnitudeComparand[maskTrueAboveThreshold] / magnitudeArrayTarget[maskTrueAboveThreshold]
-	arrayCoefficients_ComplexValued: ArrayTypeVariable = ones_like(arrayTarget, dtype=arrayTarget.dtype)
+	arrayCoefficients_ComplexValued: 形ndarray = ones_like(arrayTarget, dtype=arrayTarget.dtype)
 	arrayCoefficients_ComplexValued[maskTrueAboveThreshold] = arrayCoefficients_Float64**penalty
 
 	return multiply(arrayTarget, arrayCoefficients_ComplexValued)

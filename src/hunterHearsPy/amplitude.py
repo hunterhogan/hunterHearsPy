@@ -18,7 +18,7 @@ Functions
 from __future__ import annotations
 
 from numpy import divide, finfo as numpy_finfo, max as numpy_max, multiply
-from typing import cast, overload, TYPE_CHECKING
+from typing import overload, TYPE_CHECKING
 
 if TYPE_CHECKING:
 	from hunterHearsPy import ArrayWaveforms, NormalizationReverter, Waveform
@@ -166,5 +166,5 @@ def normalizeArrayWaveforms(arrayWaveforms: ArrayWaveforms, amplitudeNorm: float
 	"""
 	listRevertNormalization: list[NormalizationReverter] = [lambda makeTypeCheckerHappy: makeTypeCheckerHappy] * arrayWaveforms.shape[-1]
 	for index in range(arrayWaveforms.shape[-1]):
-		arrayWaveforms[..., index], listRevertNormalization[index] = normalizeWaveform(cast("Waveform", arrayWaveforms[..., index]), amplitudeNorm)
+		arrayWaveforms[..., index], listRevertNormalization[index] = normalizeWaveform(arrayWaveforms[..., index], amplitudeNorm)
 	return arrayWaveforms, listRevertNormalization

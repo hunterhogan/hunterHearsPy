@@ -7,12 +7,12 @@ from __future__ import annotations
 from hunterHearsPy import getAxis, resampleWaveform, setting
 from hunterHearsPy.theSSOT import subtypeHARDCODED
 from hunterMakesPy.filesystemToolkit import makeDirectorySafely
+from soundfile import dtype_str as Options_dtype_str
 from typing import TYPE_CHECKING
 import soundfile
 
 if TYPE_CHECKING:
-	from hunterHearsPy import FileDescriptorOrPath, Waveform
-	from hunterHearsPy.theTypes import WaveformAxes
+	from hunterHearsPy import FileDescriptorOrPath, Waveform, WaveformAxes
 
 # TODO. The typing has too many moving parts.
 # 1. This function: that should be the easiest--if I get the other parts right.
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 # 4. `resampy` accepts integer or floating input and returns float32 or the same floating type.
 
 # This is a general purpose function: it is not a subroutine of _arrays.
-def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRateDesired: float | None = None) -> Waveform:
+def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRateDesired: float | None = None, dtype_str: Options_dtype_str | None = None) -> Waveform:
 	"""Read an audio file and return waveform data as a NumPy array.
 
 	You can use this function to load any audio file that `soundfile` [1] supports. The returned
@@ -36,7 +36,9 @@ def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRateDesired: float |
 		Path to the audio file or a binary stream.
 	sampleRateDesired : float | None = 44100
 		Target sample rate of the returned `Waveform` [2] in Hz. Defaults to `setting.sampleRate`,
-		which is probably 44100 when `None`.
+		which is probably 44100, when `None`.
+	dtype_str : Literal["float64", "float32", "int32", "int16"] | None = 'float32'
+		Data type for the returned `Waveform` [2]. Defaults to `setting.dtype_str`, which is probably 'float32', when `None`.
 
 	Returns
 	-------
@@ -46,7 +48,7 @@ def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRateDesired: float |
 	sampleRateDesired = sampleRateDesired or setting.sampleRate
 	with soundfile.SoundFile(pathFilename) as readSoundFile:
 		sampleRateSource: int = readSoundFile.samplerate
-		waveform: Waveform = readSoundFile.read(dtype=setting.dtype_str, always_2d=True)
+		waveform: Waveform = readSoundFile.read(dtype=dtype_str or setting.dtype_str, always_2d=True)
 	axis: dict[str, WaveformAxes] = getAxis()
 	waveform = waveform.transpose((axis['time'].number, axis['channel'].number))
 
@@ -71,8 +73,7 @@ def writeWAV(pathFilename: FileDescriptorOrPath, waveform: Waveform, sampleRate:
 	waveform : Waveform
 		Audio data shaped `(channels, samples)` or `(samples,)`.
 	sampleRate : float | None = None
-		Sample rate of `waveform` in Hz. Defaults to `setting.sampleRate`, which is probably 44100
-		when `None`.
+		Sample rate of `waveform` in Hz. Defaults to `setting.sampleRate`, which is probably 44100, when `None`.
 
 	Returns
 	-------
@@ -97,6 +98,8 @@ def writeWAV(pathFilename: FileDescriptorOrPath, waveform: Waveform, sampleRate:
 	sampleRate = int(sampleRate or setting.sampleRate)
 	makeDirectorySafely(pathFilename)
 	axis: dict[str, WaveformAxes] = getAxis()
+	# TODO what happens when waveform.shape is (samples,)? Do I care? waveform is currently typed as
+	# ndarray[tuple[int, int], dtype[WaveformDtype]]. `waveform = waveform.T` is safe but not self-documenting.
 	waveform = waveform.transpose((axis['time'].number, axis['channel'].number))
 
 	# TODO Expand subtype in universal parameters and in the function parameters.

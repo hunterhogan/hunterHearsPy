@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from hunterHearsPy import ArrayWaveforms, loadWaveforms, normalizeArrayWaveforms, normalizeWaveform, Waveform
-from tests.conftest import pathDataSamples_labeled, rtolDEFAULT, sampleData
+from tests.conftest import pathDataSamples_labeled, sampleData
 from typing import Final, TYPE_CHECKING
 import numpy
 import pytest
@@ -9,6 +9,7 @@ import pytest
 if TYPE_CHECKING:
 	from pathlib import Path
 
+rtolDEFAULT: Final[float] = 1e-7
 amplitudeNorm: Final[float] = 1.0
 
 listFilenamesSameShape = [

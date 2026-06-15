@@ -7,23 +7,23 @@ from typing import overload, TYPE_CHECKING
 import resampy
 
 if TYPE_CHECKING:
-	from hunterHearsPy import Floater, ShapeTypeVariable
+	from hunterHearsPy import 形floating, 形Shape
 	from numpy import dtype, float32, integer, ndarray
 	from typing import Any
 
 # TODO update typeshed `resampy`.
 @overload
-def resampleWaveform(waveform: ndarray[ShapeTypeVariable, dtype[integer[Any]]], sampleRateDesired: float, sampleRateSource: float, axisTime: int = -1) -> ndarray[ShapeTypeVariable, dtype[float32]]: ...
+def resampleWaveform(waveform: ndarray[形Shape, dtype[integer[Any]]], sampleRateDesired: float, sampleRateSource: float, axisTime: int = -1) -> ndarray[形Shape, dtype[float32]]: ...
 @overload
-def resampleWaveform(waveform: ndarray[ShapeTypeVariable, dtype[Floater]], sampleRateDesired: float, sampleRateSource: float, axisTime: int = -1) -> ndarray[ShapeTypeVariable, dtype[Floater]]: ...
-def resampleWaveform(waveform: ndarray[ShapeTypeVariable, dtype[Floater]] | ndarray[ShapeTypeVariable, dtype[integer[Any]]], sampleRateDesired: float, sampleRateSource: float, axisTime: int = -1) -> ndarray[ShapeTypeVariable, dtype[Floater]] | ndarray[ShapeTypeVariable, dtype[float32]]:
+def resampleWaveform(waveform: ndarray[形Shape, dtype[形floating]], sampleRateDesired: float, sampleRateSource: float, axisTime: int = -1) -> ndarray[形Shape, dtype[形floating]]: ...
+def resampleWaveform(waveform: ndarray[形Shape, dtype[形floating]] | ndarray[形Shape, dtype[integer[Any]]], sampleRateDesired: float, sampleRateSource: float, axisTime: int = -1) -> ndarray[形Shape, dtype[形floating]] | ndarray[形Shape, dtype[float32]]:
 	"""Resample `waveform` array to `sampleRateDesired` along the `axisTime` axis.
 
 	This function is _not_ regulated by the universal settings.
 
 	Parameters
 	----------
-	waveform : ndarray[ShapeTypeVariable, dtype[Floater] | dtype[integer[Any]]]
+	waveform : ndarray[形Shape, dtype[形floating] | dtype[integer[Any]]]
 		Input audio data as a NumPy array.
 	sampleRateDesired : float
 		Target sample rate in Hz.
@@ -34,7 +34,7 @@ def resampleWaveform(waveform: ndarray[ShapeTypeVariable, dtype[Floater]] | ndar
 
 	Returns
 	-------
-	waveformResampled : ndarray[ShapeTypeVariable, dtype[Floater] | dtype[float32]]
+	waveformResampled : ndarray[形Shape, dtype[形floating] | dtype[float32]]
 		Waveform resampled to `sampleRateDesired`.
 	"""
 	return resampy.resample(waveform, sampleRateSource, sampleRateDesired, axis=axisTime)

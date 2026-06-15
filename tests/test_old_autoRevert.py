@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from hunterHearsPy import moveToAxisOfOperation
 from numpy import int64
-from tests.conftest import uniformTestFailureMessage
+from tests.conftest import messageTestFailure
 from typing import TYPE_CHECKING
 import numpy
 import pytest
@@ -25,26 +25,26 @@ def test_moveToAxisOfOperation_movesAxisAndPreservesOriginalArray(
 	valueOffset: int = 13
 
 	with moveToAxisOfOperation(arrayAxisOperation, axisSource, axisOfOperation) as arrayStandardized:
-		assert arrayStandardized.shape == arrayExpectedMoved.shape, uniformTestFailureMessage(
-			arrayExpectedMoved.shape
-			, arrayStandardized.shape
-			, moveToAxisOfOperation.__name__
-			, axisSource=axisSource
-			, axisOfOperation=axisOfOperation
+		assert arrayStandardized.shape == arrayExpectedMoved.shape, messageTestFailure(
+			moveToAxisOfOperation.__name__,
+			arrayStandardized.shape,
+			arrayExpectedMoved.shape,
+			axisSource=axisSource,
+			axisOfOperation=axisOfOperation,
 		)
-		assert numpy.array_equal(arrayStandardized, arrayExpectedMoved), uniformTestFailureMessage(
-			arrayExpectedMoved, arrayStandardized, moveToAxisOfOperation.__name__, axisSource=axisSource, axisOfOperation=axisOfOperation
+		assert numpy.array_equal(arrayStandardized, arrayExpectedMoved), messageTestFailure(
+			moveToAxisOfOperation.__name__, arrayStandardized, arrayExpectedMoved, axisSource=axisSource, axisOfOperation=axisOfOperation
 		)
 
 		arrayStandardized += valueOffset
 
-	assert arrayAxisOperation.shape == shapeOriginal, uniformTestFailureMessage(
-		shapeOriginal, arrayAxisOperation.shape, moveToAxisOfOperation.__name__, axisSource=axisSource, axisOfOperation=axisOfOperation
+	assert arrayAxisOperation.shape == shapeOriginal, messageTestFailure(
+		moveToAxisOfOperation.__name__, arrayAxisOperation.shape, shapeOriginal, axisSource=axisSource, axisOfOperation=axisOfOperation
 	)
-	assert numpy.array_equal(arrayAxisOperation, arrayOriginal + valueOffset), uniformTestFailureMessage(
-		arrayOriginal + valueOffset
-		, arrayAxisOperation
-		, moveToAxisOfOperation.__name__
-		, axisSource=axisSource
-		, axisOfOperation=axisOfOperation
+	assert numpy.array_equal(arrayAxisOperation, arrayOriginal + valueOffset), messageTestFailure(
+		moveToAxisOfOperation.__name__,
+		arrayAxisOperation,
+		arrayOriginal + valueOffset,
+		axisSource=axisSource,
+		axisOfOperation=axisOfOperation,
 	)

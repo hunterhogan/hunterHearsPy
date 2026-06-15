@@ -10,9 +10,9 @@ from typing import Any, Literal, NamedTuple, TYPE_CHECKING, TypeAlias, TypedDict
 if TYPE_CHECKING:
 	from scipy.signal._short_time_fft import _FFTMode, _PadType, _ScaleTo
 
-Floater = TypeVar('Floater', bound=floating[Any])
-ArrayTypeVariable = TypeVar('ArrayTypeVariable', bound=ndarray[tuple[int, ...] | tuple[int, int] | tuple[int, int, int] | tuple[int, int, int, int], dtype[number]], covariant=True)
-ShapeTypeVariable = TypeVar('ShapeTypeVariable', bound=tuple[int, ...] | tuple[int, int] | tuple[int, int, int] | tuple[int, int, int, int])
+形floating = TypeVar('形floating', bound=floating[Any])
+形ndarray = TypeVar('形ndarray', bound=ndarray[tuple[int, ...] | tuple[int, int] | tuple[int, int, int] | tuple[int, int, int, int], dtype[number]], covariant=True)
+形Shape = TypeVar('形Shape', bound=tuple[int, ...] | tuple[int, int] | tuple[int, int, int] | tuple[int, int, int, int])
 
 OptionsAlign: TypeAlias = Literal['center', 'start', 'stop']
 
@@ -50,34 +50,30 @@ Spectrogram: TypeAlias = ndarray[tuple[int, int, int], dtype[SpectrogramDtype]]
 ArraySpectrograms: TypeAlias = ndarray[tuple[int, int, int, int], dtype[SpectrogramDtype]]
 """A NumPy `ndarray` containing `ndarray` of type `Spectrogram` indexed on the last axis: shape is (channel, frequency_bins, time, `Spectrogram`)."""
 
-#==================================================================================================
-# DEVELOPMENT refactoring. Below here, the objects have not yet been reviewed.
-
+#================== ShortTimeFFT ==================================================================
 WindowingFunctionDtype: TypeAlias = floating[Any]
 WindowingFunction: TypeAlias = ndarray[tuple[int], dtype[WindowingFunctionDtype]]
-callableReturnsNDArray = TypeVar('callableReturnsNDArray', bound=Callable[..., WindowingFunction])
+
+class ParametersShortTimeFFT(TypedDict, total=False):
+	win: WindowingFunction
+	hop: int
+	fs: int | float
+	# *
+	fft_mode: _FFTMode  # = "onesided"
+	mfft: int | None  # = None
+
+	dual_win: WindowingFunction | None  # = None
+	scale_to: _ScaleTo | None  # = None
+	phase_shift: int | None  # = 0
 
 class ParametersSTFT(TypedDict, total=False):
-	"""Optional parameters for Short-Time Fourier Transform operations."""
-
 	padding: _PadType
 	axis: int
 
-class ParametersShortTimeFFT(TypedDict, total=False):
-	"""Optional parameters for Short-Time FFT operations."""
+#==================================================================================================
+# DEVELOPMENT refactoring. Below here, the objects have not yet been reviewed.
 
-	fft_mode: _FFTMode
-	scale_to: _ScaleTo
-
-class ParametersUniversal(TypedDict):
-	"""Required parameters for universal audio processing operations."""
-
-	lengthFFT: int
-	lengthHop: int
-	lengthWindowingFunction: int
-	sampleRate: float
-	windowingFunction: WindowingFunction
-
+callableReturnsNDArray = TypeVar('callableReturnsNDArray', bound=Callable[..., WindowingFunction])
 NormalizationReverter: TypeAlias = Callable[[Waveform], Waveform]
 """Function type for reversing normalization operations.
 

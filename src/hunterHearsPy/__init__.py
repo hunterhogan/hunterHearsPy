@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 from hunterHearsPy.theTypes import (
-	ArraySpectrograms as ArraySpectrograms, ArrayTypeVariable as ArrayTypeVariable, ArrayWaveforms as ArrayWaveforms,
-	callableReturnsNDArray as callableReturnsNDArray, FileDescriptorOrPath as FileDescriptorOrPath, Floater as Floater,
-	NormalizationReverter as NormalizationReverter, OptionsAlign as OptionsAlign, ParametersShortTimeFFT as ParametersShortTimeFFT,
-	ParametersSTFT as ParametersSTFT, ParametersUniversal as ParametersUniversal, ShapeTypeVariable as ShapeTypeVariable,
-	Spectrogram as Spectrogram, SpectrogramDtype as SpectrogramDtype, Waveform as Waveform, WaveformAxes as WaveformAxes,
-	WaveformDtype as WaveformDtype, WaveformMetadata as WaveformMetadata, WindowingFunction as WindowingFunction,
-	WindowingFunctionDtype as WindowingFunctionDtype)
+	ArraySpectrograms as ArraySpectrograms, ArrayWaveforms as ArrayWaveforms, callableReturnsNDArray as callableReturnsNDArray,
+	FileDescriptorOrPath as FileDescriptorOrPath, NormalizationReverter as NormalizationReverter, OptionsAlign as OptionsAlign,
+	ParametersShortTimeFFT as ParametersShortTimeFFT, ParametersSTFT as ParametersSTFT, Spectrogram as Spectrogram,
+	SpectrogramDtype as SpectrogramDtype, Waveform as Waveform, WaveformAxes as WaveformAxes, WaveformDtype as WaveformDtype,
+	WaveformMetadata as WaveformMetadata, WindowingFunction as WindowingFunction, WindowingFunctionDtype as WindowingFunctionDtype,
+	形floating as 形floating, 形ndarray as 形ndarray, 形Shape as 形Shape)
 
 # isort: split
 from hunterHearsPy.windowingFunctions import cosineWings as cosineWings, equalPower as equalPower, halfsine as halfsine, tukey as tukey
@@ -22,10 +21,7 @@ with suppress(ModuleNotFoundError):  # noqa: RUF067
 		tukeyTensor as tukeyTensor)
 
 # isort: split
-from hunterHearsPy.theSSOT import (
-	getAxis as getAxis, parameters as parameters, parametersShortTimeFFTUniversal as parametersShortTimeFFTUniversal,
-	parametersSTFTUniversal as parametersSTFTUniversal, setting as setting,
-	windowingFunctionCallableUniversal as windowingFunctionCallableUniversal)
+from hunterHearsPy.theSSOT import getAxis as getAxis, setting as setting
 
 # isort: split
 from hunterHearsPy._resample import resampleWaveform as resampleWaveform

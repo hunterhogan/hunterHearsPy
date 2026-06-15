@@ -16,10 +16,10 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
 	from collections.abc import Generator
-	from hunterHearsPy import ArrayTypeVariable, Waveform
+	from hunterHearsPy import Waveform, 形ndarray
 
 @contextmanager
-def moveToAxisOfOperation(arrayTarget: ArrayTypeVariable, axisSource: int, axisOfOperation: int = -1) -> Generator[ArrayTypeVariable]:
+def moveToAxisOfOperation(arrayTarget: 形ndarray, axisSource: int, axisOfOperation: int = -1) -> Generator[形ndarray]:
 	"""Move an array axis to an operation position, then automatically restore the original axis order on exit.
 
 	You can use `moveToAxisOfOperation` as a context manager to temporarily rearrange the axes of
@@ -30,7 +30,7 @@ def moveToAxisOfOperation(arrayTarget: ArrayTypeVariable, axisSource: int, axisO
 
 	Parameters
 	----------
-	arrayTarget : ArrayTypeVariable
+	arrayTarget : 形ndarray
 		The array whose axis to move.
 	axisSource : int
 		The source axis position to move. Negative values count from the last axis.
@@ -39,7 +39,7 @@ def moveToAxisOfOperation(arrayTarget: ArrayTypeVariable, axisSource: int, axisO
 
 	Yields
 	------
-	arrayStandardized : ArrayTypeVariable
+	arrayStandardized : 形ndarray
 		A view of `arrayTarget` with `axisSource` at position `axisOfOperation`.
 
 	Examples
@@ -61,7 +61,7 @@ def moveToAxisOfOperation(arrayTarget: ArrayTypeVariable, axisSource: int, axisO
 		https://numpy.org/doc/stable/reference/generated/numpy.moveaxis.html
 
 	"""
-	arrayStandardized: ArrayTypeVariable = moveaxis(arrayTarget, axisSource, axisOfOperation)
+	arrayStandardized: 形ndarray = moveaxis(arrayTarget, axisSource, axisOfOperation)
 	try:
 		yield arrayStandardized
 	finally:

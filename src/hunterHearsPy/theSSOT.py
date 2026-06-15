@@ -1,16 +1,16 @@
-# ruff: noqa: D100 D101 D103
+# ruff: noqa: D100, D101, D103
 from __future__ import annotations
 
-from hunterHearsPy import OptionsAlign, ParametersUniversal, tukey, WaveformAxes
+from hunterHearsPy import OptionsAlign, tukey, WaveformAxes, WindowingFunction
 from hunterMakesPy import PackageSettings, raiseIfNone
 from numpy import complex64, float32
-from soundfile import dtype_str as soundfile_dtype_str
+from soundfile import dtype_str as Options_dtype_str
 from typing import TYPE_CHECKING
 import dataclasses
 
 if TYPE_CHECKING:
-	from hunterHearsPy import ParametersShortTimeFFT, ParametersSTFT
 	from numpy.typing import DTypeLike
+	from scipy.signal._short_time_fft import _FFTMode, _PadType
 
 #================== Hardcoded =====================================================================
 
@@ -21,9 +21,14 @@ axisWaveformIndexingHARDCODED: int = 2
 dtypeSpectrogramHARDCODED: DTypeLike = complex64
 dtypeWaveformHARDCODED: DTypeLike = float32
 # FailEarly A simple way to assure that the dtype string is consistent with the dtype object without using `assert`.
-dtype_strHARDCODED: soundfile_dtype_str = raiseIfNone(dtypeWaveformHARDCODED.__name__
-	if dtypeWaveformHARDCODED.__name__ in soundfile_dtype_str.__args__ else None)  # pyright: ignore[reportAssignmentType] # ty:ignore[invalid-assignment]
+dtype_strHARDCODED: Options_dtype_str = raiseIfNone(dtypeWaveformHARDCODED.__name__
+	if dtypeWaveformHARDCODED.__name__ in Options_dtype_str.__args__ else None)  # pyright: ignore[reportAssignmentType] # ty:ignore[invalid-assignment]
+fft_modeHARDCODED: _FFTMode = 'onesided'
+lengthFFTHARDCODED: int = 2048
+lengthHopHARDCODED: int = 512
+paddingHARDCODED: _PadType = 'even'
 sampleRateHARDCODED: float = 44100
+windowingFunctionHARDCODED: WindowingFunction = tukey(lengthHopHARDCODED * 2)
 
 subtypeHARDCODED: str = 'FLOAT'
 
@@ -31,12 +36,17 @@ subtypeHARDCODED: str = 'FLOAT'
 
 align: OptionsAlign = alignHARDCODED
 axisChannel: int = axisChannelHARDCODED
-axisWaveformTime: int = axisWaveformTimeHARDCODED
 axisWaveformIndexing: int = axisWaveformIndexingHARDCODED
-dtype_str: soundfile_dtype_str = dtype_strHARDCODED
+axisWaveformTime: int = axisWaveformTimeHARDCODED
+dtype_str: Options_dtype_str = dtype_strHARDCODED
 dtypeSpectrogram: DTypeLike = dtypeSpectrogramHARDCODED
 dtypeWaveform: DTypeLike = dtypeWaveformHARDCODED
+fft_mode: _FFTMode = fft_modeHARDCODED
+lengthFFT: int = lengthFFTHARDCODED
+lengthHop: int = lengthHopHARDCODED
+padding: _PadType = paddingHARDCODED
 sampleRate: float = sampleRateHARDCODED
+windowingFunction: WindowingFunction = windowingFunctionHARDCODED
 
 #================== "Data basket" à la `mapFolding` ===============================================
 
@@ -45,17 +55,27 @@ settingsPackage = PackageSettings('hunterHearsPy')
 @dataclasses.dataclass(slots=True)
 class UniversalParameters:
 	align: OptionsAlign
-	dtype_str: soundfile_dtype_str
+	dtype_str: Options_dtype_str
 	dtypeSpectrogram: DTypeLike
 	dtypeWaveform: DTypeLike
+	fft_mode: _FFTMode
+	lengthFFT: int
+	lengthHop: int
+	padding: _PadType
 	sampleRate: float
+	windowingFunction: WindowingFunction
 
 setting = UniversalParameters(
-	align=align,
-	dtype_str=dtype_str,
-	dtypeSpectrogram=dtypeSpectrogram,
-	dtypeWaveform=dtypeWaveform,
-	sampleRate=sampleRate,
+	align=align
+	, dtype_str=dtype_str
+	, dtypeSpectrogram=dtypeSpectrogram
+	, dtypeWaveform=dtypeWaveform
+	, fft_mode=fft_mode
+	, lengthFFT=lengthFFT
+	, lengthHop=lengthHop
+	, padding=padding
+	, sampleRate=sampleRate
+	, windowingFunction=windowingFunction
 )
 
 #------------------ Evolving idea for standardizing axes -------------------------------------------
@@ -66,21 +86,3 @@ def getAxis() -> dict[str, WaveformAxes]:
 		, time=WaveformAxes(number=axisWaveformTime, size=0)
 		, indexing=WaveformAxes(number=axisWaveformIndexing, size=0)
 	)
-
-#======= # TODO old system to be converted
-parametersShortTimeFFTUniversal: ParametersShortTimeFFT = {'fft_mode': 'onesided'}
-parametersSTFTUniversal: ParametersSTFT = {'padding': 'even', 'axis': -1}
-
-lengthWindowingFunctionDEFAULT = 1024
-windowingFunctionCallableDEFAULT = tukey
-parametersDEFAULT = ParametersUniversal(
-	lengthFFT=2048
-	, lengthHop=512
-	, lengthWindowingFunction=lengthWindowingFunctionDEFAULT
-	, sampleRate=44100
-	, windowingFunction=windowingFunctionCallableDEFAULT(lengthWindowingFunctionDEFAULT),
-)
-
-windowingFunctionCallableUniversal = windowingFunctionCallableDEFAULT
-
-parameters: ParametersUniversal = parametersDEFAULT
