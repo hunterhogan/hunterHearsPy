@@ -25,6 +25,11 @@ Waveform: TypeAlias = ndarray[tuple[int, int], dtype[WaveformDtype]]
 ArrayWaveforms: TypeAlias = ndarray[tuple[int, int, int], dtype[WaveformDtype]]
 """A NumPy `ndarray` containing `ndarray` of type `Waveform` indexed on the last axis: shape is (channel, time, `Waveform`)."""
 
+class ArrayWaveformsShape(NamedTuple):
+	a0: int
+	a1: int
+	a2: int
+
 class WaveformAxes(NamedTuple):
 	number: int
 	size: int

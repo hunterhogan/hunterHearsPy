@@ -1,11 +1,3 @@
-# pyright: reportArgumentType=false
-# pyright: reportAssignmentType=false
-# pyright: reportCallIssue=false
-# pyright: reportUnknownVariableType=false
-# pyright: reportUnnecessaryComparison=false
-# pyright: reportUnusedVariable=false
-# ruff: noqa: FBT001
-# ty:ignore[invalid-assignment]
 from __future__ import annotations
 
 from hunterHearsPy import FileDescriptorOrPath, ParametersShortTimeFFT, setting, writeWAV
@@ -20,13 +12,13 @@ if TYPE_CHECKING:
 	from typing import Any, Literal
 
 @overload  # stft 1 ndarray
-def stft(arrayTarget: Waveform, *, inverse: Literal[False] = False, lengthWaveform: None = None, indexingAxis: None = None) -> Spectrogram: ...
+def stft(arrayTarget: Waveform, *, inverse: Literal[False] = False, lengthWaveform: None = None, indexingAxis: None = None, **keywordArguments: Any) -> Spectrogram: ...
 @overload  # stft many ndarray
-def stft(arrayTarget: ArrayWaveforms, *, inverse: Literal[False] = False, lengthWaveform: None = None, indexingAxis: int = -1) -> ArraySpectrograms: ...
+def stft(arrayTarget: ArrayWaveforms, *, inverse: Literal[False] = False, lengthWaveform: None = None, indexingAxis: int = -1, **keywordArguments: Any) -> ArraySpectrograms: ...
 @overload  # istft 1 ndarray
-def stft(arrayTarget: Spectrogram, *, inverse: Literal[True], lengthWaveform: int, indexingAxis: None = None) -> Waveform: ...
+def stft(arrayTarget: Spectrogram, *, inverse: Literal[True], lengthWaveform: int, indexingAxis: None = None, **keywordArguments: Any) -> Waveform: ...
 @overload  # istft many ndarray
-def stft(arrayTarget: ArraySpectrograms, *, inverse: Literal[True], lengthWaveform: int, indexingAxis: int = -1) -> ArrayWaveforms: ...
+def stft(arrayTarget: ArraySpectrograms, *, inverse: Literal[True], lengthWaveform: int, indexingAxis: int = -1, **keywordArguments: Any) -> ArrayWaveforms: ...
 def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrograms
 		, *
 		, inverse: bool = False
@@ -53,7 +45,7 @@ def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrogram
 
 	workhorseSTFT = ShortTimeFFT(**parametersShortTimeFFT)
 
-	def doTransformation(arrayInput: Waveform | Spectrogram, lengthWaveform: int | None, inverse: bool) -> Waveform | Spectrogram:
+	def doTransformation(arrayInput: Waveform | Spectrogram, lengthWaveform: int | None, *, inverse: bool) -> Waveform | Spectrogram:
 		if inverse:
 			return workhorseSTFT.istft(S=arrayInput, k1=lengthWaveform)
 		return workhorseSTFT.stft(x=arrayInput, padding=padding)
@@ -64,10 +56,10 @@ def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrogram
 	else:
 		arrayTARGET: ArrayWaveforms | ArraySpectrograms = numpy.moveaxis(arrayTarget, indexingAxis, -1)
 		index = 0
-		arrayTransformed: ArrayWaveforms | ArraySpectrograms = numpy.tile(doTransformation(arrayTARGET[..., index], lengthWaveform, inverse)[..., numpy.newaxis], arrayTARGET.shape[-1])
+		arrayTransformed: ArrayWaveforms | ArraySpectrograms = numpy.tile(doTransformation(arrayTARGET[..., index], lengthWaveform, inverse=inverse)[..., numpy.newaxis], arrayTARGET.shape[-1])
 
 		for index in range(1, arrayTARGET.shape[-1]):
-			arrayTransformed[..., index] = doTransformation(arrayTARGET[..., index], lengthWaveform, inverse)
+			arrayTransformed[..., index] = doTransformation(arrayTARGET[..., index], lengthWaveform, inverse=inverse)
 
 		return numpy.moveaxis(arrayTransformed, -1, indexingAxis)
 
