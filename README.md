@@ -86,7 +86,13 @@ I don't know a good way to implement user-configurable universal settings. There
 - time is more generic than samples and often preferred.
 - array is generic.
 - when talking about a NumPy `ndarray`, write `ndarray` not array.
-- sampleRate is giving me problems in the "ingest" functions. Regularly review these semiotics until the system is clear.
+- `sampleRate` is giving me problems in the "ingest" functions.
+  - Regularly review these semiotics until the system is clear.
+  - Most of the time, `sampleRate` is descriptive: this is the sample rate. See `writeWAV`.
+  - In `readAudioFile`, the parameter is prescriptive: make this the sample rate. Even worse, the
+    attribute of the current sample rate is `readSoundFile.samplerate`, which is descriptive, of course.
+  - However, `def resampleWaveform(waveform, sampleRateDesired: float, sampleRateSource: float):` has
+    excellent semiotics because it does not use `sampleRate`.
 
 ### Preferred packages
 

@@ -26,6 +26,7 @@ prayharder
 pythonpath
 resampy
 resultᵢ
+Rsilent
 rtol
 samplerate
 Smurfy

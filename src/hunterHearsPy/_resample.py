@@ -19,12 +19,16 @@ def resampleWaveform(waveform: ndarray[形Shape, dtype[形floating]], sampleRate
 def resampleWaveform(waveform: ndarray[形Shape, dtype[形floating]] | ndarray[形Shape, dtype[integer[Any]]], sampleRateDesired: float, sampleRateSource: float, axisTime: int = -1) -> ndarray[形Shape, dtype[形floating]] | ndarray[形Shape, dtype[float32]]:
 	"""Resample `waveform` array to `sampleRateDesired` along the `axisTime` axis.
 
+	Warning
+	-------
+	The returned `ndarray` always has a floating-point `dtype`, even if the sample rate is unchanged.
+
 	This function is _not_ regulated by the universal settings.
 
 	Parameters
 	----------
 	waveform : ndarray[形Shape, dtype[形floating] | dtype[integer[Any]]]
-		Input audio data as a NumPy array.
+		Input audio data as a NumPy `ndarray`.
 	sampleRateDesired : float
 		Target sample rate in Hz.
 	sampleRateSource : float
@@ -35,6 +39,6 @@ def resampleWaveform(waveform: ndarray[形Shape, dtype[形floating]] | ndarray[�
 	Returns
 	-------
 	waveformResampled : ndarray[形Shape, dtype[形floating] | dtype[float32]]
-		Waveform resampled to `sampleRateDesired`.
+		Waveform sampled at `sampleRateDesired` Hz.
 	"""
 	return resampy.resample(waveform, sampleRateSource, sampleRateDesired, axis=axisTime)

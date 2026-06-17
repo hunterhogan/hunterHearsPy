@@ -10,6 +10,7 @@ from typing import Any, Literal, NamedTuple, TYPE_CHECKING, TypeAlias, TypedDict
 if TYPE_CHECKING:
 	from scipy.signal._short_time_fft import _FFTMode, _PadType, _ScaleTo
 
+个 = TypeVar('个')
 形floating = TypeVar('形floating', bound=floating[Any])
 形ndarray = TypeVar('形ndarray', bound=ndarray[tuple[int, ...] | tuple[int, int] | tuple[int, int, int] | tuple[int, int, int, int], dtype[number]], covariant=True)
 形Shape = TypeVar('形Shape', bound=tuple[int, ...] | tuple[int, int] | tuple[int, int, int] | tuple[int, int, int, int])

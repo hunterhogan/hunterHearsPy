@@ -1,6 +1,5 @@
 # pyright: reportArgumentType=false
-# pyright: reportAssignmentType=false
-# ruff: noqa: RUF069
+# ruff: noqa: RUF069 ERA001
 # ty:ignore[invalid-assignment]
 from __future__ import annotations
 
@@ -21,6 +20,8 @@ if TYPE_CHECKING:
 # 3. `Soundfile.read` has decent typing, but I have total control because I have a custom stub file in
 #    `stubFileNotFound`.
 # 4. `resampy` accepts integer or floating input and returns float32 or the same floating type.
+
+# AND NOW, `writeWAV` is pulled into the problem.
 
 # This is a general purpose function: it is not a subroutine of _arrays.
 def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRateDesired: float | None = None, dtype_str: Options_dtype_str | None = None) -> Waveform:
@@ -104,5 +105,9 @@ def writeWAV(pathFilename: FileDescriptorOrPath, waveform: Waveform, sampleRate:
 
 	# TODO Expand subtype in universal parameters and in the function parameters.
 	subtype: str = subtypeHARDCODED
+	# TODO: this is complicated.
+	# ValueError: dtype must be one of ['float32', 'float64', 'int16', 'int32'] and not 'float16'
+	# WaveformDtype: TypeAlias = floating[Any] | integer[Any]
+	# Waveform: TypeAlias = ndarray[tuple[int, int], dtype[WaveformDtype]]
 	soundfile.write(file=pathFilename, data=waveform, samplerate=sampleRate, subtype=subtype, format='WAV')
 	return pathFilename

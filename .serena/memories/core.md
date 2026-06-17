@@ -7,4 +7,4 @@
 - Tests live in `tests/`; sample audio data lives under `tests/dataSamples/`; temporary test output is centralized under `tests/dataSamples/tmp` by `tests/conftest.py`.
 - AST rewrite experiments/utilities live under `astTransformations/`; notebooks/notes live under `Z0Z_notes/`.
 - Packaging and test config live in `pyproject.toml`; basic formatting authority is `.editorconfig`.
-- Read `mem:tech_stack` for packaging/dependency details, `mem:suggested_commands` for common commands, `mem:conventions` for project and HH coding rules, and `mem:task_completion` before closing coding tasks.
+- Read `mem:tech_stack` for packaging/dependency details, `mem:suggested_commands` for common commands, `mem:conventions` for project and HH coding rules, `mem:tests/redesign_progress` when continuing the in-flight pytest redesign, and `mem:task_completion` before closing coding tasks.

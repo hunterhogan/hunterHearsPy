@@ -7,7 +7,7 @@ from hunterHearsPy.theTypes import (
 	NormalizationReverter as NormalizationReverter, OptionsAlign as OptionsAlign, ParametersShortTimeFFT as ParametersShortTimeFFT,
 	ParametersSTFT as ParametersSTFT, Spectrogram as Spectrogram, SpectrogramDtype as SpectrogramDtype, Waveform as Waveform,
 	WaveformAxes as WaveformAxes, WaveformDtype as WaveformDtype, WaveformMetadata as WaveformMetadata, WindowingFunction as WindowingFunction,
-	WindowingFunctionDtype as WindowingFunctionDtype, 形floating as 形floating, 形ndarray as 形ndarray, 形Shape as 形Shape)
+	WindowingFunctionDtype as WindowingFunctionDtype, 个 as 个, 形floating as 形floating, 形ndarray as 形ndarray, 形Shape as 形Shape)
 
 # isort: split
 from hunterHearsPy.windowingFunctions import cosineWings as cosineWings, equalPower as equalPower, halfsine as halfsine, tukey as tukey

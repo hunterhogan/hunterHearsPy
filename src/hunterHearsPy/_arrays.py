@@ -11,12 +11,11 @@ import sys
 
 if TYPE_CHECKING:
 	from collections.abc import Sequence
-	from hunterHearsPy import ArraySpectrograms, ArrayWaveforms, FileDescriptorOrPath, OptionsAlign, Spectrogram, Waveform
+	from hunterHearsPy import ArraySpectrograms, ArrayWaveforms, FileDescriptorOrPath, OptionsAlign, Waveform
 	from numpy.typing import DTypeLike
 	from soundfile import dtype_str as Options_dtype_str
 	from typing import Any
 
-# TODO concurrency `loadSpectrograms`
 # TODO more sophisticated tests
 
 def getWaveformMetadata(
@@ -65,7 +64,7 @@ def loadWaveforms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUlimit
 	align: OptionsAlign = keywordArguments.get('align', setting.align)
 	dtype: DTypeLike = keywordArguments.get('dtype', setting.dtypeWaveform)
 	dtype_str: Options_dtype_str = keywordArguments.get('dtype_str', setting.dtype_str)
-	sampleRateDesired: float = keywordArguments.get('sampleRate', setting.sampleRate)
+	sampleRateDesired: float = keywordArguments.get('sampleRateDesired', setting.sampleRate)
 
 	max_workers: int = defineConcurrencyLimit(limit=CPUlimit)
 
@@ -87,8 +86,7 @@ def loadWaveforms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUlimit
 
 def loadSpectrograms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUlimit: bool | float | int | None = None, **keywordArguments: Any) -> tuple[ArraySpectrograms, dict[int, WaveformMetadata]]:
 	"""Load spectrograms from a list of audio files."""
-	# DEVELOPMENT `loadSpectrograms` is not an extension of `loadWaveforms` because each
-	# `pathFilename` is transformed into a spectrogram: I don't create an intermediate
+	# DEVELOPMENT `loadSpectrograms` is not an extension of `loadWaveforms`: I don't create an intermediate
 	# `arrayWaveforms`. Nevertheless, I want the functions to share as much logic as possible.
 
 	align: OptionsAlign = keywordArguments.get('align', setting.align)
@@ -101,16 +99,16 @@ def loadSpectrograms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUli
 
 	dictionaryWaveformMetadata, axis = getWaveformMetadata(listPathFilenames, sampleRateDesired, align)
 
-	waveformZeros: Waveform = numpy.zeros(shape=(axis['channel'].size, axis['time'].size), dtype=dtypeWaveform)
-
+	waveformZeros: Waveform = numpy.zeros((axis['channel'].size, axis['time'].size), dtypeWaveform)
 	arraySpectrograms: ArraySpectrograms = numpy.zeros(shape=(*stft(waveformZeros, **keywordArguments).shape, len(dictionaryWaveformMetadata)), dtype=dtype)
 
-	def workhorse(waveform: Waveform, metadata: WaveformMetadata, **parametersSTFT: Any) -> Spectrogram:
+	def workhorse(index: int, metadata: WaveformMetadata) -> None:
+		waveform: Waveform = waveformZeros.copy()
 		waveform[:, metadata['samplesStart'] : metadata['samplesStop']] = readAudioFile(metadata['pathFilename'], sampleRateDesired, dtype_str).astype(dtypeWaveform, copy=False)
 		# TODO Think about numpy.pad.mode waveform = numpy.pad(waveform, ((0, 0), (metadata['samplesStart'], waveform.shape[1] - metadata['samplesStop'])), mode=mode)
-		return stft(waveform, **parametersSTFT)
+		arraySpectrograms[..., index] = stft(waveform, **keywordArguments)
 
-	for index, metadata in tqdm(dictionaryWaveformMetadata.items()):
-		arraySpectrograms[..., index] = workhorse(waveformZeros.copy(), metadata, **keywordArguments)
+	with ThreadPoolExecutor(max_workers=max_workers) as threadManager:
+		tuple(tqdm(threadManager.map(workhorse, dictionaryWaveformMetadata.keys(), dictionaryWaveformMetadata.values()), desc='Loading spectrograms', total=len(dictionaryWaveformMetadata)))
 
 	return arraySpectrograms, dictionaryWaveformMetadata
