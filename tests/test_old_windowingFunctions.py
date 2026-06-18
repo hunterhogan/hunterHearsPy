@@ -41,7 +41,7 @@ def device(request: pytest.FixtureRequest) -> str:
 @pytest.mark.parametrize('ratioTaper', [0.0, 0.1, 0.5, 1.0])
 def test_cosineWingsArray(ratioTaper: float, lengthWindow: int) -> None:
 	arrayWindow = cosineWings(lengthWindow, ratioTaper=ratioTaper)
-	assert arrayWindow.shape == (lengthWindow,), messageTestFailure('cosineWings shape check', arrayWindow.shape, (lengthWindow,))
+	assert arrayWindow.shape == (lengthWindow,), messageTestFailure(arrayWindow.shape, (lengthWindow,), 'cosineWings shape check')
 	if ratioTaper == 0.0:
 		# Expect an all-ones array
 		prototype_numpyArrayEqual(numpy.ones(lengthWindow), cosineWings, lengthWindow, ratioTaper=0.0)
@@ -49,14 +49,14 @@ def test_cosineWingsArray(ratioTaper: float, lengthWindow: int) -> None:
 @pytest.mark.parametrize('ratioTaper', [0.0, 0.1, 0.5, 1.0])
 def test_equalPowerArray(ratioTaper: float, lengthWindow: int) -> None:
 	arrayWindow = equalPower(lengthWindow, ratioTaper=ratioTaper)
-	assert arrayWindow.shape == (lengthWindow,), messageTestFailure('equalPower shape check', arrayWindow.shape, (lengthWindow,))
+	assert arrayWindow.shape == (lengthWindow,), messageTestFailure(arrayWindow.shape, (lengthWindow,), 'equalPower shape check')
 	if ratioTaper == 0.0:
 		# Expect an all-ones array
 		prototype_numpyArrayEqual(numpy.ones(lengthWindow), equalPower, lengthWindow, ratioTaper=0.0)
 
 def test_halfsineArray(lengthWindow: int) -> None:
 	arrayWindow = halfsine(lengthWindow)
-	assert arrayWindow.shape == (lengthWindow,), messageTestFailure('halfsine shape check', arrayWindow.shape, (lengthWindow,))
+	assert arrayWindow.shape == (lengthWindow,), messageTestFailure(arrayWindow.shape, (lengthWindow,), 'halfsine shape check')
 	assert numpy.all(arrayWindow >= 0), 'halfsine should yield non-negative coefficients'
 	assert numpy.all(arrayWindow <= 1), 'halfsine should yield coefficients no greater than 1'
 
@@ -64,13 +64,13 @@ def test_halfsine_edge_value(lengthWindow: int) -> None:
 	arrayWindow = halfsine(lengthWindow)
 	expectedEdgeValue = numpy.sin(numpy.pi * 0.5 / lengthWindow)
 	assert numpy.allclose(arrayWindow[0], expectedEdgeValue), messageTestFailure(
-		'halfsine edge value', arrayWindow[0], expectedEdgeValue
+		arrayWindow[0], expectedEdgeValue, 'halfsine edge value'
 	)
 
 @pytest.mark.parametrize('ratioTaper', [0.0, 0.1, 0.5, 1.0])
 def test_tukeyArray(ratioTaper: float, lengthWindow: int) -> None:
 	arrayWindow = tukey(lengthWindow, ratioTaper=ratioTaper)
-	assert arrayWindow.shape == (lengthWindow,), messageTestFailure('tukey shape check', arrayWindow.shape, (lengthWindow,))
+	assert arrayWindow.shape == (lengthWindow,), messageTestFailure(arrayWindow.shape, (lengthWindow,), 'tukey shape check')
 
 def test_tukey_backward_compatibility() -> None:
 	arrayExpected = tukey(10, ratioTaper=0.5)
@@ -105,19 +105,19 @@ def prototype_tensorEquivalent(
 	tensor = functionTensorTarget(*arguments, device=torch.device(device), **keywordArguments)
 
 	assert tensor.device.type == device, messageTestFailure(
-		f'{functionTensorTarget.__name__} device check', tensor.device.type, device
+		tensor.device.type, device, f'{functionTensorTarget.__name__} device check'
 	)
 	assert tensor.dtype == torch.float32, messageTestFailure(
-		f'{functionTensorTarget.__name__} dtype check', tensor.dtype, torch.float32
+		tensor.dtype, torch.float32, f'{functionTensorTarget.__name__} dtype check'
 	)
 	assert tensor.shape == torch.Size([ndarray.shape[0]]), messageTestFailure(
-		f'{functionTensorTarget.__name__} shape check', tensor.shape, ndarray.shape
+		tensor.shape, ndarray.shape, f'{functionTensorTarget.__name__} shape check'
 	)
 
 	# Convert tensor to numpy for comparison with original array
 	tensorAsNumpy = tensor.cpu().numpy()
 	assert numpy.allclose(ndarray, tensorAsNumpy), messageTestFailure(
-		f'{functionTensorTarget.__name__} vs {functionNdarrayOriginal.__name__}', "Arrays don't match", 'Arrays to match'
+		ndarray, tensorAsNumpy, f'{functionTensorTarget.__name__} vs {functionNdarrayOriginal.__name__}'
 	)
 
 def test_windowing_tensors_equivalence(device: str, lengthWindow: int) -> None:

@@ -26,25 +26,21 @@ def test_moveToAxisOfOperation_movesAxisAndPreservesOriginalArray(
 
 	with moveToAxisOfOperation(arrayAxisOperation, axisSource, axisOfOperation) as arrayStandardized:
 		assert arrayStandardized.shape == arrayExpectedMoved.shape, messageTestFailure(
-			moveToAxisOfOperation.__name__,
 			arrayStandardized.shape,
 			arrayExpectedMoved.shape,
+			moveToAxisOfOperation.__name__,
 			axisSource=axisSource,
 			axisOfOperation=axisOfOperation,
 		)
 		assert numpy.array_equal(arrayStandardized, arrayExpectedMoved), messageTestFailure(
-			moveToAxisOfOperation.__name__, arrayStandardized, arrayExpectedMoved, axisSource=axisSource, axisOfOperation=axisOfOperation
+			arrayStandardized, arrayExpectedMoved, moveToAxisOfOperation.__name__, axisSource=axisSource, axisOfOperation=axisOfOperation
 		)
 
 		arrayStandardized += valueOffset
 
 	assert arrayAxisOperation.shape == shapeOriginal, messageTestFailure(
-		moveToAxisOfOperation.__name__, arrayAxisOperation.shape, shapeOriginal, axisSource=axisSource, axisOfOperation=axisOfOperation
+		arrayAxisOperation.shape, shapeOriginal, moveToAxisOfOperation.__name__, axisSource=axisSource, axisOfOperation=axisOfOperation
 	)
 	assert numpy.array_equal(arrayAxisOperation, arrayOriginal + valueOffset), messageTestFailure(
-		moveToAxisOfOperation.__name__,
-		arrayAxisOperation,
-		arrayOriginal + valueOffset,
-		axisSource=axisSource,
-		axisOfOperation=axisOfOperation,
+		arrayAxisOperation, arrayOriginal + valueOffset, moveToAxisOfOperation.__name__, axisSource=axisSource, axisOfOperation=axisOfOperation
 	)

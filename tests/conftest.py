@@ -32,7 +32,7 @@ def approx_abs(request: pytest.FixtureRequest) -> float:
 
 def assert_approx(actual: 个, expected: 个, rel: float, abs: float, function: str, *arguments: Any, **keywordArguments: Any) -> None:
 	assert actual == pytest.approx(expected, rel, abs, nan_ok=True), messageTestFailure(  # pyright: ignore[reportUnknownMemberType]
-		function, actual, expected, *arguments, **keywordArguments)
+		actual, expected, function, *arguments, **keywordArguments)
 
 def assert_array_equal(actual: 形ndarray, expected: 形ndarray, function: str, *arguments: Any, **keywordArguments: Any) -> None:
 	"""Assert that two arrays are equal, and if not, raise an AssertionError with a detailed message."""
@@ -40,7 +40,7 @@ def assert_array_equal(actual: 形ndarray, expected: 形ndarray, function: str, 
 
 #------------------ Messages ------------------------------------------------------------------------------
 
-def messageTestFailure(function: str, actual: Any, expected: Any, *arguments: Any, **keywordArguments: Any) -> str:
+def messageTestFailure(actual: Any, expected: Any, function: str, *arguments: Any, **keywordArguments: Any) -> str:
 	"""Format assertion message for any test comparison."""
 	parameters: list[str] = list(map(repr, arguments))
 	parameters.extend(f'{keyAndValue[0]}={keyAndValue[1]!r}' for keyAndValue in keywordArguments.items())
@@ -69,17 +69,15 @@ def pathFilename(request: pytest.FixtureRequest) -> Path:
 
 @pytest.fixture
 def dtype_str(pathFilename: Path) -> Options_dtype_str | None:
-	dtypeStr: Options_dtype_str | None
-	if 's16' in pathFilename.stem:
+	dtypeStr: Options_dtype_str | None = None
+	if 's16' in pathFilename.stem.split('_'):
 		dtypeStr = 'int16'
-	else:
-		dtypeStr = None
 	return dtypeStr
 
 @pytest.fixture
 def expected(pathFilename: Path, sampleRateDesired: float, dtype_str: Options_dtype_str | None) -> Waveform:
 	pathFilenameExpected: Path = pathDataSamplesExpected / (
-		f"readAudioFile__{pathFilename.stem}__sampleRateDesired{int(sampleRateDesired)}Hz__dtype{dtype_str or 'default'}.npy"
+		f"readAudioFile__{pathFilename.stem}__sampleRateDesired{int(sampleRateDesired)}Hz__dtype{dtype_str}.npy"
 	)
 	return numpy.load(pathFilenameExpected, mmap_mode='r', allow_pickle=False)
 
@@ -123,14 +121,14 @@ def prototype_numpyAllClose(
 		actual = type(actualError)
 		messageExpected = expected if isinstance(expected, type) else 'array-like result'
 		assert actual == expected, messageTestFailure(
-			functionTarget.__name__, messageActual, messageExpected, *arguments, **keywordArguments
+			messageActual, messageExpected, functionTarget.__name__, *arguments, **keywordArguments
 		)
 	else:
 		if isinstance(expected, type):
 			message = f'Expected an exception of type {expected.__name__}, but got a result'
 			raise AssertionError(message)
 		assert numpy.allclose(actual, expected, rtol, atol), messageTestFailure(
-			functionTarget.__name__, actual, expected, *arguments, **keywordArguments
+			actual, expected, functionTarget.__name__, *arguments, **keywordArguments
 		)
 
 def prototype_numpyArrayEqual(expected: NDArray[Any], functionTarget: Callable[..., Any], *arguments: Any, **keywordArguments: Any) -> None:
@@ -142,11 +140,11 @@ def prototype_numpyArrayEqual(expected: NDArray[Any], functionTarget: Callable[.
 		actual = type(actualError)
 		messageExpected = expected if isinstance(expected, type) else 'array-like result'
 		assert actual == expected, messageTestFailure(
-			functionTarget.__name__, messageActual, messageExpected, *arguments, **keywordArguments
+			messageActual, messageExpected, functionTarget.__name__, *arguments, **keywordArguments
 		)
 	else:
 		assert numpy.array_equal(actual, expected), messageTestFailure(
-			functionTarget.__name__, actual, expected, *arguments, **keywordArguments
+			actual, expected, functionTarget.__name__, *arguments, **keywordArguments
 		)
 
 #================== Old system: replace, do not keep ========================================

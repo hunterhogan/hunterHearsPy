@@ -79,16 +79,16 @@ def test_loadSpectrograms_acceptsSampleRateDesired(listPathFilenamesFromWaveform
 	actualCountMetadata = len(dictionaryWaveformMetadata)
 
 	assert actualCountFiles == expectedCountFiles, messageTestFailure(
-		'loadSpectrograms', actualCountFiles, expectedCountFiles, listPathFilenamesFromWaveformData, sampleRateDesired
+		actualCountFiles, expectedCountFiles, 'loadSpectrograms', listPathFilenamesFromWaveformData, sampleRateDesired
 	)
 	assert actualCountMetadata == expectedCountFiles, messageTestFailure(
-		'loadSpectrograms metadata count', actualCountMetadata, expectedCountFiles, listPathFilenamesFromWaveformData, sampleRateDesired
+		actualCountMetadata, expectedCountFiles, 'loadSpectrograms metadata count', listPathFilenamesFromWaveformData, sampleRateDesired
 	)
 	assert len(actualShape) == expectedSpectrogramDimensions, messageTestFailure(
-		'loadSpectrograms shape dimensions', len(actualShape), expectedSpectrogramDimensions, listPathFilenamesFromWaveformData, sampleRateDesired
+		len(actualShape), expectedSpectrogramDimensions, 'loadSpectrograms shape dimensions', listPathFilenamesFromWaveformData, sampleRateDesired
 	)
 	assert numpy.issubdtype(arraySpectrograms.dtype, numpy.complexfloating), messageTestFailure(
-		'loadSpectrograms dtype', arraySpectrograms.dtype, 'complex floating point type', listPathFilenamesFromWaveformData, sampleRateDesired
+		arraySpectrograms.dtype, 'complex floating point type', 'loadSpectrograms dtype', listPathFilenamesFromWaveformData, sampleRateDesired
 	)
 
 def test_loadSpectrograms_singleFile(waveformDataStereo44kHz: WaveformAndMetadata) -> None:
@@ -109,13 +109,13 @@ def test_loadSpectrograms_singleFile(waveformDataStereo44kHz: WaveformAndMetadat
 	actualCountMetadata = len(dictionaryWaveformMetadata)
 
 	assert actualShape == expectedShape, messageTestFailure(
-		'loadSpectrograms single file shape', actualShape, expectedShape, listPathFilenameSingle, sampleRateDesired
+		actualShape, expectedShape, 'loadSpectrograms single file shape', listPathFilenameSingle, sampleRateDesired
 	)
 	assert actualCountFiles == expectedCountFiles, messageTestFailure(
-		'loadSpectrograms single file count', actualCountFiles, expectedCountFiles, listPathFilenameSingle, sampleRateDesired
+		actualCountFiles, expectedCountFiles, 'loadSpectrograms single file count', listPathFilenameSingle, sampleRateDesired
 	)
 	assert actualCountMetadata == expectedCountMetadata, messageTestFailure(
-		'loadSpectrograms single file metadata count', actualCountMetadata, expectedCountMetadata, listPathFilenameSingle, sampleRateDesired
+		actualCountMetadata, expectedCountMetadata, 'loadSpectrograms single file metadata count', listPathFilenameSingle, sampleRateDesired
 	)
 
 def test_loadSpectrograms_roundTripReconstructionAccuracy(waveformDataStereo44kHz: WaveformAndMetadata) -> None:
@@ -134,10 +134,10 @@ def test_loadSpectrograms_roundTripReconstructionAccuracy(waveformDataStereo44kH
 	actualCountFiles = arraySpectrograms.shape[-1]
 
 	assert actualShape == expectedShape, messageTestFailure(
-		'loadSpectrograms roundtrip shape comparison', actualShape, expectedShape, listPathFilenameSingle, sampleRateDesired
+		actualShape, expectedShape, 'loadSpectrograms roundtrip shape comparison', listPathFilenameSingle, sampleRateDesired
 	)
 	assert actualCountFiles == expectedCountFiles, messageTestFailure(
-		'loadSpectrograms roundtrip file count', actualCountFiles, expectedCountFiles, listPathFilenameSingle, sampleRateDesired
+		actualCountFiles, expectedCountFiles, 'loadSpectrograms roundtrip file count', listPathFilenameSingle, sampleRateDesired
 	)
 
 def test_loadSpectrograms_rejectsEmptyInput() -> None:
@@ -157,10 +157,10 @@ def test_stft_forwardTransform(waveformDataStereo44kHz: WaveformAndMetadata) -> 
 	actualNonEmpty = spectrogram.shape[0] > 0 and spectrogram.shape[1] > 0
 
 	assert actualComplexFloating == expectedComplexFloating, messageTestFailure(
-		'stft forward transform dtype', actualDtype, 'complex floating point type', waveformSingle
+		actualDtype, 'complex floating point type', 'stft forward transform dtype', waveformSingle
 	)
 	assert actualNonEmpty == expectedNonEmpty, messageTestFailure(
-		'stft forward transform shape', spectrogram.shape, 'non-empty spectrogram', waveformSingle
+		spectrogram.shape, 'non-empty spectrogram', 'stft forward transform shape', waveformSingle
 	)
 
 def test_stft_inverseTransform(waveformDataStereo44kHz: WaveformAndMetadata) -> None:
@@ -190,10 +190,10 @@ def test_stft_acceptsSTFTParameters(
 	actualComplexFloating = numpy.issubdtype(spectrogram.dtype, numpy.complexfloating)
 
 	assert actualNonEmpty == expectedNonEmpty, messageTestFailure(
-		'stft with custom parameters shape', spectrogram.shape, 'non-empty spectrogram', waveformSingle, sampleRate=sampleRate, lengthWindowingFunction=lengthWindowingFunctionSTFT, lengthHop=lengthHopSTFT
+		actualNonEmpty, expectedNonEmpty, 'stft with custom parameters shape', waveformSingle, sampleRate=sampleRate, lengthWindowingFunction=lengthWindowingFunctionSTFT, lengthHop=lengthHopSTFT
 	)
 	assert actualComplexFloating == expectedComplexFloating, messageTestFailure(
-		'stft with custom parameters dtype', spectrogram.dtype, 'complex floating point type', waveformSingle, sampleRate=sampleRate, lengthWindowingFunction=lengthWindowingFunctionSTFT, lengthHop=lengthHopSTFT
+		actualComplexFloating, expectedComplexFloating, 'stft with custom parameters dtype', waveformSingle, sampleRate=sampleRate, lengthWindowingFunction=lengthWindowingFunctionSTFT, lengthHop=lengthHopSTFT
 	)
 
 def test_stft_rejectsInverseWithoutLengthWaveform(waveformDataStereo44kHz: WaveformAndMetadata) -> None:
@@ -231,8 +231,8 @@ def test_waveformSpectrogramWaveform_magnitudeOnlyTransform(waveformDataStereo44
 	actualContentDifferent = not numpy.allclose(waveformOriginal, waveformProcessed, atol=1e-2, rtol=1e-2)
 
 	assert actualShapeMatch == expectedShapeMatch, messageTestFailure(
-		'waveformSpectrogramWaveform magnitude-only shape preservation', waveformProcessed.shape, waveformOriginal.shape, waveformOriginal
+		actualShapeMatch, expectedShapeMatch, 'waveformSpectrogramWaveform magnitude-only shape preservation', waveformProcessed.shape, waveformOriginal.shape, waveformOriginal
 	)
 	assert actualContentDifferent == expectedContentDifferent, messageTestFailure(
-		'waveformSpectrogramWaveform magnitude-only content change', 'nearly identical content', 'different waveform content', waveformOriginal
+		actualContentDifferent, expectedContentDifferent, 'waveformSpectrogramWaveform magnitude-only content change', 'nearly identical content', 'different waveform content', waveformOriginal
 	)
