@@ -31,24 +31,28 @@ def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrogram
 		raise ValueError(message)
 
 	parametersShortTimeFFT = ParametersShortTimeFFT(
-		dual_win=keywordArguments.get('dual_win'),
-		fft_mode=keywordArguments.get('fft_mode', setting.fft_mode),
-		hop=keywordArguments.get('lengthHop', setting.lengthHop),
-		mfft=keywordArguments.get('lengthFFT', setting.lengthFFT),
-		phase_shift=keywordArguments.get('phase_shift', 0),
-		fs=keywordArguments.get('sampleRate', setting.sampleRate),
-		scale_to=keywordArguments.get('scale_to'),
-		win=keywordArguments.get('windowingFunction', setting.windowingFunction),
+		dual_win=keywordArguments.get('dual_win')
+		, fft_mode=keywordArguments.get('fft_mode', setting.fft_mode)
+		, hop=keywordArguments.get('lengthHop', setting.lengthHop)
+		, mfft=keywordArguments.get('lengthFFT', setting.lengthFFT)
+		, phase_shift=keywordArguments.get('phase_shift', 0)
+		, fs=keywordArguments.get('sampleRate', setting.sampleRate)
+		, scale_to=keywordArguments.get('scale_to')
+		, win=keywordArguments.get('windowingFunction', setting.windowingFunction)
 	)
 
 	padding: _PadType = keywordArguments.get('padding', setting.padding)
 
 	workhorseSTFT = ShortTimeFFT(**parametersShortTimeFFT)
 
-	def doTransformation(arrayInput: Waveform | Spectrogram, lengthWaveform: int | None, *, inverse: bool) -> Waveform | Spectrogram:
+	@overload
+	def doTransformation(transformee: Waveform, lengthWaveform: None, *, inverse: Literal[False]) -> Spectrogram: ...
+	@overload
+	def doTransformation(transformee: Spectrogram, lengthWaveform: int, *, inverse: Literal[True]) -> Waveform: ...
+	def doTransformation(transformee: Waveform | Spectrogram, lengthWaveform: int | None, *, inverse: bool) -> Waveform | Spectrogram:
 		if inverse:
-			return workhorseSTFT.istft(S=arrayInput, k1=lengthWaveform)
-		return workhorseSTFT.stft(x=arrayInput, padding=padding)
+			return workhorseSTFT.istft(S=transformee, k1=lengthWaveform)
+		return workhorseSTFT.stft(x=transformee, padding=padding)
 
 	if indexingAxis is None:
 		arrayOf1: Waveform | Spectrogram = arrayTarget
