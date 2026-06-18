@@ -1,9 +1,9 @@
-# ruff: noqa: D101
+# ruff: noqa: D101 ERA001
 """Type definitions for audio signal processing and waveform analysis."""
 from __future__ import annotations
 
 from collections.abc import Callable
-from numpy import complexfloating, dtype, floating, integer, ndarray, number
+from numpy import complex128, dtype, floating, integer, ndarray, number
 from soundfile import FileDescriptorOrPath as FileDescriptorOrPath  # noqa: TC002
 from typing import Any, Literal, NamedTuple, TYPE_CHECKING, TypeAlias, TypedDict, TypeVar
 
@@ -19,7 +19,17 @@ OptionsAlign: TypeAlias = Literal['center', 'start', 'stop']
 
 #================== Waveform ======================================================================
 
+# Works with soundfile
 WaveformDtype: TypeAlias = floating[Any] | integer[Any]
+
+# Doesn't work
+# WaveformDtype: TypeAlias = float16 | float32 | float64 | int8 | int16 | int32 | int64
+# WaveformDtype: TypeAlias = number[_64Bit]
+
+# Work with NumPy in stft
+# WaveformDtype: TypeAlias = float16 | float32 | float64
+# WaveformDtype: TypeAlias = floating[Any]
+
 Waveform: TypeAlias = ndarray[tuple[int, int], dtype[WaveformDtype]]
 """A NumPy `ndarray` of audio waveform data with shape (channel, time); for mono audio, `channel` = 1."""
 
@@ -49,7 +59,8 @@ class WaveformMetadata(TypedDict):
 
 #================== Spectrogram ===================================================================
 
-SpectrogramDtype: TypeAlias = complexfloating[Any, Any]
+# SpectrogramDtype: TypeAlias = complex64 | complex128
+SpectrogramDtype: TypeAlias = complex128
 Spectrogram: TypeAlias = ndarray[tuple[int, int, int], dtype[SpectrogramDtype]]
 """A NumPy `ndarray` of spectrogram data with shape (channel, frequency_bins, time). For mono audio, `channel` = 1."""
 

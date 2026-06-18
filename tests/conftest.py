@@ -38,6 +38,10 @@ def assert_array_equal(actual: 形ndarray, expected: 形ndarray, function: str, 
 	"""Assert that two arrays are equal, and if not, raise an AssertionError with a detailed message."""
 	assert numpy.array_equal(actual, expected), messageTestFailure_ndarray(actual, expected, function, *arguments, **keywordArguments)
 
+def assertEqualTo(actual: 个, expected: 个, function: str, *arguments: Any, **keywordArguments: Any) -> None:
+	"""Assert that two arrays are equal, and if not, raise an AssertionError with a detailed message."""
+	assert actual == expected, messageTestFailure(actual, expected, function, *arguments, **keywordArguments)
+
 #------------------ Messages ------------------------------------------------------------------------------
 
 def messageTestFailure(actual: Any, expected: Any, function: str, *arguments: Any, **keywordArguments: Any) -> str:
@@ -83,21 +87,6 @@ def expected(pathFilename: Path, sampleRateDesired: float, dtype_str: Options_dt
 
 #================== Old system: adapt some parts ========================================
 
-def standardizedEqualTo(expected: Any, functionTarget: Callable[..., Any], *arguments: Any, **keywordArguments: Any) -> None:
-	"""Template for most tests to compare the actual outcome with the expected outcome, including expected errors."""
-	if type(expected) == type[Exception]:  # noqa: E721
-		messageExpected: str = expected.__name__
-	else:
-		messageExpected = expected
-
-	try:
-		messageActual = actual = functionTarget(*arguments, **keywordArguments)
-	except Exception as actualError:
-		messageActual: str = type(actualError).__name__
-		actual = type(actualError)
-
-	assert actual == expected, messageTestFailure(functionTarget.__name__, messageActual, messageExpected, *arguments, **keywordArguments)
-
 def prototype_numpyAllClose(
 	expected: NDArray[Any] | type[Exception]
 	, atol: float | None
@@ -128,22 +117,6 @@ def prototype_numpyAllClose(
 			message = f'Expected an exception of type {expected.__name__}, but got a result'
 			raise AssertionError(message)
 		assert numpy.allclose(actual, expected, rtol, atol), messageTestFailure(
-			actual, expected, functionTarget.__name__, *arguments, **keywordArguments
-		)
-
-def prototype_numpyArrayEqual(expected: NDArray[Any], functionTarget: Callable[..., Any], *arguments: Any, **keywordArguments: Any) -> None:
-	"""Template for tests using numpy.array_equal comparison."""
-	try:
-		actual = functionTarget(*arguments, **keywordArguments)
-	except Exception as actualError:
-		messageActual: str = type(actualError).__name__
-		actual = type(actualError)
-		messageExpected = expected if isinstance(expected, type) else 'array-like result'
-		assert actual == expected, messageTestFailure(
-			messageActual, messageExpected, functionTarget.__name__, *arguments, **keywordArguments
-		)
-	else:
-		assert numpy.array_equal(actual, expected), messageTestFailure(
 			actual, expected, functionTarget.__name__, *arguments, **keywordArguments
 		)
 

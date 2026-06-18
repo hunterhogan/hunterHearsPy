@@ -1,7 +1,14 @@
+# pyright: reportArgumentType=false
+# pyright: reportAssignmentType=false
+# pyright: reportCallIssue=false
+# pyright: reportUnknownVariableType=false
+# ty:ignore[invalid-assignment]
 from __future__ import annotations
 
-from hunterHearsPy import FileDescriptorOrPath, ParametersShortTimeFFT, setting, writeWAV
+from hunterHearsPy import ParametersShortTimeFFT, setting
+from hunterMakesPy.parseParameters import defineConcurrencyLimit
 from scipy.signal import ShortTimeFFT
+from tqdm.auto import tqdm
 from typing import overload, TYPE_CHECKING
 import numpy
 
@@ -24,9 +31,12 @@ def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrogram
 		, inverse: bool = False
 		, lengthWaveform: int | None = None
 		, indexingAxis: int | None = None
+		, CPUlimit: bool | float | int | None = None
 		, **keywordArguments: Any
 	) -> Waveform | ArrayWaveforms | Spectrogram | ArraySpectrograms:
 	if inverse and not lengthWaveform:
+		# TODO Save `arrayTarget` to a temp file in a temp dir because it might be the result of a
+		# long computation. Print the pathFilename in the message.
 		message = "`lengthWaveform` must be specified for inverse transform"
 		raise ValueError(message)
 
@@ -45,64 +55,39 @@ def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrogram
 
 	workhorseSTFT = ShortTimeFFT(**parametersShortTimeFFT)
 
-	@overload
-	def doTransformation(transformee: Waveform, lengthWaveform: None, *, inverse: Literal[False]) -> Spectrogram: ...
-	@overload
-	def doTransformation(transformee: Spectrogram, lengthWaveform: int, *, inverse: Literal[True]) -> Waveform: ...
-	def doTransformation(transformee: Waveform | Spectrogram, lengthWaveform: int | None, *, inverse: bool) -> Waveform | Spectrogram:
-		if inverse:
-			return workhorseSTFT.istft(S=transformee, k1=lengthWaveform)
-		return workhorseSTFT.stft(x=transformee, padding=padding)
+	def mushroom(waveform: Waveform) -> Spectrogram:
+		return workhorseSTFT.stft(x=waveform, padding=padding)
 
-	if indexingAxis is None:
-		arrayOf1: Waveform | Spectrogram = arrayTarget
-		return doTransformation(arrayOf1, lengthWaveform, inverse=inverse)
-	else:
-		arrayTARGET: ArrayWaveforms | ArraySpectrograms = numpy.moveaxis(arrayTarget, indexingAxis, -1)
+	def turtleShell(spectrogram: Spectrogram, lengthWaveform: int) -> Waveform:
+		return workhorseSTFT.istft(S=spectrogram, k1=lengthWaveform)  # pyright: ignore[reportReturnType]
+
+	if (indexingAxis is None) and (inverse is False):
+		waveform: Waveform = arrayTarget
+		return mushroom(waveform)
+	elif (indexingAxis is None) and (inverse is True) and (lengthWaveform is not None):
+		spectrogram: Spectrogram = arrayTarget
+		return turtleShell(spectrogram, lengthWaveform)
+	elif (indexingAxis is not None) and (inverse is False):
+		max_workers: int = defineConcurrencyLimit(limit=CPUlimit)
+		arrayWaveforms: ArrayWaveforms = arrayTarget
+		arrayWaveforms = numpy.moveaxis(arrayWaveforms, indexingAxis, -1)
 		index = 0
-		arrayTransformed: ArrayWaveforms | ArraySpectrograms = numpy.tile(doTransformation(arrayTARGET[..., index], lengthWaveform, inverse=inverse)[..., numpy.newaxis], arrayTARGET.shape[-1])
-
+		arraySpectrograms: ArraySpectrograms = numpy.tile(mushroom(arrayWaveforms[..., index])[..., numpy.newaxis], arrayWaveforms.shape[-1])
+		for index in range(1, arrayWaveforms.shape[-1]):
+			arraySpectrograms[..., index] = mushroom(arrayWaveforms[..., index])
+		return numpy.moveaxis(arraySpectrograms, -1, indexingAxis)
+	elif (indexingAxis is not None) and (inverse is True) and (lengthWaveform is not None):
+		max_workers: int = defineConcurrencyLimit(limit=CPUlimit)
+		arrayTARGET: ArraySpectrograms = arrayTarget
+		arrayTARGET = numpy.moveaxis(arrayTARGET, indexingAxis, -1)
+		index = 0
+		arrayTransformed: ArrayWaveforms = numpy.tile(turtleShell(arrayTARGET[..., index], lengthWaveform)[..., numpy.newaxis], arrayTARGET.shape[-1])
 		for index in range(1, arrayTARGET.shape[-1]):
-			arrayTransformed[..., index] = doTransformation(arrayTARGET[..., index], lengthWaveform, inverse=inverse)
-
+			arrayTransformed[..., index] = turtleShell(arrayTARGET[..., index], lengthWaveform)
 		return numpy.moveaxis(arrayTransformed, -1, indexingAxis)
-
-def spectrogramToWAV(spectrogram: Spectrogram, pathFilename: FileDescriptorOrPath, lengthWaveform: int, **parametersSTFT: Any) -> None:
-	"""Write a complex spectrogram to a WAV file by computing the inverse STFT.
-
-	You can use this function to reconstruct a waveform from a `Spectrogram` [1] and save
-	it directly to a WAV file. `spectrogramToWAV` calls `stft` with `inverse=True` to
-	obtain the reconstructed `Waveform` [2], then passes it to `writeWAV`.
-
-	Parameters
-	----------
-	spectrogram : Spectrogram
-		Complex spectrogram to convert back to a waveform.
-	pathFilename : FileDescriptorOrPath
-		Destination path for the WAV file, or a binary stream.
-	lengthWaveform : int
-		Number of samples in the output waveform. The inverse STFT cannot recover the
-		original length from the spectrogram alone, so `lengthWaveform` is required.
-	sampleRate : float | None = None
-		Sample rate for the output WAV file in Hz. Defaults to `44100` when `None`.
-	**parametersSTFT : Any
-		Keyword parameters forwarded to `stft`, such as `lengthWindowingFunction` and
-		`lengthHop`.
-
-	File Overwrite and Format
-	-------------------------
-	See `writeWAV` for file overwrite behavior and output format details.
-
-	References
-	----------
-	[1] `Spectrogram`
-
-	[2] `Waveform`
-
-	"""
-	waveform: Waveform = stft(spectrogram, inverse=True, lengthWaveform=lengthWaveform, indexingAxis=None, **parametersSTFT)
-	sampleRate: float = parametersSTFT.get('sampleRate', setting.sampleRate)
-	writeWAV(pathFilename, waveform, sampleRate)
+	else:
+		message = "Invalid combination of `indexingAxis` and `inverse` parameters"
+		raise ValueError(message)
 
 def waveformSpectrogramWaveform(callableNeedsSpectrogram: Callable[[Spectrogram], Spectrogram]) -> Callable[[Waveform], Waveform]:
 	"""Decorate a spectrogram-processing callable to accept and return waveforms.

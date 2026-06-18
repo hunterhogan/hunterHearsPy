@@ -6,10 +6,13 @@ from __future__ import annotations
 
 from hunterHearsPy import loadSpectrograms, readAudioFile, stft, waveformSpectrogramWaveform
 from pathlib import Path
-from tests.conftest import messageTestFailure, prototype_numpyAllClose, standardizedEqualTo, WaveformAndMetadata
-from typing import Any, Final
+from tests.conftest import messageTestFailure, prototype_numpyAllClose, WaveformAndMetadata
+from typing import Any, Final, TYPE_CHECKING
 import numpy
 import pytest
+
+if TYPE_CHECKING:
+	from collections.abc import Callable
 
 pathDataSamples = Path('tests/dataSamples/old')
 
@@ -139,6 +142,21 @@ def test_loadSpectrograms_roundTripReconstructionAccuracy(waveformDataStereo44kH
 	assert actualCountFiles == expectedCountFiles, messageTestFailure(
 		actualCountFiles, expectedCountFiles, 'loadSpectrograms roundtrip file count', listPathFilenameSingle, sampleRateDesired
 	)
+
+def standardizedEqualTo(expected: Any, functionTarget: Callable[..., Any], *arguments: Any, **keywordArguments: Any) -> None:
+	"""Template for most tests to compare the actual outcome with the expected outcome, including expected errors."""
+	if type(expected) == type[Exception]:  # noqa: E721
+		messageExpected: str = expected.__name__
+	else:
+		messageExpected = expected
+
+	try:
+		messageActual = actual = functionTarget(*arguments, **keywordArguments)
+	except Exception as actualError:
+		messageActual: str = type(actualError).__name__
+		actual = type(actualError)
+
+	assert actual == expected, messageTestFailure(functionTarget.__name__, messageActual, messageExpected, *arguments, **keywordArguments)  # ty:ignore[unresolved-attribute]
 
 def test_loadSpectrograms_rejectsEmptyInput() -> None:
 	"""Test that loadSpectrograms raises TypeError for empty input."""

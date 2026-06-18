@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from hunterHearsPy import getWaveformMetadata, loadWaveforms, readAudioFile, resampleWaveform, writeWAV
 from pathlib import Path
-from tests.conftest import prototype_numpyArrayEqual, WaveformAndMetadata
+from tests.conftest import assert_array_equal, WaveformAndMetadata
 from typing import Any, Final, TYPE_CHECKING
 import io
 import numpy
@@ -240,7 +240,8 @@ def test_resampleSameRateNoChange(waveformStereo44kHz: WaveformAndMetadata) -> N
 	"""Test that identical sample rates produce no change."""
 	waveformOriginal = waveformStereo44kHz.waveform
 	sampleRate = 44100
-	prototype_numpyArrayEqual(waveformOriginal, resampleWaveform, waveformOriginal, sampleRate, sampleRate)
+	waveformResampled = resampleWaveform(waveformOriginal, sampleRate, sampleRate)
+	assert_array_equal(waveformResampled, waveformOriginal, 'resampleWaveform')
 
 @pytest.mark.parametrize(
 	'testCase',

@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from hunterHearsPy import cosineWings, equalPower, halfsine, tukey
-from tests.conftest import messageTestFailure, prototype_numpyAllClose, prototype_numpyArrayEqual
+from tests.conftest import assert_array_equal, messageTestFailure, prototype_numpyAllClose
 from typing import Any, TYPE_CHECKING
 import numpy
 import pytest
@@ -43,16 +43,18 @@ def test_cosineWingsArray(ratioTaper: float, lengthWindow: int) -> None:
 	arrayWindow = cosineWings(lengthWindow, ratioTaper=ratioTaper)
 	assert arrayWindow.shape == (lengthWindow,), messageTestFailure(arrayWindow.shape, (lengthWindow,), 'cosineWings shape check')
 	if ratioTaper == 0.0:
-		# Expect an all-ones array
-		prototype_numpyArrayEqual(numpy.ones(lengthWindow), cosineWings, lengthWindow, ratioTaper=0.0)
+		actual = cosineWings(lengthWindow, ratioTaper=0.0)
+		expected = numpy.ones(lengthWindow)
+		assert_array_equal(actual, expected, 'cosineWings')
 
 @pytest.mark.parametrize('ratioTaper', [0.0, 0.1, 0.5, 1.0])
 def test_equalPowerArray(ratioTaper: float, lengthWindow: int) -> None:
 	arrayWindow = equalPower(lengthWindow, ratioTaper=ratioTaper)
 	assert arrayWindow.shape == (lengthWindow,), messageTestFailure(arrayWindow.shape, (lengthWindow,), 'equalPower shape check')
 	if ratioTaper == 0.0:
-		# Expect an all-ones array
-		prototype_numpyArrayEqual(numpy.ones(lengthWindow), equalPower, lengthWindow, ratioTaper=0.0)
+		actual = equalPower(lengthWindow, ratioTaper=0.0)
+		expected = numpy.ones(lengthWindow)
+		assert_array_equal(actual, expected, 'equalPower')
 
 def test_halfsineArray(lengthWindow: int) -> None:
 	arrayWindow = halfsine(lengthWindow)
@@ -77,7 +79,8 @@ def test_tukey_backward_compatibility() -> None:
 	prototype_numpyAllClose(arrayExpected, None, None, tukey, 10, alpha=0.5)
 
 def test_tukey_special_cases(lengthWindow: int) -> None:
-	prototype_numpyArrayEqual(numpy.ones(lengthWindow), tukey, lengthWindow, ratioTaper=0.0)
+	actual = tukey(lengthWindow, ratioTaper=0.0)
+	assert_array_equal(actual, numpy.ones(lengthWindow), 'tukey')
 	prototype_numpyAllClose(SciPy.hann(lengthWindow), None, None, tukey, lengthWindow, ratioTaper=1.0)
 
 @pytest.mark.parametrize('functionWindowingInvalid', [cosineWings, equalPower])

@@ -27,11 +27,10 @@ from hunterHearsPy.theSSOT import getAxis as getAxis, setting as setting
 from hunterHearsPy._resample import resampleWaveform as resampleWaveform
 
 # isort: split
-from hunterHearsPy._io import readAudioFile as readAudioFile, writeWAV as writeWAV
+from hunterHearsPy._fft import stft as stft, waveformSpectrogramWaveform as waveformSpectrogramWaveform
 
 # isort: split
-from hunterHearsPy._fft import (
-	spectrogramToWAV as spectrogramToWAV, stft as stft, waveformSpectrogramWaveform as waveformSpectrogramWaveform)
+from hunterHearsPy._io import readAudioFile as readAudioFile, spectrogramToWAV as spectrogramToWAV, writeWAV as writeWAV
 
 # isort: split
 from hunterHearsPy.amplitude import normalizeArrayWaveforms as normalizeArrayWaveforms, normalizeWaveform as normalizeWaveform

@@ -3,15 +3,15 @@
 # ty:ignore[invalid-assignment]
 from __future__ import annotations
 
-from hunterHearsPy import getAxis, resampleWaveform, setting
+from hunterHearsPy import getAxis, resampleWaveform, setting, Spectrogram, stft, Waveform
 from hunterHearsPy.theSSOT import subtypeHARDCODED
 from hunterMakesPy.filesystemToolkit import makeDirectorySafely
 from soundfile import dtype_str as Options_dtype_str
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import soundfile
 
 if TYPE_CHECKING:
-	from hunterHearsPy import FileDescriptorOrPath, Waveform, WaveformAxes
+	from hunterHearsPy import FileDescriptorOrPath, WaveformAxes
 
 # TODO. The typing has too many moving parts.
 # 1. This function: that should be the easiest--if I get the other parts right.
@@ -111,3 +111,40 @@ def writeWAV(pathFilename: FileDescriptorOrPath, waveform: Waveform, sampleRate:
 	# Waveform: TypeAlias = ndarray[tuple[int, int], dtype[WaveformDtype]]
 	soundfile.write(file=pathFilename, data=waveform, samplerate=sampleRate, subtype=subtype, format='WAV')
 	return pathFilename
+
+def spectrogramToWAV(spectrogram: Spectrogram, pathFilename: FileDescriptorOrPath, lengthWaveform: int, **parametersSTFT: Any) -> None:
+	"""Write a complex spectrogram to a WAV file by computing the inverse STFT.
+
+	You can use this function to reconstruct a waveform from a `Spectrogram` [1] and save
+	it directly to a WAV file. `spectrogramToWAV` calls `stft` with `inverse=True` to
+	obtain the reconstructed `Waveform` [2], then passes it to `writeWAV`.
+
+	Parameters
+	----------
+	spectrogram : Spectrogram
+		Complex spectrogram to convert back to a waveform.
+	pathFilename : FileDescriptorOrPath
+		Destination path for the WAV file, or a binary stream.
+	lengthWaveform : int
+		Number of samples in the output waveform. The inverse STFT cannot recover the
+		original length from the spectrogram alone, so `lengthWaveform` is required.
+	sampleRate : float | None = None
+		Sample rate for the output WAV file in Hz. Defaults to `44100` when `None`.
+	**parametersSTFT : Any
+		Keyword parameters forwarded to `stft`, such as `lengthWindowingFunction` and
+		`lengthHop`.
+
+	File Overwrite and Format
+	-------------------------
+	See `writeWAV` for file overwrite behavior and output format details.
+
+	References
+	----------
+	[1] `Spectrogram`
+
+	[2] `Waveform`
+
+	"""
+	waveform: Waveform = stft(spectrogram, inverse=True, lengthWaveform=lengthWaveform, indexingAxis=None, **parametersSTFT)
+	sampleRate: float = parametersSTFT.get('sampleRate', setting.sampleRate)
+	writeWAV(pathFilename, waveform, sampleRate)
