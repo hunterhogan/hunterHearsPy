@@ -27,6 +27,8 @@ dependencies = [
   "scipy",
   "soundfile>=0.14.0",
   "tqdm",
+  "typing-extensions>=4.0.0",
+  "Z0Z_tools>=2.1.0",
 ]
 optional-dependencies = { torch = ["torch"] }
 

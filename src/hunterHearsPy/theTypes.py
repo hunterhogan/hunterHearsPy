@@ -1,4 +1,4 @@
-# ruff: noqa: D101 ERA001 PLC2701
+# ruff: noqa: D101, ERA001
 """Type definitions for audio signal processing and waveform analysis."""
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from soundfile import FileDescriptorOrPath as FileDescriptorOrPath  # noqa: TC00
 from typing import Any, Literal, NamedTuple, TYPE_CHECKING, TypeAlias, TypedDict, TypeVar
 
 if TYPE_CHECKING:
-	from scipy.signal._short_time_fft import _FFTMode, _PadType, _ScaleTo
+	from scipy.signal._short_time_fft import _PadType, _ScaleTo
 	_FFTMode1: TypeAlias = Literal["onesided", "onesided2X"]
 
 个 = TypeVar('个')
@@ -68,19 +68,28 @@ ArraySpectrograms: TypeAlias = ndarray[tuple[int, int, int, int], dtype[Spectrog
 WindowingFunctionDtype: TypeAlias = floating[Any]
 WindowingFunction: TypeAlias = ndarray[tuple[int], dtype[WindowingFunctionDtype]]
 
-class ParametersShortTimeFFT(TypedDict, total=False):
-	win: WindowingFunction
-	hop: int
-	fs: int | float
-	fft_mode: _FFTMode1
-	mfft: int | None
+class E733TH4X0R(TypedDict, total=False):
 	dual_win: WindowingFunction | None
-	scale_to: _ScaleTo | None
+	fft_mode: _FFTMode1
+	fs: int | float
+	hop: int
+	mfft: int | None
 	phase_shift: int | None
+	scale_to: _ScaleTo | None
+	win: WindowingFunction
 
-class ParametersSTFT(TypedDict, total=False):
+class ParametersShortTimeFFT(TypedDict, total=False):
+	dual_win: WindowingFunction | None
+	fft_mode: _FFTMode1
+	lengthFFT: int | None
+	lengthHop: int
+	phase_shift: int | None
+	sampleRate: int | float
+	scale_to: _ScaleTo | None
+	windowingFunction: WindowingFunction
+
+class Parameters_stft(ParametersShortTimeFFT, total=False):
 	padding: _PadType
-	axis: int
 
 #==================================================================================================
 # DEVELOPMENT refactoring. Below here, the objects have not yet been reviewed.

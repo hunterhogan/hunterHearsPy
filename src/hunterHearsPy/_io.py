@@ -3,12 +3,16 @@
 # ty:ignore[invalid-assignment]
 from __future__ import annotations
 
-from hunterHearsPy import getAxis, resampleWaveform, setting, Spectrogram, stft, Waveform
+from hunterHearsPy import ArraySpectrograms, ArrayWaveforms, getAxis, resampleWaveform, setting, Spectrogram, stft, Waveform
 from hunterHearsPy.theSSOT import subtypeHARDCODED
 from hunterMakesPy.filesystemToolkit import makeDirectorySafely
+from pathlib import Path
 from soundfile import dtype_str as Options_dtype_str
 from typing import Any, TYPE_CHECKING
+import numpy
 import soundfile
+import tempfile
+import uuid
 
 if TYPE_CHECKING:
 	from hunterHearsPy import FileDescriptorOrPath, WaveformAxes
@@ -145,6 +149,17 @@ def spectrogramToWAV(spectrogram: Spectrogram, pathFilename: FileDescriptorOrPat
 	[2] `Waveform`
 
 	"""
-	waveform: Waveform = stft(spectrogram, inverse=True, lengthWaveform=lengthWaveform, indexingAxis=None, **parametersSTFT)
+	waveform: Waveform = stft(spectrogram, lengthWaveform=lengthWaveform, **parametersSTFT)
 	sampleRate: float = parametersSTFT.get('sampleRate', setting.sampleRate)
 	writeWAV(pathFilename, waveform, sampleRate)
+
+def saveOnError(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrograms) -> str:
+	pathFilename: Path = Path(tempfile.mkdtemp(prefix='hunterHearsPy'), f"arrayTarget_{uuid.uuid4().hex}.npy").resolve()
+	numpy.save(pathFilename, arrayTarget)
+	message: str = (
+	"I did not receive `lengthWaveform`, so I could not perform the inverse STFT. "
+	f"I saved `arrayTarget` to a file in this computer's temporary directory so you might recover the data. {arrayTarget.shape = }, {arrayTarget.dtype = }\n"
+	f"{pathFilename = }"
+	)
+
+	return message

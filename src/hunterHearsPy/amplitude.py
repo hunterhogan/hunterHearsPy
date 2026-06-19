@@ -1,3 +1,4 @@
+# ruff: noqa: D103
 """Normalize audio waveform amplitudes.
 
 (AI generated docstring)
@@ -9,19 +10,33 @@ amplitude scale when applied to any waveform derived from the normalized result.
 Contents
 --------
 Functions
-    normalizeArrayWaveforms
-        Normalize multiple waveforms in an array to a specified peak amplitude.
-    normalizeWaveform
-        Normalize a waveform to a specified peak amplitude.
+	normalizeArrayWaveforms
+		Normalize multiple waveforms in an array to a specified peak amplitude.
+	normalizeWaveform
+		Normalize a waveform to a specified peak amplitude.
 
 """
 from __future__ import annotations
 
-from numpy import divide, finfo as numpy_finfo, max as numpy_max, multiply
-from typing import overload, TYPE_CHECKING
+from hunterMakesPy import zeroIndexed
+from numpy import divide, finfo as numpy_finfo, float32, iinfo as numpy_iinfo, max as numpy_max, multiply
+from typing import Any, overload, TYPE_CHECKING
+import numpy
 
 if TYPE_CHECKING:
-	from hunterHearsPy import ArrayWaveforms, NormalizationReverter, Waveform
+	from hunterHearsPy import ArrayWaveforms, ArrayWaveformsFloating, NormalizationReverter, Waveform, WaveformFloating
+	from numpy import dtype, floating, integer
+
+def amplitudeIntegerToFloating(arrayTarget: Waveform | ArrayWaveforms) -> WaveformFloating | ArrayWaveformsFloating:
+	integerInformation: numpy_iinfo[integer] = numpy_iinfo(arrayTarget.dtype.str)
+	dtypeFloating: dtype[floating[Any]] = numpy.promote_types(arrayTarget.dtype, float32)
+	arrayFloating: WaveformFloating | ArrayWaveformsFloating = numpy.astype(arrayTarget, dtypeFloating, copy=False)
+	if integerInformation.min < 0:
+		arrayFloating /= -integerInformation.min
+	else:
+		arrayFloating -= (integerInformation.max + zeroIndexed) / 2
+		arrayFloating /= (integerInformation.max + zeroIndexed) / 2
+	return arrayFloating
 
 def normalizeWaveform(waveform: Waveform, amplitudeNorm: float = 1.0) -> tuple[Waveform, NormalizationReverter]:
 	"""Normalize a waveform to a specified peak amplitude.
