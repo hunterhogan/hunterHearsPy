@@ -1,4 +1,4 @@
-# ruff: noqa: D101 ERA001
+# ruff: noqa: D101 ERA001 PLC2701
 """Type definitions for audio signal processing and waveform analysis."""
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from typing import Any, Literal, NamedTuple, TYPE_CHECKING, TypeAlias, TypedDict
 
 if TYPE_CHECKING:
 	from scipy.signal._short_time_fft import _FFTMode, _PadType, _ScaleTo
+	_FFTMode1: TypeAlias = Literal["onesided", "onesided2X"]
 
 个 = TypeVar('个')
 形floating = TypeVar('形floating', bound=floating[Any])
@@ -19,22 +20,18 @@ OptionsAlign: TypeAlias = Literal['center', 'start', 'stop']
 
 #================== Waveform ======================================================================
 
-# Works with soundfile
-WaveformDtype: TypeAlias = floating[Any] | integer[Any]
-
-# Doesn't work
-# WaveformDtype: TypeAlias = float16 | float32 | float64 | int8 | int16 | int32 | int64
-# WaveformDtype: TypeAlias = number[_64Bit]
-
-# Work with NumPy in stft
-# WaveformDtype: TypeAlias = float16 | float32 | float64
-# WaveformDtype: TypeAlias = floating[Any]
+WaveformFloatingDtype: TypeAlias = floating[Any]
+WaveformDtype: TypeAlias = integer[Any] | WaveformFloatingDtype
 
 Waveform: TypeAlias = ndarray[tuple[int, int], dtype[WaveformDtype]]
+"""A NumPy `ndarray` of audio waveform data with shape (channel, time); for mono audio, `channel` = 1."""
+WaveformFloating: TypeAlias = ndarray[tuple[int, int], dtype[WaveformFloatingDtype]]
 """A NumPy `ndarray` of audio waveform data with shape (channel, time); for mono audio, `channel` = 1."""
 
 ArrayWaveforms: TypeAlias = ndarray[tuple[int, int, int], dtype[WaveformDtype]]
 """A NumPy `ndarray` containing `ndarray` of type `Waveform` indexed on the last axis: shape is (channel, time, `Waveform`)."""
+ArrayWaveformsFloating: TypeAlias = ndarray[tuple[int, int, int], dtype[WaveformFloatingDtype]]
+"""A NumPy `ndarray` containing `ndarray` of type `WaveformFloating` indexed on the last axis: shape is (channel, time, `WaveformFloating`)."""
 
 class ArrayWaveformsShape(NamedTuple):
 	a0: int
@@ -75,13 +72,11 @@ class ParametersShortTimeFFT(TypedDict, total=False):
 	win: WindowingFunction
 	hop: int
 	fs: int | float
-	# *
-	fft_mode: _FFTMode  # = "onesided"
-	mfft: int | None  # = None
-
-	dual_win: WindowingFunction | None  # = None
-	scale_to: _ScaleTo | None  # = None
-	phase_shift: int | None  # = 0
+	fft_mode: _FFTMode1
+	mfft: int | None
+	dual_win: WindowingFunction | None
+	scale_to: _ScaleTo | None
+	phase_shift: int | None
 
 class ParametersSTFT(TypedDict, total=False):
 	padding: _PadType

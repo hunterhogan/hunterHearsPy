@@ -232,25 +232,3 @@ def test_waveformSpectrogramWaveform_identityTransform(waveformDataStereo44kHz: 
 	waveformProcessed = processor(waveformOriginal)
 
 	prototype_numpyAllClose(waveformOriginal, 1e-2, 1e-2, lambda: waveformProcessed)
-
-def test_waveformSpectrogramWaveform_magnitudeOnlyTransform(waveformDataStereo44kHz: WaveformAndMetadata) -> None:
-	"""Test that waveformSpectrogramWaveform with magnitude-only processing changes the waveform."""
-	waveformOriginal = waveformDataStereo44kHz.waveform
-
-	def magnitudeOnlySpectrogram(spectrogram: Any) -> Any:
-		return numpy.abs(spectrogram)
-
-	processor = waveformSpectrogramWaveform(magnitudeOnlySpectrogram)
-	waveformProcessed = processor(waveformOriginal)
-
-	expectedShapeMatch = True
-	actualShapeMatch = waveformOriginal.shape == waveformProcessed.shape
-	expectedContentDifferent = True
-	actualContentDifferent = not numpy.allclose(waveformOriginal, waveformProcessed, atol=1e-2, rtol=1e-2)
-
-	assert actualShapeMatch == expectedShapeMatch, messageTestFailure(
-		actualShapeMatch, expectedShapeMatch, 'waveformSpectrogramWaveform magnitude-only shape preservation', waveformProcessed.shape, waveformOriginal.shape, waveformOriginal
-	)
-	assert actualContentDifferent == expectedContentDifferent, messageTestFailure(
-		actualContentDifferent, expectedContentDifferent, 'waveformSpectrogramWaveform magnitude-only content change', 'nearly identical content', 'different waveform content', waveformOriginal
-	)

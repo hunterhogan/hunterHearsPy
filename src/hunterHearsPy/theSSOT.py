@@ -1,16 +1,17 @@
-# ruff: noqa: D100, D101, D103
+# ruff: noqa: D100, D101, D103, PLC2701
 from __future__ import annotations
 
 from hunterHearsPy import OptionsAlign, tukey, WaveformAxes, WindowingFunction
 from hunterMakesPy import PackageSettings, raiseIfNone
 from numpy import complex64, float32
 from soundfile import dtype_str as Options_dtype_str
-from typing import TYPE_CHECKING
+from typing import Literal, TYPE_CHECKING, TypeAlias
 import dataclasses
 
 if TYPE_CHECKING:
 	from numpy.typing import DTypeLike
 	from scipy.signal._short_time_fft import _FFTMode, _PadType
+	_FFTMode1: TypeAlias = Literal["onesided", "onesided2X"]
 
 #================== Hardcoded =====================================================================
 
@@ -23,7 +24,7 @@ dtypeWaveformHARDCODED: DTypeLike = float32
 # FailEarly A simple way to assure that the dtype string is consistent with the dtype object without using `assert`.
 dtype_strHARDCODED: Options_dtype_str = raiseIfNone(dtypeWaveformHARDCODED.__name__
 	if dtypeWaveformHARDCODED.__name__ in Options_dtype_str.__args__ else None)  # pyright: ignore[reportAssignmentType] # ty:ignore[invalid-assignment]
-fft_modeHARDCODED: _FFTMode = 'onesided'
+fft_modeHARDCODED: _FFTMode1 = 'onesided'
 lengthFFTHARDCODED: int = 2048
 lengthHopHARDCODED: int = 512
 paddingHARDCODED: _PadType = 'even'
@@ -41,7 +42,7 @@ axisWaveformTime: int = axisWaveformTimeHARDCODED
 dtype_str: Options_dtype_str = dtype_strHARDCODED
 dtypeSpectrogram: DTypeLike = dtypeSpectrogramHARDCODED
 dtypeWaveform: DTypeLike = dtypeWaveformHARDCODED
-fft_mode: _FFTMode = fft_modeHARDCODED
+fft_mode: _FFTMode1 = fft_modeHARDCODED
 lengthFFT: int = lengthFFTHARDCODED
 lengthHop: int = lengthHopHARDCODED
 padding: _PadType = paddingHARDCODED
@@ -58,7 +59,7 @@ class UniversalParameters:
 	dtype_str: Options_dtype_str
 	dtypeSpectrogram: DTypeLike
 	dtypeWaveform: DTypeLike
-	fft_mode: _FFTMode
+	fft_mode: _FFTMode1
 	lengthFFT: int
 	lengthHop: int
 	padding: _PadType

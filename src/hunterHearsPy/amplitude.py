@@ -88,7 +88,7 @@ def normalizeWaveform(waveform: Waveform, amplitudeNorm: float = 1.0) -> tuple[W
 		https://numpy.org/doc/stable/reference/generated/numpy.finfo.html
 
 	"""
-	amplitudeNorm = amplitudeNorm or float(numpy_finfo(waveform.dtype).tiny.astype(waveform.dtype))
+	amplitudeNorm = amplitudeNorm or float(numpy_finfo(waveform.dtype.str).tiny.astype(waveform.dtype))
 
 	peakAbsolute: float = abs(float(numpy_max([waveform.max(), -waveform.min()]))) or 1.0
 	amplitudeAdjustment: float = amplitudeNorm / peakAbsolute

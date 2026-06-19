@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from hunterHearsPy.theTypes import (
-	ArraySpectrograms as ArraySpectrograms, ArrayWaveforms as ArrayWaveforms, ArrayWaveformsShape as ArrayWaveformsShape,
-	callableReturnsNDArray as callableReturnsNDArray, FileDescriptorOrPath as FileDescriptorOrPath,
+	ArraySpectrograms as ArraySpectrograms, ArrayWaveforms as ArrayWaveforms, ArrayWaveformsFloating as ArrayWaveformsFloating,
+	ArrayWaveformsShape as ArrayWaveformsShape, callableReturnsNDArray as callableReturnsNDArray, FileDescriptorOrPath as FileDescriptorOrPath,
 	NormalizationReverter as NormalizationReverter, OptionsAlign as OptionsAlign, ParametersShortTimeFFT as ParametersShortTimeFFT,
 	ParametersSTFT as ParametersSTFT, Spectrogram as Spectrogram, SpectrogramDtype as SpectrogramDtype, Waveform as Waveform,
-	WaveformAxes as WaveformAxes, WaveformDtype as WaveformDtype, WaveformMetadata as WaveformMetadata, WindowingFunction as WindowingFunction,
+	WaveformAxes as WaveformAxes, WaveformDtype as WaveformDtype, WaveformFloating as WaveformFloating,
+	WaveformFloatingDtype as WaveformFloatingDtype, WaveformMetadata as WaveformMetadata, WindowingFunction as WindowingFunction,
 	WindowingFunctionDtype as WindowingFunctionDtype, 个 as 个, 形floating as 形floating, 形ndarray as 形ndarray, 形Shape as 形Shape)
 
 # isort: split
