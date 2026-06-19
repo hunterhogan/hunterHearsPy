@@ -1,5 +1,5 @@
 # pyright: reportArgumentType=false
-# ruff: noqa: RUF069 ERA001
+# ruff: noqa: ERA001
 # ty:ignore[invalid-assignment]
 from __future__ import annotations
 
@@ -57,12 +57,7 @@ def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRateDesired: float |
 	axis: dict[str, WaveformAxes] = getAxis()
 	waveform = waveform.transpose((axis['time'].number, axis['channel'].number))
 
-	if float(sampleRateSource) != sampleRateDesired:
-		# calling resampling will force int to float, so if the user wants int, sending it through resampling is NOT a no-op.
-		# Therefore, this guard is necessary.
-		waveform = resampleWaveform(waveform, sampleRateDesired, sampleRateSource, axis['time'].number)
-
-	return waveform
+	return resampleWaveform(waveform, sampleRateDesired, sampleRateSource, axis['time'].number)
 
 def writeWAV(pathFilename: FileDescriptorOrPath, waveform: Waveform, sampleRate: float | None = None) -> FileDescriptorOrPath:
 	"""Write a waveform array to a WAV file.

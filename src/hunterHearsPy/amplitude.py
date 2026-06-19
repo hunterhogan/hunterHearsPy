@@ -19,18 +19,21 @@ Functions
 from __future__ import annotations
 
 from hunterMakesPy import zeroIndexed
-from numpy import divide, finfo as numpy_finfo, float32, iinfo as numpy_iinfo, max as numpy_max, multiply
+from numpy import divide, finfo as numpy_finfo, float32, iinfo as numpy_iinfo, max as numpy_max, multiply, ndarray
 from typing import Any, overload, TYPE_CHECKING
+from typing_extensions import TypeVar
 import numpy
 
 if TYPE_CHECKING:
-	from hunterHearsPy import ArrayWaveforms, ArrayWaveformsFloating, NormalizationReverter, Waveform, WaveformFloating
+	from hunterHearsPy import ArrayWaveforms, NormalizationReverter, Waveform
 	from numpy import dtype, floating, integer
 
-def amplitudeIntegerToFloating(arrayTarget: Waveform | ArrayWaveforms) -> WaveformFloating | ArrayWaveformsFloating:
+Axes = TypeVar("Axes", tuple[int, int], tuple[int, int, int])
+
+def amplitudeIntegerToFloating(arrayTarget: ndarray[Axes, dtype[integer[Any]]]) -> ndarray[Axes, dtype[floating[Any]]]:
 	integerInformation: numpy_iinfo[integer] = numpy_iinfo(arrayTarget.dtype.str)
 	dtypeFloating: dtype[floating[Any]] = numpy.promote_types(arrayTarget.dtype, float32)
-	arrayFloating: WaveformFloating | ArrayWaveformsFloating = numpy.astype(arrayTarget, dtypeFloating, copy=False)
+	arrayFloating: ndarray[Axes, dtype[floating[Any]]] = numpy.astype(arrayTarget, dtypeFloating, copy=False)
 	if integerInformation.min < 0:
 		arrayFloating /= -integerInformation.min
 	else:

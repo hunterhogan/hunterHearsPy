@@ -28,7 +28,10 @@ def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrogram
 		, **keywordArguments: Unpack[Parameters_stft]
 	) -> Waveform | ArrayWaveforms | Spectrogram | ArraySpectrograms:
 	if numpy.issubdtype(arrayTarget.dtype, numpy.integer):
-		arrayFloating: WaveformFloating | ArrayWaveformsFloating = amplitudeIntegerToFloating(arrayTarget)
+		if arrayTarget.ndim == 3:
+			arrayFloating: ArrayWaveformsFloating = amplitudeIntegerToFloating(arrayTarget)
+		if arrayTarget.ndim == 2:
+			arrayFloating: WaveformFloating = amplitudeIntegerToFloating(arrayTarget)
 	else:
 		arrayFloating = arrayTarget
 		if numpy.issubdtype(arrayTarget.dtype, numpy.complexfloating) and (lengthWaveform < 1):

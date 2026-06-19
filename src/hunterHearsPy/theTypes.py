@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 
 个 = TypeVar('个')
 形floating = TypeVar('形floating', bound=floating[Any])
-形ndarray = TypeVar('形ndarray', bound=ndarray[tuple[int, ...] | tuple[int, int] | tuple[int, int, int] | tuple[int, int, int, int], dtype[number]], covariant=True)
-形Shape = TypeVar('形Shape', bound=tuple[int, ...] | tuple[int, int] | tuple[int, int, int] | tuple[int, int, int, int])
+形ndarray = TypeVar('形ndarray', bound=ndarray[tuple[int, ...], dtype[number]], covariant=True)
+形Shape = TypeVar('形Shape', bound=tuple[int, ...])
 
 OptionsAlign: TypeAlias = Literal['center', 'start', 'stop']
 
