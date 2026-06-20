@@ -1,12 +1,13 @@
-# ruff: noqa: RUF069
 # pyright: reportArgumentType=false
+# ruff: noqa: DOC501
+# ruff: noqa: RUF069
 # ty:ignore[invalid-argument-type]
 # ty:ignore[unresolved-attribute]
 from __future__ import annotations
 
 from hunterHearsPy import cosineWings, equalPower, halfsine, tukey
-from tests.conftest import assert_array_equal, messageTestFailure, prototype_numpyAllClose
-from typing import Any, TYPE_CHECKING
+from tests.conftest import assert_array_equal, messageTestFailure
+from typing import Any, Final, TYPE_CHECKING
 import numpy
 import pytest
 import scipy.signal.windows as SciPy
@@ -16,7 +17,41 @@ from hunterHearsPy import cosineWingsTensor, equalPowerTensor, halfsineTensor, t
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
+	from numpy.typing import NDArray
 	from torch import Tensor
+
+def prototype_numpyAllClose(
+	expected: NDArray[Any] | type[Exception]
+	, atol: float | None
+	, rtol: float | None
+	, functionTarget: Callable[..., Any]
+	, *arguments: Any
+	, **keywordArguments: Any
+) -> None:
+	"""Template for tests using numpy.allclose comparison."""
+	atolDEFAULT: Final[float] = 1e-7
+	rtolDEFAULT: Final[float] = 1e-7
+
+	if atol is None:
+		atol = atolDEFAULT
+	if rtol is None:
+		rtol = rtolDEFAULT
+	try:
+		actual = functionTarget(*arguments, **keywordArguments)
+	except Exception as actualError:
+		messageActual: str = type(actualError).__name__
+		actual = type(actualError)
+		messageExpected = expected if isinstance(expected, type) else 'array-like result'
+		assert actual == expected, messageTestFailure(
+			messageActual, messageExpected, functionTarget.__name__, *arguments, **keywordArguments
+		)
+	else:
+		if isinstance(expected, type):
+			message = f'Expected an exception of type {expected.__name__}, but got a result'
+			raise AssertionError(message)
+		assert numpy.allclose(actual, expected, rtol, atol), messageTestFailure(
+			actual, expected, functionTarget.__name__, *arguments, **keywordArguments
+		)
 
 """Section: Windowing function testing utilities"""
 

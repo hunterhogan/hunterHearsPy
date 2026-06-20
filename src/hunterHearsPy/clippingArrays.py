@@ -137,13 +137,13 @@ def applyHardLimitComplexValued(
 		https://numpy.org/doc/stable/reference/typing.html#numpy.typing.NDArray
 
 	"""
-	arrayTargetMagnitude: ndarray[形Shape, dtype[float64]] = absolute(arrayTarget, dtype=float64)  # pyright: ignore[reportAssignmentType] # ty:ignore[invalid-assignment]
+	arrayTargetMagnitude = absolute(arrayTarget, dtype=float64)
 
-	comparandMagnitude: ndarray[形Shape, dtype[float64]] = absolute(comparand, dtype=float64)  # pyright: ignore[reportAssignmentType] # ty:ignore[invalid-assignment]
+	comparandMagnitude = absolute(comparand, dtype=float64)
 
-	selectAboveThreshold: ndarray[形Shape, dtype[float64]] = ((comparandMagnitude - arrayTargetMagnitude) < 0.0).astype(float64)  # pyright: ignore[reportAssignmentType] # ty:ignore[invalid-assignment]
+	selectAboveThreshold = (comparandMagnitude - arrayTargetMagnitude) < 0.0
 
-	arrayClippingCoefficientsMagnitude: ndarray[形Shape, dtype[float64]] = comparandMagnitude[selectAboveThreshold] / arrayTargetMagnitude[selectAboveThreshold]  # pyright: ignore[reportArgumentType, reportCallIssue, reportUnknownVariableType]
+	arrayClippingCoefficientsMagnitude = comparandMagnitude[selectAboveThreshold] / arrayTargetMagnitude[selectAboveThreshold]
 	# TODO I don't remember why I created complexfloating `arrayClippingCoefficients` instead of just
 	# using `arrayClippingCoefficientsMagnitude`. I made this long enough ago that I did it because I
 	# was a n00b. Oh, I see. `arrayClippingCoefficientsMagnitude` is empty in cells
@@ -151,6 +151,6 @@ def applyHardLimitComplexValued(
 	# problem.
 	# TODO I need real tests.
 	arrayClippingCoefficients = ones_like(arrayTarget, dtype=arrayTarget.dtype)
-	arrayClippingCoefficients[selectAboveThreshold] = arrayClippingCoefficientsMagnitude**penalty  # pyright: ignore[reportArgumentType, reportCallIssue]
+	arrayClippingCoefficients[selectAboveThreshold] = arrayClippingCoefficientsMagnitude**penalty
 
 	return multiply(arrayTarget, arrayClippingCoefficients)  # pyright: ignore[reportReturnType] # ty:ignore[invalid-return-type]

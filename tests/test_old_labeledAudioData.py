@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from hunterHearsPy import readAudioFile
-from tests.conftest import ingestSampleData, sampleData, WaveformAndMetadata
+from tests.oldSampleData import ingestSampleData, sampleData, WaveformAndMetadata
 from typing import Final
 import numpy
 import pytest

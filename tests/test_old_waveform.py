@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from hunterHearsPy import getWaveformMetadata, loadWaveforms, readAudioFile, resampleWaveform, writeWAV
 from pathlib import Path
-from tests.conftest import assert_array_equal, WaveformAndMetadata
+from tests.conftest import assert_array_equal
+from tests.oldSampleData import WaveformAndMetadata
 from typing import Any, Final, TYPE_CHECKING
 import io
 import numpy

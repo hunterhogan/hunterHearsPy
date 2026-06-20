@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from hunterHearsPy import ArrayWaveforms, loadWaveforms, normalizeArrayWaveforms, normalizeWaveform, Waveform
-from hunterHearsPy.amplitude import amplitudeToSoundfile
-from tests.conftest import pathDataSamples_labeled, sampleData
+from tests.oldSampleData import pathDataSamples_labeled, sampleData
 from typing import Final, TYPE_CHECKING
 import numpy
 import pytest

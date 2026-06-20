@@ -1,22 +1,58 @@
-# pyright: reportUnknownLambdaType=false
 # pyright: reportUnknownArgumentType=false
-# ruff: noqa: DOC201
+# pyright: reportUnknownLambdaType=false
+# ruff: noqa: DOC201, DOC501
+# ty:ignore[unresolved-attribute]
 """test_waveform or test_spectrogram? if a spectrogram is involved at any point, then test_spectrogram."""
 from __future__ import annotations
 
 from hunterHearsPy import loadSpectrograms, readAudioFile, stft, waveformSpectrogramWaveform
 from pathlib import Path
-from tests.conftest import messageTestFailure, prototype_numpyAllClose, WaveformAndMetadata
+from tests.conftest import messageTestFailure
+from tests.oldSampleData import WaveformAndMetadata
 from typing import Any, Final, TYPE_CHECKING
 import numpy
 import pytest
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
+	from numpy.typing import NDArray
 
 pathDataSamples = Path('tests/dataSamples/old')
 
 expectedSpectrogramDimensions: Final[int] = 4
+
+def prototype_numpyAllClose(
+	expected: NDArray[Any] | type[Exception]
+	, atol: float | None
+	, rtol: float | None
+	, functionTarget: Callable[..., Any]
+	, *arguments: Any
+	, **keywordArguments: Any
+) -> None:
+	"""Template for tests using numpy.allclose comparison."""
+	atolDEFAULT: Final[float] = 1e-7
+	rtolDEFAULT: Final[float] = 1e-7
+
+	if atol is None:
+		atol = atolDEFAULT
+	if rtol is None:
+		rtol = rtolDEFAULT
+	try:
+		actual = functionTarget(*arguments, **keywordArguments)
+	except Exception as actualError:
+		messageActual: str = type(actualError).__name__
+		actual = type(actualError)
+		messageExpected = expected if isinstance(expected, type) else 'array-like result'
+		assert actual == expected, messageTestFailure(
+			messageActual, messageExpected, functionTarget.__name__, *arguments, **keywordArguments
+		)
+	else:
+		if isinstance(expected, type):
+			message = f'Expected an exception of type {expected.__name__}, but got a result'
+			raise AssertionError(message)
+		assert numpy.allclose(actual, expected, rtol, atol), messageTestFailure(
+			actual, expected, functionTarget.__name__, *arguments, **keywordArguments
+		)
 
 """Section: Spectrogram testing fixtures and parameters"""
 
@@ -156,7 +192,7 @@ def standardizedEqualTo(expected: Any, functionTarget: Callable[..., Any], *argu
 		messageActual: str = type(actualError).__name__
 		actual = type(actualError)
 
-	assert actual == expected, messageTestFailure(functionTarget.__name__, messageActual, messageExpected, *arguments, **keywordArguments)  # ty:ignore[unresolved-attribute]
+	assert actual == expected, messageTestFailure(functionTarget.__name__, messageActual, messageExpected, *arguments, **keywordArguments)
 
 def test_loadSpectrograms_rejectsEmptyInput() -> None:
 	"""Test that loadSpectrograms raises TypeError for empty input."""

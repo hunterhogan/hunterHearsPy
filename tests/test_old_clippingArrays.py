@@ -1,15 +1,51 @@
+# ty:ignore[unresolved-attribute]
+# ruff: noqa: DOC501
 from __future__ import annotations
 
 from hunterHearsPy import applyHardLimit, applyHardLimitComplexValued
 from numpy import float64
 from numpy._core._exceptions import _UFuncNoLoopError  # noqa: PLC2701
-from tests.conftest import prototype_numpyAllClose
-from typing import Any, TYPE_CHECKING
+from tests.conftest import messageTestFailure
+from typing import Any, Final, TYPE_CHECKING
 import numpy
 import pytest
 
 if TYPE_CHECKING:
+	from collections.abc import Callable
 	from numpy.typing import NDArray
+
+def prototype_numpyAllClose(
+	expected: NDArray[Any] | type[Exception]
+	, atol: float | None
+	, rtol: float | None
+	, functionTarget: Callable[..., Any]
+	, *arguments: Any
+	, **keywordArguments: Any
+) -> None:
+	"""Template for tests using numpy.allclose comparison."""
+	atolDEFAULT: Final[float] = 1e-7
+	rtolDEFAULT: Final[float] = 1e-7
+
+	if atol is None:
+		atol = atolDEFAULT
+	if rtol is None:
+		rtol = rtolDEFAULT
+	try:
+		actual = functionTarget(*arguments, **keywordArguments)
+	except Exception as actualError:
+		messageActual: str = type(actualError).__name__
+		actual = type(actualError)
+		messageExpected = expected if isinstance(expected, type) else 'array-like result'
+		assert actual == expected, messageTestFailure(
+			messageActual, messageExpected, functionTarget.__name__, *arguments, **keywordArguments
+		)
+	else:
+		if isinstance(expected, type):
+			message = f'Expected an exception of type {expected.__name__}, but got a result'
+			raise AssertionError(message)
+		assert numpy.allclose(actual, expected, rtol, atol), messageTestFailure(
+			actual, expected, functionTarget.__name__, *arguments, **keywordArguments
+		)
 
 @pytest.mark.parametrize(
 	'description,expected,arrayTarget,comparand'
