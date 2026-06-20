@@ -47,7 +47,7 @@ Repository = "https://github.com/hunterhogan/hunterHearsPy.git"
 dev = [
     "astToolkit",
     "pytest-cov",
-    "scipy-stubs>=1.18.0.0",
+    "scipy-stubs",
     "types-resampy",
 ]
 pytorch = ["torch==2.10.0"]
