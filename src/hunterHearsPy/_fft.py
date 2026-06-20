@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from humpy_cytoolz.dicttoolz import keyfilter, merge
-from hunterHearsPy import Parameters_stft, ParametersShortTimeFFT, setting, Translator
-from hunterHearsPy.amplitude import amplitudeIntegerToFloating
+from hunterHearsPy import amplitudeIntegerToFloating, Parameters_stft, ParametersShortTimeFFT, setting, Translator
 from scipy.signal import ShortTimeFFT
 from typing import overload, TYPE_CHECKING
 from typing_extensions import Unpack
@@ -11,6 +10,7 @@ import numpy
 if TYPE_CHECKING:
 	from collections.abc import Callable
 	from hunterHearsPy import ArraySpectrograms, ArrayWaveforms, ArrayWaveformsFloating, Spectrogram, Waveform, WaveformFloating
+	from pathlib import PurePath
 	from scipy.signal._short_time_fft import _PadType
 
 @overload  # stft 1 ndarray
@@ -36,7 +36,13 @@ def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrogram
 		arrayFloating = arrayTarget
 		if numpy.issubdtype(arrayTarget.dtype, numpy.complexfloating) and (lengthWaveform < 1):
 			from hunterHearsPy._io import saveOnError  # noqa: PLC0415
-			message: str = saveOnError(arrayTarget)
+			pathFilename: PurePath = saveOnError(arrayTarget)
+			message: str = (
+				"I did not receive `lengthWaveform`, so I could not perform the inverse STFT. "
+				"I saved `arrayTarget` to a file in this computer's temporary directory so you might recover the data. "
+				f"{arrayTarget.shape = }, {arrayTarget.dtype = }\n"
+				f"{pathFilename = }"
+			)
 			raise ValueError(message)
 
 	parametersShortTimeFFT = Translator(**ParametersShortTimeFFT(keyfilter(setting.ShortTimeFFT.keys().__contains__, merge(setting.ShortTimeFFT, keywordArguments))))  # pyright: ignore[reportArgumentType] # ty:ignore[invalid-argument-type]

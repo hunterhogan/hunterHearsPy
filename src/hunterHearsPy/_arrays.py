@@ -16,8 +16,6 @@ if TYPE_CHECKING:
 	from soundfile import dtype_str as Options_dtype_str
 	from typing import Any
 
-# TODO more sophisticated tests
-
 def getWaveformMetadata(
 	listPathFilenames: Sequence[FileDescriptorOrPath], sampleRate: float, align: OptionsAlign
 ) -> tuple[dict[int, WaveformMetadata], dict[str, WaveformAxes]]:
@@ -86,9 +84,6 @@ def loadWaveforms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUlimit
 
 def loadSpectrograms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUlimit: bool | float | int | None = None, **keywordArguments: Any) -> tuple[ArraySpectrograms, dict[int, WaveformMetadata]]:
 	"""Load spectrograms from a list of audio files."""
-	# DEVELOPMENT `loadSpectrograms` is not an extension of `loadWaveforms`: I don't create an intermediate
-	# `arrayWaveforms`. Nevertheless, I want the functions to share as much logic as possible.
-
 	align: OptionsAlign = keywordArguments.get('align', setting.align)
 	dtype: DTypeLike = keywordArguments.get('dtype', setting.dtypeSpectrogram)
 	dtype_str: Options_dtype_str = keywordArguments.get('dtype_str', setting.dtype_str)

@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 	from numpy import dtype, float32, integer, ndarray
 	from typing import Any
 
-# TODO update typeshed `resampy`.
 @overload
 def resampleWaveform(waveform: ndarray[形Shape, dtype[integer[Any]]], sampleRateDesired: float, sampleRateSource: float, axisTime: int = -1) -> ndarray[形Shape, dtype[float32]]: ...
 @overload

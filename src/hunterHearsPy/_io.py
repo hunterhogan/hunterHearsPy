@@ -1,21 +1,22 @@
 # pyright: reportArgumentType=false
-# ruff: noqa: ERA001
 # ty:ignore[invalid-assignment]
 from __future__ import annotations
 
-from hunterHearsPy import ArraySpectrograms, ArrayWaveforms, getAxis, resampleWaveform, setting, Spectrogram, stft, Waveform
-from hunterHearsPy.theSSOT import subtypeHARDCODED
+from hunterHearsPy import amplitudeToSoundfile, getAxis, resampleWaveform, setting, stft
 from hunterMakesPy.filesystemToolkit import makeDirectorySafely
-from pathlib import Path
-from soundfile import dtype_str as Options_dtype_str
-from typing import Any, TYPE_CHECKING
+from pathlib import Path, PurePath
+from typing import TYPE_CHECKING
+from typing_extensions import Unpack
 import numpy
 import soundfile
 import tempfile
 import uuid
 
 if TYPE_CHECKING:
-	from hunterHearsPy import FileDescriptorOrPath, WaveformAxes
+	from hunterHearsPy import FileDescriptorOrPath, Parameters_stft, Spectrogram, Waveform, WaveformAxes
+	from numpy import dtype, ndarray
+	from soundfile import dtype_str as Options_dtype_str
+	from typing import Any
 
 # TODO. The typing has too many moving parts.
 # 1. This function: that should be the easiest--if I get the other parts right.
@@ -59,7 +60,7 @@ def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRateDesired: float |
 
 	return resampleWaveform(waveform, sampleRateDesired, sampleRateSource, axis['time'].number)
 
-def writeWAV(pathFilename: FileDescriptorOrPath, waveform: Waveform, sampleRate: float | None = None) -> FileDescriptorOrPath:
+def writeWAV(pathFilename: FileDescriptorOrPath, waveform: Waveform, sampleRate: float | None = None, subtype: str | None = None) -> FileDescriptorOrPath:
 	"""Write a waveform array to a WAV file.
 
 	You can use this function to save a `Waveform` [1] or any compatible NumPy array to a 32-bit float
@@ -96,22 +97,17 @@ def writeWAV(pathFilename: FileDescriptorOrPath, waveform: Waveform, sampleRate:
 		https://python-soundfile.readthedocs.io/en/0.12.1/
 	"""
 	sampleRate = int(sampleRate or setting.sampleRate)
+	subtype = subtype or setting.subtype
 	makeDirectorySafely(pathFilename)
-	axis: dict[str, WaveformAxes] = getAxis()
-	# TODO what happens when waveform.shape is (samples,)? Do I care? waveform is currently typed as
-	# ndarray[tuple[int, int], dtype[WaveformDtype]]. `waveform = waveform.T` is safe but not self-documenting.
-	waveform = waveform.transpose((axis['time'].number, axis['channel'].number))
 
-	# TODO Expand subtype in universal parameters and in the function parameters.
-	subtype: str = subtypeHARDCODED
-	# TODO: this is complicated.
-	# ValueError: dtype must be one of ['float32', 'float64', 'int16', 'int32'] and not 'float16'
-	# WaveformDtype: TypeAlias = floating[Any] | integer[Any]
-	# Waveform: TypeAlias = ndarray[tuple[int, int], dtype[WaveformDtype]]
+	waveform = amplitudeToSoundfile(waveform)
+
+	waveform = waveform.transpose()
+
 	soundfile.write(file=pathFilename, data=waveform, samplerate=sampleRate, subtype=subtype, format='WAV')
 	return pathFilename
 
-def spectrogramToWAV(spectrogram: Spectrogram, pathFilename: FileDescriptorOrPath, lengthWaveform: int, **parametersSTFT: Any) -> None:
+def spectrogramToWAV(spectrogram: Spectrogram, pathFilename: FileDescriptorOrPath, lengthWaveform: int, **parametersSTFT: Unpack[Parameters_stft]) -> None:
 	"""Write a complex spectrogram to a WAV file by computing the inverse STFT.
 
 	You can use this function to reconstruct a waveform from a `Spectrogram` [1] and save
@@ -148,13 +144,8 @@ def spectrogramToWAV(spectrogram: Spectrogram, pathFilename: FileDescriptorOrPat
 	sampleRate: float = parametersSTFT.get('sampleRate', setting.sampleRate)
 	writeWAV(pathFilename, waveform, sampleRate)
 
-def saveOnError(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrograms) -> str:
-	pathFilename: Path = Path(tempfile.mkdtemp(prefix='hunterHearsPy'), f"arrayTarget_{uuid.uuid4().hex}.npy").resolve()
+def saveOnError(arrayTarget: ndarray[tuple[int, ...], dtype[Any]], *, identifierTarget: str = 'arrayTarget') -> PurePath:
+	pathFilename: Path = Path(tempfile.mkdtemp(prefix='hunterHearsPy'), f"{identifierTarget}_{uuid.uuid4().hex}.npy").resolve()
 	numpy.save(pathFilename, arrayTarget)
-	message: str = (
-	"I did not receive `lengthWaveform`, so I could not perform the inverse STFT. "
-	f"I saved `arrayTarget` to a file in this computer's temporary directory so you might recover the data. {arrayTarget.shape = }, {arrayTarget.dtype = }\n"
-	f"{pathFilename = }"
-	)
 
-	return message
+	return PurePath(pathFilename)

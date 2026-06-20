@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from hunterHearsPy import ArrayWaveforms, loadWaveforms, normalizeArrayWaveforms, normalizeWaveform, Waveform
+from hunterHearsPy.amplitude import amplitudeToSoundfile
 from tests.conftest import pathDataSamples_labeled, sampleData
 from typing import Final, TYPE_CHECKING
 import numpy
@@ -18,6 +19,44 @@ listFilenamesSameShape = [
 	'WAV_44100_ch2_sec5_Sine_Copy2.wav',
 	'WAV_44100_ch2_sec5_Sine_Copy3.wav',
 ]
+
+@pytest.mark.parametrize(
+	'arrayTarget, expected',
+	[
+		pytest.param(
+			numpy.array([[-233, 89, 144]], dtype=numpy.int16),
+			numpy.array([[-233, 89, 144]], dtype=numpy.int16),
+			id='int16Passthrough',
+		),
+		pytest.param(
+			numpy.array([[-128, -34, 55, 127]], dtype=numpy.int8),
+			numpy.array([[-32768, -8704, 14080, 32512]], dtype=numpy.int16),
+			id='int8ScaledToInt16',
+		),
+		pytest.param(
+			numpy.array([[0, 233, 32768, 65535]], dtype=numpy.uint16),
+			numpy.array([[-32768, -32535, 0, 32767]], dtype=numpy.int16),
+			id='uint16CenteredToInt16',
+		),
+		pytest.param(
+			numpy.array([[-0.5, 0.125, 0.75]], dtype=numpy.float16),
+			numpy.array([[-0.5, 0.125, 0.75]], dtype=numpy.float32),
+			id='float16CastToFloat32',
+		),
+	],
+)
+def test_amplitudeToSoundfile(arrayTarget: Waveform, expected: Waveform) -> None:
+	actual: Waveform = amplitudeToSoundfile(arrayTarget)
+
+	assert actual.dtype == expected.dtype, (
+		f'amplitudeToSoundfile returned dtype `{actual.dtype}` instead of `{expected.dtype}` '
+		f'for input dtype `{arrayTarget.dtype}`.'
+	)
+	numpy.testing.assert_array_equal(
+		actual,
+		expected,
+		err_msg=f'amplitudeToSoundfile returned unexpected values for input dtype `{arrayTarget.dtype}`.',
+	)
 
 @pytest.fixture
 def listPathFilenamesArrayWaveforms() -> list[Path]:

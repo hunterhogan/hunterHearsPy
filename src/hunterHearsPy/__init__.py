@@ -31,8 +31,8 @@ from hunterHearsPy.dataBaskets import Translator as Translator
 # isort: split
 from hunterHearsPy._resample import resampleWaveform as resampleWaveform
 from hunterHearsPy.amplitude import (
-	amplitudeIntegerToFloating as amplitudeIntegerToFloating, normalizeArrayWaveforms as normalizeArrayWaveforms,
-	normalizeWaveform as normalizeWaveform)
+	amplitudeIntegerToFloating as amplitudeIntegerToFloating, amplitudeToSoundfile as amplitudeToSoundfile,
+	normalizeArrayWaveforms as normalizeArrayWaveforms, normalizeWaveform as normalizeWaveform)
 
 # isort: split
 from hunterHearsPy._fft import stft as stft, waveformSpectrogramWaveform as waveformSpectrogramWaveform

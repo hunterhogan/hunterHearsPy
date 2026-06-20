@@ -5,13 +5,12 @@ from hunterHearsPy import OptionsAlign, ParametersShortTimeFFT, tukey, WaveformA
 from hunterMakesPy import PackageSettings, raiseIfNone
 from numpy import complex64, float32
 from soundfile import dtype_str as Options_dtype_str
-from typing import Literal, TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING
 import dataclasses
 
 if TYPE_CHECKING:
 	from numpy.typing import DTypeLike
-	from scipy.signal._short_time_fft import _FFTMode, _PadType, _ScaleTo
-	_FFTMode1: TypeAlias = Literal["onesided", "onesided2X"]
+	from scipy.signal._short_time_fft import _FFTMode1, _PadType, _ScaleTo
 
 #================== Hardcoded =====================================================================
 
@@ -26,6 +25,7 @@ dtype_strHARDCODED: Options_dtype_str = raiseIfNone(dtypeWaveformHARDCODED.__nam
 	if dtypeWaveformHARDCODED.__name__ in Options_dtype_str.__args__ else None)  # pyright: ignore[reportAssignmentType] # ty:ignore[invalid-assignment]
 paddingHARDCODED: _PadType = 'even'
 sampleRateHARDCODED: float = 44100
+subtypeHARDCODED: str = 'FLOAT'
 
 #------------------ ParametersShortTimeFFT ------------------------------------------------------------------------------
 
@@ -36,10 +36,6 @@ lengthHopHARDCODED: int = 512
 phase_shiftHARDCODED: int | None = 0
 scale_toHARDCODED: _ScaleTo | None = None
 windowingFunctionHARDCODED: WindowingFunction = tukey(lengthHopHARDCODED * 2)
-
-#------------------ TODO ------------------------------------------------------------------------------
-
-subtypeHARDCODED: str = 'FLOAT'
 
 #================== Process yet to be invented to implement user settings =========================
 
@@ -58,6 +54,7 @@ padding: _PadType = paddingHARDCODED
 phase_shift: int | None = phase_shiftHARDCODED
 sampleRate: float = sampleRateHARDCODED
 scale_to: _ScaleTo | None = scale_toHARDCODED
+subtype: str = subtypeHARDCODED
 windowingFunction: WindowingFunction = windowingFunctionHARDCODED
 
 #================== "Data basket" à la `mapFolding` ===============================================
@@ -73,6 +70,7 @@ class UniversalParameters:
 	padding: _PadType
 	sampleRate: float
 	ShortTimeFFT: ParametersShortTimeFFT
+	subtype: str
 
 setting = UniversalParameters(
 	align=align
@@ -89,8 +87,9 @@ setting = UniversalParameters(
 		, phase_shift=phase_shift
 		, sampleRate=sampleRate
 		, scale_to=scale_to
-		, windowingFunction=windowingFunction
-))
+		, windowingFunction=windowingFunction)
+	, subtype=subtype
+)
 
 #------------------ Evolving idea for standardizing axes -------------------------------------------
 

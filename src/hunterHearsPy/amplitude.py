@@ -16,10 +16,12 @@ Functions
 		Normalize a waveform to a specified peak amplitude.
 
 """
+
 from __future__ import annotations
 
 from hunterMakesPy import zeroIndexed
 from numpy import divide, finfo as numpy_finfo, float32, iinfo as numpy_iinfo, max as numpy_max, multiply, ndarray
+from soundfile import dtype_str
 from typing import Any, overload, TYPE_CHECKING
 from typing_extensions import TypeVar
 import numpy
@@ -27,8 +29,9 @@ import numpy
 if TYPE_CHECKING:
 	from hunterHearsPy import ArrayWaveforms, NormalizationReverter, Waveform
 	from numpy import dtype, floating, integer
+	from pathlib import PurePath
 
-Axes = TypeVar("Axes", tuple[int, int], tuple[int, int, int])
+Axes = TypeVar('Axes', tuple[int, int], tuple[int, int, int])
 
 def amplitudeIntegerToFloating(arrayTarget: ndarray[Axes, dtype[integer[Any]]]) -> ndarray[Axes, dtype[floating[Any]]]:
 	integerInformation: numpy_iinfo[integer] = numpy_iinfo(arrayTarget.dtype.str)
@@ -40,6 +43,67 @@ def amplitudeIntegerToFloating(arrayTarget: ndarray[Axes, dtype[integer[Any]]]) 
 		arrayFloating -= (integerInformation.max + zeroIndexed) / 2
 		arrayFloating /= (integerInformation.max + zeroIndexed) / 2
 	return arrayFloating
+
+def amplitudeToSoundfile(arrayTarget: ndarray[Axes, dtype[Any]]) -> ndarray[Axes, dtype[Any]]:
+	dtypeSoundfile: tuple[dtype[Any], ...] = tuple(map(numpy.dtype, dtype_str.__args__))
+	dtypeSoundfileFloating: tuple[dtype[Any], ...] = tuple(
+		filter(lambda dtypeCandidate: numpy.issubdtype(dtypeCandidate, numpy.floating), dtypeSoundfile)
+	)
+	dtypeSoundfileInteger: tuple[dtype[Any], ...] = tuple(
+		filter(lambda dtypeCandidate: numpy.issubdtype(dtypeCandidate, numpy.integer), dtypeSoundfile)
+	)
+	dtypeFloatingMaximum: dtype[Any] = max(dtypeSoundfileFloating, key=lambda dtypeCandidate: dtypeCandidate.itemsize)
+	dtypeFloatingTarget: dtype[Any] = min(
+		filter(lambda dtypeCandidate: arrayTarget.dtype.itemsize <= dtypeCandidate.itemsize, dtypeSoundfileFloating)
+		, key=lambda dtypeCandidate: dtypeCandidate.itemsize
+		, default=dtypeFloatingMaximum
+	)
+	dtypeIntegerMaximum: dtype[Any] = max(dtypeSoundfileInteger, key=lambda dtypeCandidate: dtypeCandidate.itemsize)
+	dtypeIntegerTarget: dtype[Any] = min(
+		filter(lambda dtypeCandidate: arrayTarget.dtype.itemsize <= dtypeCandidate.itemsize, dtypeSoundfileInteger)
+		, key=lambda dtypeCandidate: dtypeCandidate.itemsize
+		, default=dtypeIntegerMaximum
+	)
+
+	if arrayTarget.dtype.name in dtype_str.__args__:
+		arraySoundfile = arrayTarget
+	elif numpy.issubdtype(arrayTarget.dtype, numpy.floating):
+		arraySoundfile = numpy.astype(arrayTarget, dtypeFloatingTarget, copy=False)
+	elif numpy.issubdtype(arrayTarget.dtype, numpy.integer):
+		integerInformationSource: numpy_iinfo[integer] = numpy_iinfo(arrayTarget.dtype)
+		integerInformationTarget: numpy_iinfo[integer] = numpy_iinfo(dtypeIntegerTarget)
+		dtypeFloating: dtype[floating[Any]] = numpy.promote_types(dtypeIntegerTarget, float32)
+		arraySoundfile = numpy.astype(arrayTarget, dtypeFloating, copy=False)
+		if integerInformationSource.min < 0:
+			arraySoundfile /= -integerInformationSource.min
+		else:
+			amplitudeMiddle: float = (integerInformationSource.max + zeroIndexed) / 2
+			arraySoundfile -= amplitudeMiddle
+			arraySoundfile /= amplitudeMiddle
+		if integerInformationTarget.min < 0:
+			arraySoundfile *= -integerInformationTarget.min
+		else:
+			amplitudeMiddle = (integerInformationTarget.max + zeroIndexed) / 2
+			arraySoundfile *= amplitudeMiddle
+			arraySoundfile += amplitudeMiddle
+		numpy.rint(arraySoundfile, out=arraySoundfile)
+		numpy.clip(arraySoundfile, integerInformationTarget.min, integerInformationTarget.max, out=arraySoundfile)
+		arraySoundfile = numpy.astype(arraySoundfile, dtypeIntegerTarget, copy=False)
+	else:
+		try:
+			arraySoundfile = numpy.astype(arrayTarget, dtypeFloatingMaximum, copy=False)
+		except (TypeError, ValueError) as error:
+			from hunterHearsPy._io import saveOnError  # noqa: PLC0415
+
+			pathFilename: PurePath = saveOnError(arrayTarget)
+			message: str = (
+				'I could not convert `arrayTarget` to a soundfile-compatible dtype. '
+				"I saved `arrayTarget` to a file in this computer's temporary directory so you might recover the data. "
+				f'{arrayTarget.shape = }, {arrayTarget.dtype = }\n'
+				f'{pathFilename = }'
+			)
+			raise TypeError(message) from error
+	return arraySoundfile
 
 def normalizeWaveform(waveform: Waveform, amplitudeNorm: float = 1.0) -> tuple[Waveform, NormalizationReverter]:
 	"""Normalize a waveform to a specified peak amplitude.
@@ -89,12 +153,12 @@ def normalizeWaveform(waveform: Waveform, amplitudeNorm: float = 1.0) -> tuple[W
 	--------
 	Normalize a waveform and revert the normalization:
 
-		```python
+	```python
 		from hunterHearsPy import normalizeWaveform
 
 		waveformNormalized, revertNormalization = normalizeWaveform(waveform.copy())
 		waveformReverted = revertNormalization(waveformNormalized)
-		```
+	```
 
 	References
 	----------
@@ -119,9 +183,12 @@ def normalizeWaveform(waveform: Waveform, amplitudeNorm: float = 1.0) -> tuple[W
 	def revertNormalization(waveformDescendant: ArrayWaveforms) -> ArrayWaveforms: ...
 	def revertNormalization(waveformDescendant: ArrayWaveforms | Waveform) -> ArrayWaveforms | Waveform:
 		return divide(waveformDescendant, amplitudeAdjustment, out=waveformDescendant)
+
 	return waveform, revertNormalization
 
-def normalizeArrayWaveforms(arrayWaveforms: ArrayWaveforms, amplitudeNorm: float = 1.0) -> tuple[ArrayWaveforms, list[NormalizationReverter]]:
+def normalizeArrayWaveforms(
+	arrayWaveforms: ArrayWaveforms, amplitudeNorm: float = 1.0
+) -> tuple[ArrayWaveforms, list[NormalizationReverter]]:
 	"""Normalize multiple waveforms in an array to a specified peak amplitude.
 
 	(AI generated docstring)
@@ -161,15 +228,13 @@ def normalizeArrayWaveforms(arrayWaveforms: ArrayWaveforms, amplitudeNorm: float
 	--------
 	Normalize all waveforms in an array and revert each one:
 
-		```python
+	```python
 		from hunterHearsPy import normalizeArrayWaveforms
 
 		arrayNormalized, listRevertNormalization = normalizeArrayWaveforms(arrayWaveforms.copy())
 		for indexWaveform in range(arrayNormalized.shape[-1]):
-			arrayReverted[..., indexWaveform] = listRevertNormalization[indexWaveform](
-				arrayReverted[..., indexWaveform]
-			)
-		```
+			arrayReverted[..., indexWaveform] = listRevertNormalization[indexWaveform](arrayReverted[..., indexWaveform])
+	```
 
 	References
 	----------

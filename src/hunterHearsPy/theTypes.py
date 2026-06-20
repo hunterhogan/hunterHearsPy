@@ -1,15 +1,14 @@
-# ruff: noqa: D101, ERA001
+# ruff: noqa: D101
 """Type definitions for audio signal processing and waveform analysis."""
 from __future__ import annotations
 
 from collections.abc import Callable
-from numpy import complex128, dtype, floating, integer, ndarray, number
+from numpy import complex64, complex128, dtype, floating, integer, ndarray, number
 from soundfile import FileDescriptorOrPath as FileDescriptorOrPath  # noqa: TC002
 from typing import Any, Literal, NamedTuple, TYPE_CHECKING, TypeAlias, TypedDict, TypeVar
 
 if TYPE_CHECKING:
-	from scipy.signal._short_time_fft import _PadType, _ScaleTo
-	_FFTMode1: TypeAlias = Literal["onesided", "onesided2X"]
+	from scipy.signal._short_time_fft import _FFTMode1, _PadType, _ScaleTo
 
 个 = TypeVar('个')
 形floating = TypeVar('形floating', bound=floating[Any])
@@ -56,8 +55,7 @@ class WaveformMetadata(TypedDict):
 
 #================== Spectrogram ===================================================================
 
-# SpectrogramDtype: TypeAlias = complex64 | complex128
-SpectrogramDtype: TypeAlias = complex128
+SpectrogramDtype: TypeAlias = complex64 | complex128
 Spectrogram: TypeAlias = ndarray[tuple[int, int, int], dtype[SpectrogramDtype]]
 """A NumPy `ndarray` of spectrogram data with shape (channel, frequency_bins, time). For mono audio, `channel` = 1."""
 
