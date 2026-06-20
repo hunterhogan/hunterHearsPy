@@ -1,10 +1,9 @@
-# pyright: reportArgumentType=false
-# ty:ignore[invalid-assignment]
 from __future__ import annotations
 
 from hunterHearsPy import amplitudeToSoundfile, getAxis, resampleWaveform, setting, stft
 from hunterMakesPy.filesystemToolkit import makeDirectorySafely
 from pathlib import Path, PurePath
+from soundfile import AudioData
 from typing import TYPE_CHECKING
 from typing_extensions import Unpack
 import numpy
@@ -13,22 +12,11 @@ import tempfile
 import uuid
 
 if TYPE_CHECKING:
-	from hunterHearsPy import FileDescriptorOrPath, Parameters_stft, Spectrogram, Waveform, WaveformAxes
+	from hunterHearsPy import AxisMetadata, FileDescriptorOrPath, Parameters_stft, Spectrogram, Waveform
 	from numpy import dtype, ndarray
-	from soundfile import dtype_str as Options_dtype_str
+	from soundfile import AudioData_2d, dtype_str as Options_dtype_str
 	from typing import Any
 
-# TODO. The typing has too many moving parts.
-# 1. This function: that should be the easiest--if I get the other parts right.
-# 2. `SoundFile.read(dtype=setting.dtype_str` is dynamic, and the static checker is using the type of
-#    the field, `dtype_str: soundfile_dtype_str`, `Literal["float64", "float32", "int32", "int16"]`
-# 3. `Soundfile.read` has decent typing, but I have total control because I have a custom stub file in
-#    `stubFileNotFound`.
-# 4. `resampy` accepts integer or floating input and returns float32 or the same floating type.
-
-# AND NOW, `writeWAV` is pulled into the problem.
-
-# This is a general purpose function: it is not a subroutine of _arrays.
 def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRateDesired: float | None = None, dtype_str: Options_dtype_str | None = None) -> Waveform:
 	"""Read an audio file and return waveform data as a NumPy array.
 
@@ -54,11 +42,11 @@ def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRateDesired: float |
 	sampleRateDesired = sampleRateDesired or setting.sampleRate
 	with soundfile.SoundFile(pathFilename) as readSoundFile:
 		sampleRateSource: int = readSoundFile.samplerate
-		waveform: Waveform = readSoundFile.read(dtype=dtype_str or setting.dtype_str, always_2d=True)
-	axis: dict[str, WaveformAxes] = getAxis()
-	waveform = waveform.transpose((axis['time'].number, axis['channel'].number))
+		audioData: AudioData_2d = readSoundFile.read(dtype=dtype_str or setting.dtype_str, always_2d=True)  # ty:ignore[invalid-assignment] https://github.com/astral-sh/ty/issues/2799
+	axis: dict[str, AxisMetadata] = getAxis()
+	waveform: Waveform = audioData.transpose((axis['time'].number, axis['channel'].number))
 
-	return resampleWaveform(waveform, sampleRateDesired, sampleRateSource, axis['time'].number)
+	return resampleWaveform(waveform, sampleRateDesired, sampleRateSource, axis['time'].number)  # ty:ignore[no-matching-overload] https://github.com/astral-sh/ty/issues/2799
 
 def writeWAV(pathFilename: FileDescriptorOrPath, waveform: Waveform, sampleRate: float | None = None, subtype: str | None = None) -> FileDescriptorOrPath:
 	"""Write a waveform array to a WAV file.
@@ -100,11 +88,11 @@ def writeWAV(pathFilename: FileDescriptorOrPath, waveform: Waveform, sampleRate:
 	subtype = subtype or setting.subtype
 	makeDirectorySafely(pathFilename)
 
-	waveform = amplitudeToSoundfile(waveform)
+	audioData: AudioData = amplitudeToSoundfile(waveform)
 
-	waveform = waveform.transpose()
+	audioData = audioData.transpose()
 
-	soundfile.write(file=pathFilename, data=waveform, samplerate=sampleRate, subtype=subtype, format='WAV')
+	soundfile.write(file=pathFilename, data=audioData, samplerate=sampleRate, subtype=subtype, format='WAV')
 	return pathFilename
 
 def spectrogramToWAV(spectrogram: Spectrogram, pathFilename: FileDescriptorOrPath, lengthWaveform: int, **parametersSTFT: Unpack[Parameters_stft]) -> None:

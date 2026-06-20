@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from hunterHearsPy import ArrayWaveformsShape, getAxis, readAudioFile, setting, stft, WaveformAxes, WaveformMetadata
+from hunterHearsPy import (
+	ArraySpectrogramsShape, ArrayWaveformsShape, AxisMetadata, getAxis, readAudioFile, setting, stft, WaveformMetadata, WaveformShape)
 from hunterMakesPy.parseParameters import defineConcurrencyLimit
 from tqdm.auto import tqdm
 from typing import TYPE_CHECKING
@@ -12,22 +13,23 @@ import sys
 if TYPE_CHECKING:
 	from collections.abc import Sequence
 	from hunterHearsPy import ArraySpectrograms, ArrayWaveforms, FileDescriptorOrPath, OptionsAlign, Waveform
+	from numpy.lib._arraypad_impl import _ModeKind
 	from numpy.typing import DTypeLike
 	from soundfile import dtype_str as Options_dtype_str
 	from typing import Any
 
 def getWaveformMetadata(
 	listPathFilenames: Sequence[FileDescriptorOrPath], sampleRate: float, align: OptionsAlign
-) -> tuple[dict[int, WaveformMetadata], dict[str, WaveformAxes]]:
+) -> tuple[dict[int, WaveformMetadata], dict[str, AxisMetadata]]:
 	"""Retrieve metadata for a collection of audio waveform files."""
-	# ======== Initialize ==========================================================
+	#============== Initialize ==========================================================
 
-	axis: dict[str, WaveformAxes] = getAxis()
+	axis: dict[str, AxisMetadata] = getAxis()
 	channelMaximum: int = 0
 	dictionaryWaveformMetadata: dict[int, WaveformMetadata] = {}
 	lengthMaximum: int = 0
 
-	# ======== Populate ===========================================================
+	#============== Populate ===========================================================
 
 	if len(listPathFilenames) == 0:
 		message: str = f'I received `{len(listPathFilenames) = }`, so `arrayWaveforms` will have zero-sized axes.'
@@ -41,11 +43,11 @@ def getWaveformMetadata(
 		channelMaximum = max(channelMaximum, channels)
 		lengthMaximum = max(lengthMaximum, lengthWaveform)
 
-	axis['channel'] = WaveformAxes(number=axis['channel'].number, size=channelMaximum)
-	axis['indexing'] = WaveformAxes(number=axis['indexing'].number, size=len(listPathFilenames))
-	axis['time'] = WaveformAxes(number=axis['time'].number, size=lengthMaximum)
+	axis['channel'] = AxisMetadata(number=axis['channel'].number, size=channelMaximum)
+	axis['indexing'] = AxisMetadata(number=axis['indexing'].number, size=len(listPathFilenames))
+	axis['time'] = AxisMetadata(number=axis['time'].number, size=lengthMaximum)
 
-	# ======== Calculate ===========================================================
+	#============== Calculate ===========================================================
 
 	multiplicandSamplesStart: float = max((align == 'center') / 2, align == 'start')
 
@@ -59,6 +61,7 @@ def getWaveformMetadata(
 
 def loadWaveforms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUlimit: bool | float | int | None = None, **keywordArguments: Any) -> ArrayWaveforms:
 	"""Load a list of audio files into a single stacked NumPy array."""
+	#============== Initialize ==========================================================
 	align: OptionsAlign = keywordArguments.get('align', setting.align)
 	dtype: DTypeLike = keywordArguments.get('dtype', setting.dtypeWaveform)
 	dtype_str: Options_dtype_str = keywordArguments.get('dtype_str', setting.dtype_str)
@@ -66,12 +69,13 @@ def loadWaveforms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUlimit
 
 	max_workers: int = defineConcurrencyLimit(limit=CPUlimit)
 
+	#============== Allocate memory ==========================================================
 	dictionaryWaveformMetadata, axis = getWaveformMetadata(listPathFilenames, sampleRateDesired, align)
 
 	arrayWaveforms: ArrayWaveforms = numpy.zeros(ArrayWaveformsShape(*(entry.size for entry in sorted(axis.values()))), dtype)
-	# TODO frustrating! ^^^ in the line above, the axis order is entirely based on the SSOT, `axis`,
-	# but IMMEDIATELY below, the axis order is hardcoded!
 
+	#============== Concurrent loading ==========================================================
+	# TODO the axis order is hardcoded.
 	def workhorse(index: int, metadata: WaveformMetadata) -> None:
 		arrayWaveforms[:, metadata['samplesStart'] : metadata['samplesStop'], index] = readAudioFile(
 			metadata['pathFilename'], sampleRateDesired, dtype_str
@@ -84,6 +88,66 @@ def loadWaveforms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUlimit
 
 def loadSpectrograms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUlimit: bool | float | int | None = None, **keywordArguments: Any) -> tuple[ArraySpectrograms, dict[int, WaveformMetadata]]:
 	"""Load spectrograms from a list of audio files."""
+	#============== Initialize ==========================================================
+
+	align: OptionsAlign = keywordArguments.get('align', setting.align)
+	align_pad_mode: _ModeKind = keywordArguments.get('align_pad_mode', setting.align_pad_mode)
+	dtype: DTypeLike = keywordArguments.get('dtype', setting.dtypeSpectrogram)
+	dtype_str: Options_dtype_str = keywordArguments.get('dtype_str', setting.dtype_str)
+	dtypeWaveform: DTypeLike = keywordArguments.get('dtypeWaveform', setting.dtypeWaveform)
+	sampleRateDesired: float = keywordArguments.get('sampleRateDesired', setting.sampleRate)
+
+	max_workers: int = defineConcurrencyLimit(limit=CPUlimit)
+
+	#============== Allocate memory ==========================================================
+
+	dictionaryWaveformMetadata, axis = getWaveformMetadata(listPathFilenames, sampleRateDesired, align)
+
+	waveformShape = WaveformShape(*(entry.size for entry in sorted((axis['channel'], axis['time']))))
+	axisSpectrogram = AxisMetadata(setting.axisSpectrogramIndexing, len(dictionaryWaveformMetadata))
+	arraySpectrogramsShape: list[int] = list(stft(numpy.zeros(waveformShape, dtypeWaveform), **keywordArguments).shape)
+	arraySpectrogramsShape.insert(axisSpectrogram.number, axisSpectrogram.size)
+
+	arraySpectrograms: ArraySpectrograms = numpy.zeros(ArraySpectrogramsShape(*arraySpectrogramsShape), dtype)
+
+	#============== Concurrent loading ==========================================================
+
+	def workhorse(index: int, metadata: WaveformMetadata) -> None:
+		# TODO make tests that can check if this works.
+
+		pad_width: dict[int, tuple[int, int]] = {
+			axis['channel'].number: (0, 0)
+			, axis['time'].number: (metadata['samplesStart'], axis['time'].size - metadata['samplesStop'])
+		}
+
+		# TODO axisSpectrogram.number is hardcoded here. grr!
+		arraySpectrograms[..., index] = stft(
+			numpy.pad(
+				readAudioFile(metadata['pathFilename'], sampleRateDesired, dtype_str).astype(dtypeWaveform, copy=False)
+				, pad_width, mode=align_pad_mode)
+			, **keywordArguments
+		)
+
+		if False:  # This fails the current tests.
+			arraySpectrogramsShape[axisSpectrogram.number] = index
+			indices = numpy.indices(tuple(arraySpectrogramsShape))
+			numpy.put_along_axis(arraySpectrograms, indices=indices, values=stft(
+				numpy.pad(
+					readAudioFile(metadata['pathFilename'], sampleRateDesired, dtype_str).astype(dtypeWaveform, copy=False)
+					, pad_width, mode=align_pad_mode)
+				, **keywordArguments
+			), axis=axisSpectrogram.number
+		)
+
+	with ThreadPoolExecutor(max_workers=max_workers) as threadManager:
+		tuple(tqdm(threadManager.map(workhorse, dictionaryWaveformMetadata.keys(), dictionaryWaveformMetadata.values()), desc='Loading spectrograms', total=axisSpectrogram.size))
+
+	return arraySpectrograms, dictionaryWaveformMetadata
+
+def BACKUPloadSpectrograms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUlimit: bool | float | int | None = None, **keywordArguments: Any) -> tuple[ArraySpectrograms, dict[int, WaveformMetadata]]:
+	"""Load spectrograms from a list of audio files."""
+	#============== Initialize ==========================================================
+
 	align: OptionsAlign = keywordArguments.get('align', setting.align)
 	dtype: DTypeLike = keywordArguments.get('dtype', setting.dtypeSpectrogram)
 	dtype_str: Options_dtype_str = keywordArguments.get('dtype_str', setting.dtype_str)
@@ -92,18 +156,27 @@ def loadSpectrograms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUli
 
 	max_workers: int = defineConcurrencyLimit(limit=CPUlimit)
 
+	#============== Allocate memory ==========================================================
+
 	dictionaryWaveformMetadata, axis = getWaveformMetadata(listPathFilenames, sampleRateDesired, align)
 
-	waveformZeros: Waveform = numpy.zeros((axis['channel'].size, axis['time'].size), dtypeWaveform)
-	arraySpectrograms: ArraySpectrograms = numpy.zeros(shape=(*stft(waveformZeros, **keywordArguments).shape, len(dictionaryWaveformMetadata)), dtype=dtype)
+	waveformShape = WaveformShape(*(entry.size for entry in sorted((axis['channel'], axis['time']))))
+	waveformZeros: Waveform = numpy.zeros(waveformShape, dtypeWaveform)
+
+	axisSpectrogram = AxisMetadata(setting.axisSpectrogramIndexing, len(dictionaryWaveformMetadata))
+
+	arraySpectrogramsShape: list[int] = list(stft(waveformZeros, **keywordArguments).shape)
+	arraySpectrogramsShape.insert(axisSpectrogram.number, axisSpectrogram.size)
+	arraySpectrograms: ArraySpectrograms = numpy.zeros(ArraySpectrogramsShape(*arraySpectrogramsShape), dtype)
+
+	#============== Concurrent loading ==========================================================
 
 	def workhorse(index: int, metadata: WaveformMetadata) -> None:
 		waveform: Waveform = waveformZeros.copy()
 		waveform[:, metadata['samplesStart'] : metadata['samplesStop']] = readAudioFile(metadata['pathFilename'], sampleRateDesired, dtype_str).astype(dtypeWaveform, copy=False)
-		# TODO Think about numpy.pad.mode waveform = numpy.pad(waveform, ((0, 0), (metadata['samplesStart'], waveform.shape[1] - metadata['samplesStop'])), mode=mode)
 		arraySpectrograms[..., index] = stft(waveform, **keywordArguments)
 
 	with ThreadPoolExecutor(max_workers=max_workers) as threadManager:
-		tuple(tqdm(threadManager.map(workhorse, dictionaryWaveformMetadata.keys(), dictionaryWaveformMetadata.values()), desc='Loading spectrograms', total=len(dictionaryWaveformMetadata)))
+		tuple(tqdm(threadManager.map(workhorse, dictionaryWaveformMetadata.keys(), dictionaryWaveformMetadata.values()), desc='Loading spectrograms', total=axisSpectrogram.size))
 
 	return arraySpectrograms, dictionaryWaveformMetadata

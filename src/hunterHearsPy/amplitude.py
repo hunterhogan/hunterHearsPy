@@ -20,90 +20,73 @@ Functions
 from __future__ import annotations
 
 from hunterMakesPy import zeroIndexed
-from numpy import divide, finfo as numpy_finfo, float32, iinfo as numpy_iinfo, max as numpy_max, multiply, ndarray
+from numpy import divide, finfo as numpy_finfo, float32, floating, iinfo as numpy_iinfo, integer, max as numpy_max, multiply
 from soundfile import dtype_str
-from typing import Any, overload, TYPE_CHECKING
-from typing_extensions import TypeVar
+from typing import overload, TYPE_CHECKING
 import numpy
 
 if TYPE_CHECKING:
-	from hunterHearsPy import ArrayWaveforms, NormalizationReverter, Waveform
-	from numpy import dtype, floating, integer
+	from hunterHearsPy import ArrayWaveforms, NormalizationReverter, Waveform, 形Shape
+	from numpy import dtype, ndarray
 	from pathlib import PurePath
+	from soundfile import AudioData
+	from typing import Any
 
-Axes = TypeVar('Axes', tuple[int, int], tuple[int, int, int])
-
-def amplitudeIntegerToFloating(arrayTarget: ndarray[Axes, dtype[integer[Any]]]) -> ndarray[Axes, dtype[floating[Any]]]:
+def amplitudeIntegerToFloating(arrayTarget: ndarray[形Shape, dtype[integer[Any]]]) -> ndarray[形Shape, dtype[floating[Any]]]:
 	integerInformation: numpy_iinfo[integer] = numpy_iinfo(arrayTarget.dtype.str)
 	dtypeFloating: dtype[floating[Any]] = numpy.promote_types(arrayTarget.dtype, float32)
-	arrayFloating: ndarray[Axes, dtype[floating[Any]]] = numpy.astype(arrayTarget, dtypeFloating, copy=False)
+	arrayFloating: ndarray[形Shape, dtype[floating[Any]]] = numpy.astype(arrayTarget, dtypeFloating, copy=False)
 	if integerInformation.min < 0:
 		arrayFloating /= -integerInformation.min
 	else:
-		arrayFloating -= (integerInformation.max + zeroIndexed) / 2
-		arrayFloating /= (integerInformation.max + zeroIndexed) / 2
+		amplitudeMiddle: float = (integerInformation.max + zeroIndexed) / 2
+		arrayFloating -= amplitudeMiddle
+		arrayFloating /= amplitudeMiddle
 	return arrayFloating
 
-def amplitudeToSoundfile(arrayTarget: ndarray[Axes, dtype[Any]]) -> ndarray[Axes, dtype[Any]]:
+def amplitudeToSoundfile(arrayTarget: ndarray[形Shape, dtype[Any]]) -> AudioData:
 	dtypeSoundfile: tuple[dtype[Any], ...] = tuple(map(numpy.dtype, dtype_str.__args__))
-	dtypeSoundfileFloating: tuple[dtype[Any], ...] = tuple(
-		filter(lambda dtypeCandidate: numpy.issubdtype(dtypeCandidate, numpy.floating), dtypeSoundfile)
-	)
-	dtypeSoundfileInteger: tuple[dtype[Any], ...] = tuple(
-		filter(lambda dtypeCandidate: numpy.issubdtype(dtypeCandidate, numpy.integer), dtypeSoundfile)
-	)
-	dtypeFloatingMaximum: dtype[Any] = max(dtypeSoundfileFloating, key=lambda dtypeCandidate: dtypeCandidate.itemsize)
-	dtypeFloatingTarget: dtype[Any] = min(
-		filter(lambda dtypeCandidate: arrayTarget.dtype.itemsize <= dtypeCandidate.itemsize, dtypeSoundfileFloating)
-		, key=lambda dtypeCandidate: dtypeCandidate.itemsize
-		, default=dtypeFloatingMaximum
-	)
-	dtypeIntegerMaximum: dtype[Any] = max(dtypeSoundfileInteger, key=lambda dtypeCandidate: dtypeCandidate.itemsize)
-	dtypeIntegerTarget: dtype[Any] = min(
-		filter(lambda dtypeCandidate: arrayTarget.dtype.itemsize <= dtypeCandidate.itemsize, dtypeSoundfileInteger)
-		, key=lambda dtypeCandidate: dtypeCandidate.itemsize
-		, default=dtypeIntegerMaximum
-	)
+	dtypeMaximum = max(dtypeSoundfile)
 
 	if arrayTarget.dtype.name in dtype_str.__args__:
-		arraySoundfile = arrayTarget
+		arraySoundfile: AudioData = arrayTarget
+
 	elif numpy.issubdtype(arrayTarget.dtype, numpy.floating):
-		arraySoundfile = numpy.astype(arrayTarget, dtypeFloatingTarget, copy=False)
+		dtypeSoundfileFloating: frozenset[dtype[floating[Any]]] = frozenset(filter(lambda _dtype: numpy.issubdtype(_dtype, floating), dtypeSoundfile))
+		dtypeNewFloating: dtype[floating[Any]] = min(min(arrayTarget.dtype, *dtypeSoundfileFloating), max(dtypeSoundfileFloating))  # noqa: PLW3301
+		arraySoundfile = numpy.astype(arrayTarget, dtypeNewFloating, copy=False)
+
 	elif numpy.issubdtype(arrayTarget.dtype, numpy.integer):
-		integerInformationSource: numpy_iinfo[integer] = numpy_iinfo(arrayTarget.dtype)
-		integerInformationTarget: numpy_iinfo[integer] = numpy_iinfo(dtypeIntegerTarget)
-		dtypeFloating: dtype[floating[Any]] = numpy.promote_types(dtypeIntegerTarget, float32)
-		arraySoundfile = numpy.astype(arrayTarget, dtypeFloating, copy=False)
-		if integerInformationSource.min < 0:
-			arraySoundfile /= -integerInformationSource.min
+		dtypesInteger: frozenset[dtype[integer[Any]]] = frozenset(filter(lambda _dtype: numpy.issubdtype(_dtype, integer), dtypeSoundfile))
+		dtypeNewInteger: dtype[integer[Any]] = min(min(arrayTarget.dtype, *dtypesInteger), max(dtypesInteger))  # noqa: PLW3301
+
+		integerInformation: numpy_iinfo[integer] = numpy_iinfo(arrayTarget.dtype)
+
+		if integerInformation.min < 0:
+			arrayTarget //= -integerInformation.min
 		else:
-			amplitudeMiddle: float = (integerInformationSource.max + zeroIndexed) / 2
-			arraySoundfile -= amplitudeMiddle
-			arraySoundfile /= amplitudeMiddle
-		if integerInformationTarget.min < 0:
-			arraySoundfile *= -integerInformationTarget.min
-		else:
-			amplitudeMiddle = (integerInformationTarget.max + zeroIndexed) / 2
-			arraySoundfile *= amplitudeMiddle
-			arraySoundfile += amplitudeMiddle
-		numpy.rint(arraySoundfile, out=arraySoundfile)
-		numpy.clip(arraySoundfile, integerInformationTarget.min, integerInformationTarget.max, out=arraySoundfile)
-		arraySoundfile = numpy.astype(arraySoundfile, dtypeIntegerTarget, copy=False)
+			amplitudeMiddle: int = (integerInformation.max + zeroIndexed) // 2
+			arrayTarget -= amplitudeMiddle
+			arrayTarget //= amplitudeMiddle
+
+		arraySoundfile = numpy.astype(arrayTarget, dtypeNewInteger, copy=False)  # pyright: ignore[reportAssignmentType]
 	else:
 		try:
-			arraySoundfile = numpy.astype(arrayTarget, dtypeFloatingMaximum, copy=False)
+			arraySoundfile = numpy.astype(arrayTarget, dtypeMaximum, copy=False)
 		except (TypeError, ValueError) as error:
 			from hunterHearsPy._io import saveOnError  # noqa: PLC0415
 
 			pathFilename: PurePath = saveOnError(arrayTarget)
 			message: str = (
-				'I could not convert `arrayTarget` to a soundfile-compatible dtype. '
+				f'I could not convert `arrayTarget` to a dtype in {dtype_str.__args__}. '
 				"I saved `arrayTarget` to a file in this computer's temporary directory so you might recover the data. "
 				f'{arrayTarget.shape = }, {arrayTarget.dtype = }\n'
 				f'{pathFilename = }'
 			)
 			raise TypeError(message) from error
-	return arraySoundfile
+	# I could hardcode the potential types 'float32', 'float64', 'int16', 'int32' to make the type annotations align.
+	# I don't know how, or if it is possible, to future-proof the type annotations against changes to `dtype_str.__args__`.
+	return arraySoundfile  # ty:ignore[invalid-return-type]
 
 def normalizeWaveform(waveform: Waveform, amplitudeNorm: float = 1.0) -> tuple[Waveform, NormalizationReverter]:
 	"""Normalize a waveform to a specified peak amplitude.
@@ -186,9 +169,7 @@ def normalizeWaveform(waveform: Waveform, amplitudeNorm: float = 1.0) -> tuple[W
 
 	return waveform, revertNormalization
 
-def normalizeArrayWaveforms(
-	arrayWaveforms: ArrayWaveforms, amplitudeNorm: float = 1.0
-) -> tuple[ArrayWaveforms, list[NormalizationReverter]]:
+def normalizeArrayWaveforms(arrayWaveforms: ArrayWaveforms, amplitudeNorm: float = 1.0) -> tuple[ArrayWaveforms, tuple[NormalizationReverter, ...]]:
 	"""Normalize multiple waveforms in an array to a specified peak amplitude.
 
 	(AI generated docstring)
@@ -215,8 +196,8 @@ def normalizeArrayWaveforms(
 	arrayWaveformsNormalized : ArrayWaveforms
 		The array of normalized waveforms, identical to `arrayWaveforms` modified in place.
 		Each waveform is scaled to peak amplitude `amplitudeNorm`.
-	listRevertNormalization : list[NormalizationReverter]
-		A list of callables indexed in the same order as the last axis of `arrayWaveforms`.
+	listRevertNormalization : tuple[NormalizationReverter, ...]
+		A tuple of callables indexed in the same order as the last axis of `arrayWaveforms`.
 		Each callable reverses the normalization scaling for the corresponding waveform.
 
 	See Also
@@ -250,4 +231,4 @@ def normalizeArrayWaveforms(
 	listRevertNormalization: list[NormalizationReverter] = [lambda makeTypeCheckerHappy: makeTypeCheckerHappy] * arrayWaveforms.shape[-1]
 	for index in range(arrayWaveforms.shape[-1]):
 		arrayWaveforms[..., index], listRevertNormalization[index] = normalizeWaveform(arrayWaveforms[..., index], amplitudeNorm)
-	return arrayWaveforms, listRevertNormalization
+	return arrayWaveforms, tuple(listRevertNormalization)

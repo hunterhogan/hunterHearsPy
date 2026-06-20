@@ -28,10 +28,14 @@ from numpy import absolute, float64, multiply, ones_like
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-	from hunterHearsPy import 形ndarray
-	from numpy import complexfloating, floating
-	from numpy.typing import ArrayLike, NDArray
+	from hunterHearsPy import 形ndarray, 形Shape
+	from numpy import complexfloating, dtype, floating, ndarray
+	from numpy.typing import ArrayLike
 	from typing import Any
+
+# NOTE I wish I had written down my evidence for why `applyHardLimit` is superior to `numpy.clip`.
+# Nevertheless, I'm confident I needed this function. Use an array for `comparand` to get the full
+# value of this function.
 
 def applyHardLimit(arrayTarget: 形ndarray, comparand: ArrayLike = 1.0) -> 形ndarray:
 	"""Clip the elements of `arrayTarget` to the magnitude bounds defined by `comparand`.
@@ -71,17 +75,17 @@ def applyHardLimit(arrayTarget: 形ndarray, comparand: ArrayLike = 1.0) -> 形nd
 		https://numpy.org/doc/stable/reference/typing.html#numpy.typing.ArrayLike
 
 	"""
-	maskTrueAboveThreshold = absolute(comparand) - absolute(arrayTarget) < 0.0
+	selectAboveThreshold = absolute(comparand) - absolute(arrayTarget) < 0.0
 	reduction = arrayTarget - (absolute(arrayTarget) - absolute(comparand))
-	arrayTarget[maskTrueAboveThreshold] = reduction[maskTrueAboveThreshold]
+	arrayTarget[selectAboveThreshold] = reduction[selectAboveThreshold]
 	return arrayTarget
 
 def applyHardLimitComplexValued(
-	arrayTarget: 形ndarray,
-	comparand: NDArray[floating[Any] | complexfloating[Any, Any]],
-	penalty: float = 1.0
-	) -> 形ndarray:
-	"""Clip the elements of complex-valued `arrayTarget` by scaling magnitudes to stay within `comparand`.
+		arrayTarget: ndarray[形Shape, dtype[complexfloating[Any, Any]]]
+		, comparand: ndarray[形Shape, dtype[floating[Any] | complexfloating[Any, Any]]]
+		, penalty: float = 1.0
+	) -> ndarray[形Shape, dtype[complexfloating[Any, Any]]]:
+	"""Clip, with `penalty`, complex-valued `arrayTarget` exceeding `comparand` magnitudes.
 
 	This function applies a magnitude-based hard limit to each element of `arrayTarget`. When the
 	magnitude of an element strictly exceeds the corresponding value in `comparand`, the element is
@@ -133,13 +137,20 @@ def applyHardLimitComplexValued(
 		https://numpy.org/doc/stable/reference/typing.html#numpy.typing.NDArray
 
 	"""
-	magnitudeArrayTarget: NDArray[float64] = absolute(arrayTarget, dtype=float64)
-	magnitudeComparand: NDArray[float64] = absolute(comparand, dtype=float64)
+	arrayTargetMagnitude: ndarray[形Shape, dtype[float64]] = absolute(arrayTarget, dtype=float64)  # pyright: ignore[reportAssignmentType] # ty:ignore[invalid-assignment]
 
-	maskTrueAboveThreshold = magnitudeComparand - magnitudeArrayTarget < 0.0
+	comparandMagnitude: ndarray[形Shape, dtype[float64]] = absolute(comparand, dtype=float64)  # pyright: ignore[reportAssignmentType] # ty:ignore[invalid-assignment]
 
-	arrayCoefficients_Float64: NDArray[float64] = magnitudeComparand[maskTrueAboveThreshold] / magnitudeArrayTarget[maskTrueAboveThreshold]
-	arrayCoefficients_ComplexValued: 形ndarray = ones_like(arrayTarget, dtype=arrayTarget.dtype)
-	arrayCoefficients_ComplexValued[maskTrueAboveThreshold] = arrayCoefficients_Float64**penalty
+	selectAboveThreshold: ndarray[形Shape, dtype[float64]] = ((comparandMagnitude - arrayTargetMagnitude) < 0.0).astype(float64)  # pyright: ignore[reportAssignmentType] # ty:ignore[invalid-assignment]
 
-	return multiply(arrayTarget, arrayCoefficients_ComplexValued)
+	arrayClippingCoefficientsMagnitude: ndarray[形Shape, dtype[float64]] = comparandMagnitude[selectAboveThreshold] / arrayTargetMagnitude[selectAboveThreshold]  # pyright: ignore[reportArgumentType, reportCallIssue, reportUnknownVariableType]
+	# TODO I don't remember why I created complexfloating `arrayClippingCoefficients` instead of just
+	# using `arrayClippingCoefficientsMagnitude`. I made this long enough ago that I did it because I
+	# was a n00b. Oh, I see. `arrayClippingCoefficientsMagnitude` is empty in cells
+	# ~selectAboveThreshold. I probably didn't understand that at the time, so `ones_like` fixed the
+	# problem.
+	# TODO I need real tests.
+	arrayClippingCoefficients = ones_like(arrayTarget, dtype=arrayTarget.dtype)
+	arrayClippingCoefficients[selectAboveThreshold] = arrayClippingCoefficientsMagnitude**penalty  # pyright: ignore[reportArgumentType, reportCallIssue]
+
+	return multiply(arrayTarget, arrayClippingCoefficients)  # pyright: ignore[reportReturnType] # ty:ignore[invalid-return-type]

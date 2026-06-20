@@ -15,31 +15,40 @@ if TYPE_CHECKING:
 形ndarray = TypeVar('形ndarray', bound=ndarray[tuple[int, ...], dtype[number]], covariant=True)
 形Shape = TypeVar('形Shape', bound=tuple[int, ...])
 
-OptionsAlign: TypeAlias = Literal['center', 'start', 'stop']
-
 #================== Waveform ======================================================================
 
-WaveformFloatingDtype: TypeAlias = floating[Any]
-WaveformDtype: TypeAlias = integer[Any] | WaveformFloatingDtype
-
-Waveform: TypeAlias = ndarray[tuple[int, int], dtype[WaveformDtype]]
-"""A NumPy `ndarray` of audio waveform data with shape (channel, time); for mono audio, `channel` = 1."""
-WaveformFloating: TypeAlias = ndarray[tuple[int, int], dtype[WaveformFloatingDtype]]
-"""A NumPy `ndarray` of audio waveform data with shape (channel, time); for mono audio, `channel` = 1."""
-
-ArrayWaveforms: TypeAlias = ndarray[tuple[int, int, int], dtype[WaveformDtype]]
-"""A NumPy `ndarray` containing `ndarray` of type `Waveform` indexed on the last axis: shape is (channel, time, `Waveform`)."""
-ArrayWaveformsFloating: TypeAlias = ndarray[tuple[int, int, int], dtype[WaveformFloatingDtype]]
-"""A NumPy `ndarray` containing `ndarray` of type `WaveformFloating` indexed on the last axis: shape is (channel, time, `WaveformFloating`)."""
+class ArraySpectrogramsShape(NamedTuple):
+	a0: int
+	a1: int
+	a2: int
+	a3: int
 
 class ArrayWaveformsShape(NamedTuple):
 	a0: int
 	a1: int
 	a2: int
 
-class WaveformAxes(NamedTuple):
+class WaveformShape(NamedTuple):
+	a0: int
+	a1: int
+
+OptionsAlign: TypeAlias = Literal['center', 'start', 'stop']
+
+class AxisMetadata(NamedTuple):
 	number: int
 	size: int
+
+WaveformFloatingDtype: TypeAlias = floating[Any]
+WaveformFloating: TypeAlias = ndarray[tuple[int, int], dtype[WaveformFloatingDtype]]
+"""A NumPy `ndarray` of audio waveform data with shape (channel, time); for mono audio, `channel` = 1."""
+ArrayWaveformsFloating: TypeAlias = ndarray[tuple[int, int, int], dtype[WaveformFloatingDtype]]
+"""A NumPy `ndarray` containing `ndarray` of type `WaveformFloating` indexed on the last axis: shape is (channel, time, `WaveformFloating`)."""
+
+WaveformDtype: TypeAlias = integer[Any] | WaveformFloatingDtype
+Waveform: TypeAlias = ndarray[tuple[int, int], dtype[WaveformDtype]]
+"""A NumPy `ndarray` of audio waveform data with shape (channel, time); for mono audio, `channel` = 1."""
+ArrayWaveforms: TypeAlias = ndarray[tuple[int, int, int], dtype[WaveformDtype]]
+"""A NumPy `ndarray` containing `ndarray` of type `Waveform` indexed on the last axis: shape is (channel, time, `Waveform`)."""
 
 class WaveformMetadata(TypedDict):
 	"""Metadata describing waveform file properties and processing state."""
