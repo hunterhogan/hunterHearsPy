@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 @pytest.fixture
 def arrayAxisOperation() -> NDArray[int64]:
-	"""You can use this fixture to test axis movement with deterministic integer data."""  # noqa: DOC201
+	"""You can use this fixture to test axis movement with deterministic integer data."""
 	return ((numpy.arange(2 * 3 * 5 * 7, dtype=int64) + 5) * 3).reshape((2, 3, 5, 7))
 
 @pytest.mark.parametrize('axisSource, axisOfOperation', [(0, -1), (1, -1), (2, 0), (-1, 1)])

@@ -45,7 +45,8 @@ def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrogram
 			)
 			raise ValueError(message)
 
-	parametersShortTimeFFT = Translator(**ParametersShortTimeFFT(keyfilter(setting.ShortTimeFFT.keys().__contains__, merge(setting.ShortTimeFFT, keywordArguments))))  # pyright: ignore[reportArgumentType] # ty:ignore[invalid-argument-type]
+	parametersShortTimeFFT = Translator(**ParametersShortTimeFFT(
+		keyfilter(setting.ShortTimeFFT.keys().__contains__, merge(setting.ShortTimeFFT, keywordArguments))))  # pyright: ignore[reportArgumentType] # ty:ignore[invalid-argument-type]
 
 	padding: _PadType = keywordArguments.get('padding', setting.padding)
 

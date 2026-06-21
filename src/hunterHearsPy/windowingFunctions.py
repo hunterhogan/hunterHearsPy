@@ -22,190 +22,145 @@ import scipy.signal.windows as SciPy
 if TYPE_CHECKING:
 	from hunterHearsPy import WindowingFunction
 
-def _getLengthTaper(lengthWindow: int, ratioTaper: float | None) -> int:
-	"""I use this shared subroutine to split a window length into taper sections.
-
-	This function converts a whole window length and a taper ratio into the number of samples in one
-	edge taper. Public window constructors call it so they can share the same taper-length logic.
+def _getLengthTaper(lengthSupport: int, ratioTaper: float) -> int:
+	"""I use this to compute and validate the taper length for a windowingFunction.
 
 	Parameters
 	----------
-	lengthWindow : int
-		Total length of the windowing function.
-	ratioTaper : float | None
-		Ratio of taper length to windowing-function length. When `None`, the default taper ratio is
-		used.
+	lengthSupport : int
+		Total length of the windowingFunction in samples.
+	ratioTaper : float
+		Fraction of the total windowingFunction width to allocate to tapering, in the closed interval
+		[0, 1].
 
 	Returns
 	-------
 	lengthTaper : int
-		Number of samples in one taper section.
-	"""  # noqa: DOC501
-	if ratioTaper is None:
-		lengthTaper = int(lengthWindow * 0.1 / 2)
-	elif 0 <= ratioTaper <= 1:
-		lengthTaper = int(lengthWindow * ratioTaper / 2)
+		Number of samples to use for each tapered end.
+
+	Raises
+	------
+	ValueError
+		If `ratioTaper` is outside the closed interval [0, 1].
+	"""
+	if 0 <= ratioTaper <= 1:
+		lengthTaper = int(lengthSupport * ratioTaper / 2)
 	else:
 		message: str = f"I received `{ratioTaper = }`. If set, `ratioTaper` must be between 0 and 1, inclusive."
 		raise ValueError(message)
 	return lengthTaper
 
-def cosineWings(lengthWindow: int, ratioTaper: float | None = None) -> WindowingFunction:
-	"""Generate a cosine-tapered windowing function with a flat center and tapered ends.
+def cosineWings(lengthSupport: int, ratioTaper: float = 0.1) -> WindowingFunction:
+	"""Generate a cosine-tapered windowingFunction with a flat center and tapered ends.
 
-	This function creates a NumPy array [1] of coefficients that rise smoothly from 0 to 1, stay
-	flat in the middle, and mirror the taper at the end. It uses `numpy.linspace` [2] to sample the
-	taper and `numpy.cos` [3] to shape it. It acts on `lengthWindow` and `ratioTaper` and returns
-	the windowing coefficients.
+	You can use this function to produce a 1-D windowingFunction of length `lengthSupport` whose ends
+	are tapered with a cosine shape while the center remains at unity. The taper occupies `ratioTaper`
+	of the total windowingFunction width and is split equally between the two ends.
 
 	Parameters
 	----------
-	lengthWindow : int
-		Total length of the windowing function.
-	ratioTaper : float | None = None
-		Ratio of taper length to windowing-function length. The value must be between 0 and 1,
-		inclusive.
+	lengthSupport : int
+		Total length of the windowingFunction in samples.
+	ratioTaper : float = 0.1
+		Fraction of the total windowingFunction to taper. Must be in the closed interval [0, 1]. The
+		computed taper length per end is `int(lengthSupport * ratioTaper / 2)`.
 
 	Returns
 	-------
 	windowingFunction : WindowingFunction
-		NumPy array of windowing coefficients with cosine tapers.
-
-	See Also
-	--------
-	`hunterHearsPy.optionalPyTorch.cosineWingsTensor`
-		Tensor version of this windowing function.
-
-	References
-	----------
-	[1] NumPy `ndarray`.
-		https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
-	[2] NumPy `linspace`.
-		https://numpy.org/doc/stable/reference/generated/numpy.linspace.html
-	[3] NumPy `cos`.
-		https://numpy.org/doc/stable/reference/generated/numpy.cos.html
-
+		1-D array of shape `(lengthSupport,)` containing values in [0, 1]. The centre region is 1.0
+		and each end contains a cosine-shaped ramp from 0 → 1 (or 1 → 0) of length `lengthTaper`.
 	"""
-	lengthTaper: int = _getLengthTaper(lengthWindow, ratioTaper)
+	lengthTaper: int = _getLengthTaper(lengthSupport, ratioTaper)
 
-	windowingFunction: WindowingFunction = numpy.ones(shape=lengthWindow)
+	windowingFunction: WindowingFunction = numpy.ones(shape=lengthSupport)
 	if 0 < lengthTaper:
 		taper = 1 - cos(numpy.linspace(start=0, stop=pi / 2, num=lengthTaper, dtype=windowingFunction.dtype))
 		windowingFunction[0:lengthTaper] = taper
 		windowingFunction[-lengthTaper:None] = taper[::-1]
 	return windowingFunction
 
-def equalPower(lengthWindow: int, ratioTaper: float | None = None) -> WindowingFunction:
-	"""Generate an equal-power taper for crossfades.
+def equalPower(lengthSupport: int, ratioTaper: float = 0.1) -> WindowingFunction:
+	"""Generate an equal-power windowingFunction suitable for crossfades.
 
-	This function creates a NumPy array [1] of coefficients that follow a square-root taper at both
-	ends and a flat center. It uses `numpy.linspace` [2] to sample the taper and `numpy.sqrt` [3] to
-	convert it to equal-power scaling. It acts on `lengthWindow` and `ratioTaper` and returns the
-	windowing coefficients.
+	You can use this function to build a 1-D windowingFunction whose ends follow a square-root ramp.
+	This produces an equal-power fade for crossfades, where amplitude ramps follow √(linear) shapes to
+	preserve perceived loudness during mixing.
 
 	Parameters
 	----------
-	lengthWindow : int
-		Total length of the windowing function.
-	ratioTaper : float | None = None
-		Ratio of taper length to windowing-function length. The value must be between 0 and 1,
-		inclusive.
+	lengthSupport : int
+		Total length of the windowingFunction in samples.
+	ratioTaper : float = 0.1
+		Fraction of the total windowingFunction to taper. Must be in the closed interval [0, 1]. The
+		computed taper length per end is `int(lengthSupport * ratioTaper / 2)`.
 
 	Returns
 	-------
 	windowingFunction : WindowingFunction
-		NumPy array of windowing coefficients with tapers.
-
-	See Also
-	--------
-	`hunterHearsPy.optionalPyTorch.equalPowerTensor`
-		Tensor version of this windowing function.
-
-	References
-	----------
-	[1] NumPy `ndarray`.
-		https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
-	[2] NumPy `linspace`.
-		https://numpy.org/doc/stable/reference/generated/numpy.linspace.html
-	[3] NumPy `sqrt`.
-		https://numpy.org/doc/stable/reference/generated/numpy.sqrt.html
-
+		1-D array of shape `(lengthSupport,)` containing values in [0, 1]. The central region is 1.0
+		and each end contains a √-shaped ramp of length `lengthTaper`.
 	"""
-	lengthTaper: int = _getLengthTaper(lengthWindow, ratioTaper)
+	lengthTaper: int = _getLengthTaper(lengthSupport, ratioTaper)
 
-	windowingFunction: WindowingFunction = numpy.ones(shape=lengthWindow)
+	windowingFunction: WindowingFunction = numpy.ones(shape=lengthSupport)
 	if 0 < lengthTaper:
 		taper = numpy.sqrt(numpy.linspace(start=0, stop=1, num=lengthTaper, dtype=windowingFunction.dtype))
 		windowingFunction[0:lengthTaper] = taper
 		windowingFunction[-lengthTaper:None] = taper[::-1]
 	return windowingFunction
 
-def halfsine(lengthWindow: int) -> WindowingFunction:
-	"""Generate a half-sine windowing function.
+def halfsine(lengthSupport: int) -> WindowingFunction:
+	"""Generate a half-sine windowingFunction of the requested length.
 
-	This function creates a NumPy array [1] of coefficients that follow a half-sine profile across
-	the requested length. It uses `numpy.arange` [2] and `numpy.sin` [3] to place the samples. It
-	acts on `lengthWindow` and returns the windowing coefficients.
+	This function returns a 1-D half-sine windowingFunction of length `lengthSupport`. The value at
+	sample index `n` is `sin(π * (n + 0.5) / lengthSupport)`, producing a smoothly varying
+	windowingFunction that starts and ends away from zero, commonly used in short-time analysis and
+	overlap-add reconstruction.
 
 	Parameters
 	----------
-	lengthWindow : int
-		Total length of the windowing function.
+	lengthSupport : int
+		Total length of the windowingFunction in samples.
 
 	Returns
 	-------
 	windowingFunction : WindowingFunction
-		NumPy array of windowing coefficients following a half-sine shape.
-
-	See Also
-	--------
-	`hunterHearsPy.optionalPyTorch.halfsineTensor`
-		Tensor version of this windowing function.
+		1-D array of shape `(lengthSupport,)` containing the half-sine values.
 
 	References
 	----------
-	[1] NumPy `ndarray`.
-		https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
-	[2] NumPy `arange`.
-		https://numpy.org/doc/stable/reference/generated/numpy.arange.html
-	[3] NumPy `sin`.
-		https://numpy.org/doc/stable/reference/generated/numpy.sin.html
-
+	[1] Short-Time Fourier Transform and Its Inverse.
+	https://eeweb.engineering.nyu.edu/iselesni/EL713/STFT/stft_inverse.pdf
 	"""
-	return sin(pi * (numpy.arange(lengthWindow) + 0.5) / lengthWindow, dtype=numpy.float64)
+	return sin(pi * (numpy.arange(lengthSupport) + 0.5) / lengthSupport, dtype=numpy.float64)
 
-def tukey(lengthWindow: int, ratioTaper: float | None = None, **keywordArguments: float) -> WindowingFunction:
-	"""Generate a Tukey windowing function with optional SciPy keyword overrides.
+def tukey(lengthSupport: int, ratioTaper: float = 0.1, **keywordArguments: float) -> WindowingFunction:
+	"""Generate a Tukey windowingFunction.
 
-	This function creates a NumPy array [1] by delegating to SciPy's Tukey window implementation
-	[2]. It accepts `lengthWindow`, `ratioTaper`, and extra keyword arguments, then returns the
-	windowing coefficients.
+	You can use this function to obtain a tapered windowingFunction where the central region is
+	constant and the ends are cosine-shaped. By default, the function uses `ratioTaper` as the Tukey
+	`alpha` value. If an explicit `alpha` is provided via keyword arguments, that value is used
+	instead of `ratioTaper`.
 
 	Parameters
 	----------
-	lengthWindow : int
-		Total length of the windowing function.
-	ratioTaper : float | None = None
-		Ratio of taper length to windowing-function length. The value must be between 0 and 1,
-		inclusive.
-	**keywordArguments : float
-		Additional keyword arguments. `alpha` overrides `ratioTaper` when provided, matching SciPy's
-		API.
+	lengthSupport : int
+		Total length of the windowingFunction in samples.
+	ratioTaper : float = 0.1
+		Default fraction of the windowingFunction to taper. Provided for API symmetry with other
+		windowingFunction constructors.
+
+	Other Parameters
+	----------------
+	alpha : float = ratioTaper
+		Equivalent to SciPy's `alpha` parameter. If provided, this overrides `ratioTaper`. Values are
+		typically in the closed interval [0, 1].
 
 	Returns
 	-------
 	windowingFunction : WindowingFunction
-		NumPy array of Tukey windowing function coefficients.
-
-	References
-	----------
-	[1] NumPy `ndarray`.
-		https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
-	[2] SciPy Tukey window.
-		https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.windows.tukey.html
-
+		1-D array of shape `(lengthSupport,)`.
 	"""
-	alpha: float | None = keywordArguments.get('alpha', ratioTaper)  # Are you tempted to use `or 0.1`? Don't be: it will override the user's value for `ratioTaper=0`.
-	if alpha is None:
-		alpha = 0.1
-	return SciPy.tukey(lengthWindow, alpha)
+	alpha: float = keywordArguments.get('alpha', ratioTaper)  # Are you tempted to use `or 0.1`? Don't be: it will override the user's value for `ratioTaper=0`.
+	return SciPy.tukey(lengthSupport, alpha)
