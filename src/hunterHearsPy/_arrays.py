@@ -114,6 +114,8 @@ def loadSpectrograms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUli
 
 	def workhorse(index: int, metadata: WaveformMetadata) -> None:
 		# TODO make tests that can check if this works.
+		# python3.10: TypeError: `pad_width` must be of integral type.
+		# f.m.l.
 
 		pad_width: dict[int, tuple[int, int]] = {
 			axis['channel'].number: (0, 0)

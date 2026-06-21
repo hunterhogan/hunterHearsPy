@@ -75,6 +75,8 @@ ArraySpectrograms: TypeAlias = ndarray[tuple[int, int, int, int], dtype[Spectrog
 WindowingFunctionDtype: TypeAlias = floating[Any]
 WindowingFunction: TypeAlias = ndarray[tuple[int], dtype[WindowingFunctionDtype]]
 
+callableReturnsNDArray = TypeVar('callableReturnsNDArray', bound=Callable[..., WindowingFunction])
+
 class E733TH4X0R(TypedDict, total=False):
 	dual_win: WindowingFunction | None
 	fft_mode: _FFTMode1
@@ -101,7 +103,6 @@ class Parameters_stft(ParametersShortTimeFFT, total=False):
 #==================================================================================================
 # DEVELOPMENT refactoring. Below here, the objects have not yet been reviewed.
 
-callableReturnsNDArray = TypeVar('callableReturnsNDArray', bound=Callable[..., WindowingFunction])
 NormalizationReverter: TypeAlias = Callable[[Waveform], Waveform]
 """Function type for reversing normalization operations.
 

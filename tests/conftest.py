@@ -11,9 +11,15 @@ import pytest
 if TYPE_CHECKING:
 	from hunterHearsPy import 个, 形ndarray
 	from pathlib import Path
+	from torch.types import Device
 	from typing import Any
 
-# ================== Settings =====================================================================
+#================== Settings =====================================================================
+
+@pytest.fixture()
+def approx_abs(request: pytest.FixtureRequest) -> float:
+	"""Return the absolute tolerance for approximate comparisons."""
+	return 1e-12
 
 @pytest.fixture()
 def approx_rel(request: pytest.FixtureRequest) -> float:
@@ -21,11 +27,19 @@ def approx_rel(request: pytest.FixtureRequest) -> float:
 	return 1e-6
 
 @pytest.fixture()
-def approx_abs(request: pytest.FixtureRequest) -> float:
-	"""Return the absolute tolerance for approximate comparisons."""
-	return 1e-12
+def atol(request: pytest.FixtureRequest) -> float:
+	"""Return the absolute tolerance for `numpy.allclose` comparisons."""
+	return 1e-08
 
-# ================== Assert ========================================================================
+@pytest.fixture()
+def rtol(request: pytest.FixtureRequest) -> float:
+	"""Return the relative tolerance for `numpy.allclose` comparisons."""
+	return 1e-05
+
+#================== Assert ========================================================================
+
+def assert_allclose(actual: Any, expected: Any, rtol: float, atol: float, function: str, *arguments: Any, **keywordArguments: Any) -> None:
+	assert numpy.allclose(actual, expected, rtol, atol), messageTestFailure(actual, expected, function, *arguments, **keywordArguments)
 
 def assert_approx(
 	actual: 个, expected: 个, pytest_rel: float, pytest_abs: float, function: str, *arguments: Any, **keywordArguments: Any
@@ -42,7 +56,7 @@ def assertEqualTo(actual: 个, expected: 个, function: str, *arguments: Any, **
 	"""Assert that two arrays are equal, and if not, raise an AssertionError with a detailed message."""
 	assert actual == expected, messageTestFailure(actual, expected, function, *arguments, **keywordArguments)
 
-# ------------------ Messages ------------------------------------------------------------------------------
+#------------------ Messages ------------------------------------------------------------------------------
 
 def messageTestFailure(actual: Any, expected: Any, function: str, *arguments: Any, **keywordArguments: Any) -> str:
 	"""Format assertion message for any test comparison."""
@@ -55,7 +69,11 @@ def messageTestFailure_ndarray(actual: 形ndarray, expected: 形ndarray, functio
 	parameters.extend(f'{keyAndValue[0]}={keyAndValue[1]!r}' for keyAndValue in keywordArguments.items())
 	return f'{function}({", ".join(parameters)}) = {actual.shape=},\t{actual.dtype=}, but {expected.shape=}, {expected.dtype=}.'
 
-# ================== Parameters ========================================================================
+#================== Parameters ========================================================================
+
+@pytest.fixture(params=tuple(map(pytest.param, (None, 'cpu'))))
+def device(request: pytest.FixtureRequest) -> Device | None:
+	return request.param
 
 @pytest.fixture()
 def expected(request: pytest.FixtureRequest) -> 形ndarray:

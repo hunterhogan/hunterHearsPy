@@ -2,167 +2,131 @@
 from __future__ import annotations
 
 from hunterHearsPy import callableReturnsNDArray, cosineWings, equalPower, halfsine, tukey
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import torch
 
 if TYPE_CHECKING:
     from torch.types import Device
+    from typing import Any
 
-def _convertToTensor(*arguments: Any, callableTarget: callableReturnsNDArray, device: Device, **keywordArguments: Any) -> torch.Tensor:
+def _convertToTensor(*arguments: Any, callableTarget: callableReturnsNDArray, device: Device | None=None, dtype: torch.dtype | None=None, **keywordArguments: Any) -> torch.Tensor:
     arrayTarget = callableTarget(*arguments, **keywordArguments)
-    return torch.tensor(data=arrayTarget, dtype=torch.float32, device=device)
+    if device is None:
+        device = torch.device(device='cpu')
+    return torch.tensor(data=arrayTarget, dtype=dtype or torch.float32, device=device)
 
-def cosineWingsTensor(lengthWindow: int, ratioTaper: float | None=None, device: Device | None=None) -> torch.Tensor:
-    """Generate a cosine-tapered windowing function with a flat center and tapered ends.
+def cosineWingsTensor(lengthSupport: int, ratioTaper: float=0.1, device: Device | None=None, dtype: torch.dtype | None=None) -> torch.Tensor:
+    """Generate a cosine-tapered windowingFunction with a flat center and tapered ends.
 
-    This function creates a NumPy array [1] of coefficients that rise smoothly from 0 to 1, stay
-    flat in the middle, and mirror the taper at the end. It uses `numpy.linspace` [2] to sample the
-    taper and `numpy.cos` [3] to shape it. It acts on `lengthWindow` and `ratioTaper` and returns
-    the windowing coefficients.
+    You can use this function to produce a 1-D windowingFunction of length `lengthSupport` whose ends
+    are tapered with a cosine shape while the center remains at unity. The taper occupies `ratioTaper`
+    of the total windowingFunction width and is split equally between the two ends.
 
     Parameters
     ----------
-    lengthWindow : int
-        Total length of the windowing function.
-    ratioTaper : float | None = None
-        Ratio of taper length to windowing-function length. The value must be between 0 and 1,
-        inclusive.
+    lengthSupport : int
+        Total length of the windowingFunction in samples.
+    ratioTaper : float = 0.1
+        Fraction of the total windowingFunction to taper. Must be in the closed interval [0, 1]. The
+        computed taper length per end is `int(lengthSupport * ratioTaper / 2)`.
     device : Device = torch.device(device='cpu')
         PyTorch device for `Tensor`.
+    dtype : torch.dtype = torch.float32
+        PyTorch data type for `Tensor`.
 
     Returns
     -------
     windowingFunction : WindowingFunction
-        NumPy array of windowing coefficients with cosine tapers.
-
-    See Also
-    --------
-    `hunterHearsPy.optionalPyTorch.cosineWingsTensor`
-        Tensor version of this windowing function.
-
-    References
-    ----------
-    [1] NumPy `ndarray`.
-        https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
-    [2] NumPy `linspace`.
-        https://numpy.org/doc/stable/reference/generated/numpy.linspace.html
-    [3] NumPy `cos`.
-        https://numpy.org/doc/stable/reference/generated/numpy.cos.html
-
+        1-D array of shape `(lengthSupport,)` containing values in [0, 1]. The centre region is 1.0
+        and each end contains a cosine-shaped ramp from 0 → 1 (or 1 → 0) of length `lengthTaper`.
     """
-    device = device or torch.device(device='cpu')
-    return _convertToTensor(lengthWindow, ratioTaper, callableTarget=cosineWings, device=device)
+    return _convertToTensor(lengthSupport, ratioTaper, callableTarget=cosineWings, device=device, dtype=dtype)
 
-def equalPowerTensor(lengthWindow: int, ratioTaper: float | None=None, device: Device | None=None) -> torch.Tensor:
-    """Generate an equal-power taper for crossfades.
+def equalPowerTensor(lengthSupport: int, ratioTaper: float=0.1, device: Device | None=None, dtype: torch.dtype | None=None) -> torch.Tensor:
+    """Generate an equal-power windowingFunction suitable for crossfades.
 
-    This function creates a NumPy array [1] of coefficients that follow a square-root taper at both
-    ends and a flat center. It uses `numpy.linspace` [2] to sample the taper and `numpy.sqrt` [3] to
-    convert it to equal-power scaling. It acts on `lengthWindow` and `ratioTaper` and returns the
-    windowing coefficients.
+    You can use this function to build a 1-D windowingFunction whose ends follow a square-root ramp.
+    This produces an equal-power fade for crossfades, where amplitude ramps follow √(linear) shapes to
+    preserve perceived loudness during mixing.
 
     Parameters
     ----------
-    lengthWindow : int
-        Total length of the windowing function.
-    ratioTaper : float | None = None
-        Ratio of taper length to windowing-function length. The value must be between 0 and 1,
-        inclusive.
+    lengthSupport : int
+        Total length of the windowingFunction in samples.
+    ratioTaper : float = 0.1
+        Fraction of the total windowingFunction to taper. Must be in the closed interval [0, 1]. The
+        computed taper length per end is `int(lengthSupport * ratioTaper / 2)`.
     device : Device = torch.device(device='cpu')
         PyTorch device for `Tensor`.
+    dtype : torch.dtype = torch.float32
+        PyTorch data type for `Tensor`.
 
     Returns
     -------
     windowingFunction : WindowingFunction
-        NumPy array of windowing coefficients with tapers.
-
-    See Also
-    --------
-    `hunterHearsPy.optionalPyTorch.equalPowerTensor`
-        Tensor version of this windowing function.
-
-    References
-    ----------
-    [1] NumPy `ndarray`.
-        https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
-    [2] NumPy `linspace`.
-        https://numpy.org/doc/stable/reference/generated/numpy.linspace.html
-    [3] NumPy `sqrt`.
-        https://numpy.org/doc/stable/reference/generated/numpy.sqrt.html
-
+        1-D array of shape `(lengthSupport,)` containing values in [0, 1]. The central region is 1.0
+        and each end contains a √-shaped ramp of length `lengthTaper`.
     """
-    device = device or torch.device(device='cpu')
-    return _convertToTensor(lengthWindow, ratioTaper, callableTarget=equalPower, device=device)
+    return _convertToTensor(lengthSupport, ratioTaper, callableTarget=equalPower, device=device, dtype=dtype)
 
-def halfsineTensor(lengthWindow: int, device: Device | None=None) -> torch.Tensor:
-    """Generate a half-sine windowing function.
+def halfsineTensor(lengthSupport: int, device: Device | None=None, dtype: torch.dtype | None=None) -> torch.Tensor:
+    """Generate a half-sine windowingFunction of the requested length.
 
-    This function creates a NumPy array [1] of coefficients that follow a half-sine profile across
-    the requested length. It uses `numpy.arange` [2] and `numpy.sin` [3] to place the samples. It
-    acts on `lengthWindow` and returns the windowing coefficients.
+    This function returns a 1-D half-sine windowingFunction of length `lengthSupport`. The value at
+    sample index `n` is `sin(π * (n + 0.5) / lengthSupport)`, producing a smoothly varying
+    windowingFunction that starts and ends away from zero, commonly used in short-time analysis and
+    overlap-add reconstruction.
 
     Parameters
     ----------
-    lengthWindow : int
-        Total length of the windowing function.
+    lengthSupport : int
+        Total length of the windowingFunction in samples.
     device : Device = torch.device(device='cpu')
         PyTorch device for `Tensor`.
+    dtype : torch.dtype = torch.float32
+        PyTorch data type for `Tensor`.
 
     Returns
     -------
     windowingFunction : WindowingFunction
-        NumPy array of windowing coefficients following a half-sine shape.
-
-    See Also
-    --------
-    `hunterHearsPy.optionalPyTorch.halfsineTensor`
-        Tensor version of this windowing function.
+        1-D array of shape `(lengthSupport,)` containing the half-sine values.
 
     References
     ----------
-    [1] NumPy `ndarray`.
-        https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
-    [2] NumPy `arange`.
-        https://numpy.org/doc/stable/reference/generated/numpy.arange.html
-    [3] NumPy `sin`.
-        https://numpy.org/doc/stable/reference/generated/numpy.sin.html
-
+    [1] Short-Time Fourier Transform and Its Inverse.
+    https://eeweb.engineering.nyu.edu/iselesni/EL713/STFT/stft_inverse.pdf
     """
-    device = device or torch.device(device='cpu')
-    return _convertToTensor(lengthWindow, callableTarget=halfsine, device=device)
+    return _convertToTensor(lengthSupport, callableTarget=halfsine, device=device, dtype=dtype)
 
-def tukeyTensor(lengthWindow: int, ratioTaper: float | None=None, device: Device | None=None, **keywordArguments: float) -> torch.Tensor:
-    """Generate a Tukey windowing function with optional SciPy keyword overrides.
+def tukeyTensor(lengthSupport: int, ratioTaper: float=0.1, device: Device | None=None, dtype: torch.dtype | None=None, **keywordArguments: float) -> torch.Tensor:
+    """Generate a Tukey windowingFunction.
 
-    This function creates a NumPy array [1] by delegating to SciPy's Tukey window implementation
-    [2]. It accepts `lengthWindow`, `ratioTaper`, and extra keyword arguments, then returns the
-    windowing coefficients.
+    You can use this function to obtain a tapered windowingFunction where the central region is
+    constant and the ends are cosine-shaped. By default, the function uses `ratioTaper` as the Tukey
+    `alpha` value. If an explicit `alpha` is provided via keyword arguments, that value is used
+    instead of `ratioTaper`.
 
     Parameters
     ----------
-    lengthWindow : int
-        Total length of the windowing function.
-    ratioTaper : float | None = None
-        Ratio of taper length to windowing-function length. The value must be between 0 and 1,
-        inclusive.
-    **keywordArguments : float
-        Additional keyword arguments. `alpha` overrides `ratioTaper` when provided, matching SciPy's
-        API.
+    lengthSupport : int
+        Total length of the windowingFunction in samples.
+    ratioTaper : float = 0.1
+        Default fraction of the windowingFunction to taper. Provided for API symmetry with other
+        windowingFunction constructors.
+
+    Other Parameters
+    ----------------
+    alpha : float = ratioTaper
+        Equivalent to SciPy's `alpha` parameter. If provided, this overrides `ratioTaper`. Values are
+        typically in the closed interval [0, 1].
     device : Device = torch.device(device='cpu')
         PyTorch device for `Tensor`.
+    dtype : torch.dtype = torch.float32
+        PyTorch data type for `Tensor`.
 
     Returns
     -------
     windowingFunction : WindowingFunction
-        NumPy array of Tukey windowing function coefficients.
-
-    References
-    ----------
-    [1] NumPy `ndarray`.
-        https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
-    [2] SciPy Tukey window.
-        https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.windows.tukey.html
-
+        1-D array of shape `(lengthSupport,)`.
     """
-    device = device or torch.device(device='cpu')
-    return _convertToTensor(lengthWindow, ratioTaper, callableTarget=tukey, device=device, **keywordArguments)
+    return _convertToTensor(lengthSupport, ratioTaper, callableTarget=tukey, device=device, dtype=dtype, **keywordArguments)
