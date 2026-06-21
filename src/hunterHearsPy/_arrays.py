@@ -114,19 +114,23 @@ def loadSpectrograms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUli
 
 	def workhorse(index: int, metadata: WaveformMetadata) -> None:
 		# TODO make tests that can check if this works.
-		# python3.10: TypeError: `pad_width` must be of integral type.
-		# f.m.l.
 
 		pad_width: dict[int, tuple[int, int]] = {
 			axis['channel'].number: (0, 0)
 			, axis['time'].number: (metadata['samplesStart'], axis['time'].size - metadata['samplesStop'])
 		}
 
+		# python3.10: TypeError: `pad_width` must be of integral type.
+		# f.m.l.
+		# TODO in 2026 October: drop Py3.10 and this crap. I just want semantic, dynamic access to the data! It's the year 2026, ffs!
+
+		pad_widthIntegralType: tuple[tuple[int, int], ...] = tuple(dict(sorted(pad_width.items())).values())
+
 		# TODO axisSpectrogram.number is hardcoded here. grr!
 		arraySpectrograms[..., index] = stft(
 			numpy.pad(
 				readAudioFile(metadata['pathFilename'], sampleRateDesired, dtype_str).astype(dtypeWaveform, copy=False)
-				, pad_width, mode=align_pad_mode)
+				, pad_widthIntegralType, mode=align_pad_mode)
 			, **keywordArguments
 		)
 
@@ -136,7 +140,7 @@ def loadSpectrograms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUli
 			numpy.put_along_axis(arraySpectrograms, indices=indices, values=stft(
 				numpy.pad(
 					readAudioFile(metadata['pathFilename'], sampleRateDesired, dtype_str).astype(dtypeWaveform, copy=False)
-					, pad_width, mode=align_pad_mode)
+					, pad_widthIntegralType, mode=align_pad_mode)
 				, **keywordArguments
 			), axis=axisSpectrogram.number
 		)
