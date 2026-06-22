@@ -5,7 +5,7 @@ from __future__ import annotations
 from hunterHearsPy import applyHardLimit, applyHardLimitComplexValued
 from numpy import float64
 from numpy._core._exceptions import _UFuncNoLoopError  # noqa: PLC2701
-from tests.conftest import messageTestFailure
+from tests import messageTestFailure
 from typing import Any, Final, TYPE_CHECKING
 import numpy
 import pytest

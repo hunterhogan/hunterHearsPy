@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from hunterHearsPy import moveToAxisOfOperation
 from numpy import int64
-from tests.conftest import messageTestFailure
+from tests import messageTestFailure
 from typing import TYPE_CHECKING
 import numpy
 import pytest

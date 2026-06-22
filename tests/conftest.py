@@ -1,18 +1,21 @@
 from __future__ import annotations
 
 from humpy_cytoolz.dicttoolz import keyfilter, merge
+from hunterHearsPy import readAudioFile
 from hunterMakesPy.dataStructures import stringItUp
-from tests import pathDataSamples, pathDataSamplesExpected
+from more_itertools import one
+from soundfile import dtype_str as Options_dtype_str
+from tests import dtypeTokens, pathDataSamples, pathDataSamplesExpected
 from typing import TYPE_CHECKING
 import inspect
 import numpy
+import operator
 import pytest
 
 if TYPE_CHECKING:
-	from hunterHearsPy import 个, 形ndarray
+	from hunterHearsPy import Waveform, 形ndarray
 	from pathlib import Path
 	from torch.types import Device
-	from typing import Any
 
 #================== Settings =====================================================================
 
@@ -36,39 +39,6 @@ def rtol(request: pytest.FixtureRequest) -> float:
 	"""Return the relative tolerance for `numpy.allclose` comparisons."""
 	return 1e-05
 
-#================== Assert ========================================================================
-
-def assert_allclose(actual: Any, expected: Any, rtol: float, atol: float, function: str, *arguments: Any, **keywordArguments: Any) -> None:
-	assert numpy.allclose(actual, expected, rtol, atol), messageTestFailure(actual, expected, function, *arguments, **keywordArguments)
-
-def assert_approx(
-	actual: 个, expected: 个, pytest_rel: float, pytest_abs: float, function: str, *arguments: Any, **keywordArguments: Any
-) -> None:
-	assert actual == pytest.approx(expected, pytest_rel, pytest_abs, nan_ok=True), messageTestFailure(
-		actual, expected, function, *arguments, **keywordArguments
-	)
-
-def assert_array_equal(actual: 形ndarray, expected: 形ndarray, function: str, *arguments: Any, **keywordArguments: Any) -> None:
-	"""Assert that two arrays are equal, and if not, raise an AssertionError with a detailed message."""
-	assert numpy.array_equal(actual, expected), messageTestFailure_ndarray(actual, expected, function, *arguments, **keywordArguments)
-
-def assertEqualTo(actual: 个, expected: 个, function: str, *arguments: Any, **keywordArguments: Any) -> None:
-	"""Assert that two arrays are equal, and if not, raise an AssertionError with a detailed message."""
-	assert actual == expected, messageTestFailure(actual, expected, function, *arguments, **keywordArguments)
-
-#------------------ Messages ------------------------------------------------------------------------------
-
-def messageTestFailure(actual: Any, expected: Any, function: str, *arguments: Any, **keywordArguments: Any) -> str:
-	"""Format assertion message for any test comparison."""
-	parameters: list[str] = list(map(repr, arguments))
-	parameters.extend(f'{keyAndValue[0]}={keyAndValue[1]!r}' for keyAndValue in keywordArguments.items())
-	return f'{function}({", ".join(parameters)}) = {actual!r}, but {expected = }.'
-
-def messageTestFailure_ndarray(actual: 形ndarray, expected: 形ndarray, function: str, *arguments: Any, **keywordArguments: Any) -> str:
-	parameters: list[str] = list(map(repr, arguments))
-	parameters.extend(f'{keyAndValue[0]}={keyAndValue[1]!r}' for keyAndValue in keywordArguments.items())
-	return f'{function}({", ".join(parameters)}) = {actual.shape=},\t{actual.dtype=}, but {expected.shape=}, {expected.dtype=}.'
-
 #================== Parameters ========================================================================
 
 @pytest.fixture(params=tuple(map(pytest.param, (None, 'cpu'))))
@@ -90,3 +60,14 @@ def expected(request: pytest.FixtureRequest) -> 形ndarray:
 def pathFilename(request: pytest.FixtureRequest) -> Path:
 	filename: str = request.param
 	return pathDataSamples / filename
+
+@pytest.fixture()
+def sampleRateSource(pathFilename: Path) -> float:
+	tokens = pathFilename.stem.split('_')
+	return float(one(filter(str.isdecimal, map(operator.itemgetter(slice(2, None)), filter(lambda string: string.startswith('Hz'), tokens)))))
+
+@pytest.fixture()
+def waveform(pathFilename: Path, sampleRateSource: float) -> Waveform:
+	tokens = pathFilename.stem.split('_')
+	dtype_str = one(filter(Options_dtype_str.__args__.__contains__, filter(dtypeTokens.__contains__, tokens)))
+	return readAudioFile(pathFilename, sampleRateSource, dtype_str)  # pyright: ignore[reportArgumentType] # ty:ignore[invalid-argument-type]

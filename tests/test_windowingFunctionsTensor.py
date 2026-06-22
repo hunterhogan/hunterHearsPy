@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from hunterHearsPy import cosineWingsTensor, equalPowerTensor, halfsineTensor, tukeyTensor
-from tests.conftest import assert_allclose, messageTestFailure
+from tests import assert_allclose, messageTestFailure
 from typing import TYPE_CHECKING
 import pytest
 import torch

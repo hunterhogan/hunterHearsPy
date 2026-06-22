@@ -24,6 +24,7 @@ from numpy import divide, finfo as numpy_finfo, float32, floating, iinfo as nump
 from soundfile import dtype_str
 from typing import overload, TYPE_CHECKING
 import numpy
+import sys
 
 if TYPE_CHECKING:
 	from hunterHearsPy import ArrayWaveforms, NormalizationReverter, Waveform, 形Shape
@@ -45,6 +46,42 @@ def amplitudeIntegerToFloating(arrayTarget: ndarray[形Shape, dtype[integer[Any]
 	return arrayFloating
 
 def amplitudeToSoundfile(arrayTarget: ndarray[形Shape, dtype[Any]]) -> AudioData:
+	"""Handle funky dtypes.
+
+	Like `resampleWaveform`, `writeWAV` is not restricted to "ecosystem" functions. It has far more
+	limited output options than soundfile, for example, but I don't want to unnecessarily restrict
+	input dtypes. I mean, if the user has a 2-axis `ndarray` of PCM data, then the only other
+	criterion is having one of the four dtypes in `dtype_str`. There are only about 10 potential
+	dtypes, including the 4 supported dtypes, that a user could have. Under a least-cost producer or
+	comparative advantage rationale, I ought to create the logic that funnels the 10 potential types
+	into the four support types, rather than forcing the user to do it. Therefore, this function
+	exists. But it is a pain in the ass, people usually free-ride the least-cost producers, and the
+	world certainly has not reciprocated my pro-social behavior.
+
+	Returns
+	-------
+	arraySoundfile : AudioData
+		The input array converted to a dtype compatible with `soundfile` [1] if necessary, otherwise
+		returned unchanged.
+	"""
+	# Four dtype buckets
+	# 1. `dtype_str`
+	# 2. integer, signed and unsigned
+	# 3. floating, single and double precision
+	# 4. other types (handled by fallback)
+
+	# Four options
+	# 1. do nothing
+	# 2. shift unsigned to signed, and scale integer range
+	# 3. change the number of significant digits
+	# 4. attempt a forceful conversion to the most forgiving dtype in `dtype_str.__args__`
+	# ^^^ WAIT! If I don't know why this happening, I don't know if I need to scale or how to scale.
+	# This isn't a normal `.astype` situation: the values are on a scale and changing the dtype can
+	# change the scale.
+	# Some of this stuff should be documented for AI agents and/or contributors. (ha!)
+	# I do not use warning if I really want the user to see the message because
+	# PyTorch spams so many warnings that many packages and people silence all warnings.
+
 	dtypeSoundfile: tuple[dtype[Any], ...] = tuple(map(numpy.dtype, dtype_str.__args__))
 	dtypeMaximum = max(dtypeSoundfile)
 
@@ -71,19 +108,21 @@ def amplitudeToSoundfile(arrayTarget: ndarray[形Shape, dtype[Any]]) -> AudioDat
 
 		arraySoundfile = numpy.astype(arrayTarget, dtypeNewInteger, copy=False)  # pyright: ignore[reportAssignmentType]
 	else:
-		try:
-			arraySoundfile = numpy.astype(arrayTarget, dtypeMaximum, copy=False)
-		except (TypeError, ValueError) as error:
-			from hunterHearsPy._io import saveOnError  # noqa: PLC0415
+		from hunterHearsPy._io import saveOnError  # noqa: PLC0415
 
-			pathFilename: PurePath = saveOnError(arrayTarget)
-			message: str = (
-				f'I could not convert `arrayTarget` to a dtype in {dtype_str.__args__}. '
-				"I saved `arrayTarget` to a file in this computer's temporary directory so you might recover the data. "
-				f'{arrayTarget.shape = }, {arrayTarget.dtype = }\n'
-				f'{pathFilename = }'
-			)
-			raise TypeError(message) from error
+		pathFilename: PurePath = saveOnError(arrayTarget)
+		message: str = (
+			f'Converting `arrayTarget` to a dtype in {dtype_str.__args__} may have failed or corrupted the data. '
+			"I saved `arrayTarget` to a file in this computer's temporary directory if you need to recover the data. "
+			f'{arrayTarget.shape = }, {arrayTarget.dtype = }\n'
+			f'{pathFilename = }'
+		)
+		sys.stderr.write(message + '\n')
+
+		# NOTE, I considered using contextlib.suppress, but then `arraySoundFile` would be
+		# unassigned/unbound, so an Exception would occur at the return statement.
+		arraySoundfile = numpy.astype(arrayTarget, dtypeMaximum, copy=False)
+
 	# I could hardcode the potential types 'float32', 'float64', 'int16', 'int32' to make the type annotations align.
 	# I don't know how, or if it is possible, to future-proof the type annotations against changes to `dtype_str.__args__`.
 	return arraySoundfile  # ty:ignore[invalid-return-type]

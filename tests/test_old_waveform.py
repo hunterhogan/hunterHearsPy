@@ -5,12 +5,12 @@
 # pyright: reportUnknownLambdaType=false
 # pyright: reportUnknownVariableType=false
 # ty:ignore[no-matching-overload]
-# ruff: noqa: T201, DOC201, PERF203, RUF076
+# ruff: noqa: T201, PERF203, RUF076
 from __future__ import annotations
 
 from hunterHearsPy import getWaveformMetadata, loadWaveforms, readAudioFile, resampleWaveform, writeWAV
 from pathlib import Path
-from tests.conftest import assert_array_equal
+from tests import assert_array_equal
 from tests.oldSampleData import WaveformAndMetadata
 from typing import Any, Final, TYPE_CHECKING
 import io

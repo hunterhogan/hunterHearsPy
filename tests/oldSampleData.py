@@ -24,7 +24,7 @@ class WaveformAndMetadata:
 pathDataSamples_labeled = Path('tests/dataSamples/labeled')
 
 def ingestSampleData() -> list[WaveformAndMetadata]:
-	"""Parse LUFS*.wav filenames and create WaveformData objects without loading waveforms."""  # noqa: DOC201
+	"""Parse LUFS*.wav filenames and create WaveformData objects without loading waveforms."""
 	listWaveformData: list[WaveformAndMetadata] = []
 	for pathFilename in pathDataSamples_labeled.glob('LUFS*.wav'):
 		LUFSAsStr, sampleRateAsStr, channelsTotalAsStr, ID = pathFilename.stem.split('_', maxsplit=3)

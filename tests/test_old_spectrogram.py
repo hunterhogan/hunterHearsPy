@@ -1,13 +1,13 @@
 # pyright: reportUnknownArgumentType=false
 # pyright: reportUnknownLambdaType=false
-# ruff: noqa: DOC201, DOC501
+# ruff: noqa: DOC501
 # ty:ignore[unresolved-attribute]
 """test_waveform or test_spectrogram? if a spectrogram is involved at any point, then test_spectrogram."""
 from __future__ import annotations
 
 from hunterHearsPy import loadSpectrograms, readAudioFile, stft, waveformSpectrogramWaveform
 from pathlib import Path
-from tests.conftest import messageTestFailure
+from tests import messageTestFailure
 from tests.oldSampleData import WaveformAndMetadata
 from typing import Any, Final, TYPE_CHECKING
 import numpy
