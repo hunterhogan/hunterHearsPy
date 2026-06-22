@@ -24,6 +24,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
+  "Z0Z_tools>=2.1.0",
   "hunterMakesPy>=0.7.0",
   "numpy",
   "resampy",
@@ -31,9 +32,13 @@ dependencies = [
   "soundfile>=0.14.0",
   "tqdm",
   "typing-extensions>=4.0.0",
-  "Z0Z_tools>=2.1.0",
 ]
-optional-dependencies = { torch = ["torch"] }
+optional-dependencies = { testing = [
+  "pytest",
+  "pytest-mock",
+  "pytest-xdist",
+  "torch"
+], torch = ["torch"] }
 
 [project.urls]
 Context7 = "https://context7.com/hunterhogan/hunterhearspy"
@@ -45,17 +50,16 @@ Repository = "https://github.com/hunterhogan/hunterHearsPy.git"
 
 [dependency-groups]
 dev = [
-    "astToolkit",
-    "pytest-cov",
-    "scipy-stubs",
-    "types-resampy",
+  "astToolkit",
+  "pytest-cov",
+  "scipy-stubs",
+  "types-resampy",
 ]
 pytorch = ["torch==2.10.0"]
-testing = ["pytest", "pytest-mock", "pytest-xdist", "torch"]
 
 [build-system]
-requires = ["uv_build>=0.11.8,<0.12.0"]
-build-backend = "uv_build"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [tool.coverage]
 report = { exclude_lines = ["if TYPE_CHECKING:", "if __name__ == \"__main__\":"], ignore_errors = false }
@@ -64,7 +68,7 @@ run = { branch = true, concurrency = ["multiprocessing"], data_file = "tests/cov
 ], parallel = true, source = ["."] }
 
 [tool.pytest]
-addopts = ["--color=auto", "-n 4", "--tb=line"]
+addopts = ["--color=auto", "--tb=line", "-n 4"]
 log_auto_indent = "On"
 pythonpath = ["src"]
 testpaths = ["tests"]
@@ -75,7 +79,7 @@ pathFilenameCitationSSOT = "citations/CITATION.cff"
 
 [tool.uv]
 build-backend = { module-name = "hunterHearsPy", module-root = "src" }
-default-groups = ["dev", "testing"]
+default-groups = ["dev"]
 
 [[tool.uv.index]]
 # NOTE I use this to install torch+cuda on my computer that doesn't have cuda. 2026-06-13
