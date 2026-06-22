@@ -50,6 +50,13 @@ Waveform: TypeAlias = ndarray[tuple[int, int], dtype[WaveformDtype]]
 ArrayWaveforms: TypeAlias = ndarray[tuple[int, int, int], dtype[WaveformDtype]]
 """A NumPy `ndarray` containing `ndarray` of type `Waveform` indexed on the last axis: shape is (channel, time, `Waveform`)."""
 
+NormalizationReverter: TypeAlias = Callable[[Waveform], Waveform]
+"""Function type for reversing normalization operations.
+
+Type alias for callable objects that accept a normalized waveform and return the waveform restored to
+its original amplitude scale.
+"""
+
 class WaveformMetadata(TypedDict):
 	"""Metadata describing waveform file properties and processing state."""
 
@@ -99,13 +106,3 @@ class ParametersShortTimeFFT(TypedDict, total=False):
 
 class Parameters_stft(ParametersShortTimeFFT, total=False):
 	padding: _PadType
-
-#==================================================================================================
-# DEVELOPMENT refactoring. Below here, the objects have not yet been reviewed.
-
-NormalizationReverter: TypeAlias = Callable[[Waveform], Waveform]
-"""Function type for reversing normalization operations.
-
-Type alias for callable objects that accept a normalized waveform and return the waveform restored to
-its original amplitude scale.
-"""
