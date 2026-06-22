@@ -132,7 +132,7 @@ def spectrogramToWAV(spectrogram: Spectrogram, pathFilename: FileDescriptorOrPat
 	sampleRate: float = parametersSTFT.get('sampleRate', setting.sampleRate)
 	writeWAV(pathFilename, waveform, sampleRate)
 
-def saveOnError(arrayTarget: ndarray[tuple[int, ...], dtype[Any]], *, identifierTarget: str = 'arrayTarget') -> PurePath:
+def saveOnError(arrayTarget: ndarray[tuple[Any, ...], dtype[Any]], *, identifierTarget: str = 'arrayTarget') -> PurePath:
 	pathFilename: Path = Path(tempfile.mkdtemp(prefix='hunterHearsPy'), f"{identifierTarget}_{uuid.uuid4().hex}.npy").resolve()
 	numpy.save(pathFilename, arrayTarget)
 

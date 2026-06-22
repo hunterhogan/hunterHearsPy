@@ -3,7 +3,7 @@ from __future__ import annotations
 from hunterHearsPy import moveToAxisOfOperation
 from numpy import int64
 from tests import messageTestFailure
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import numpy
 import pytest
 
@@ -20,7 +20,7 @@ def test_moveToAxisOfOperation_movesAxisAndPreservesOriginalArray(
 	arrayAxisOperation: NDArray[numpy.int64], axisSource: int, axisOfOperation: int
 ) -> None:
 	arrayOriginal: NDArray[numpy.int64] = arrayAxisOperation.copy()
-	shapeOriginal: tuple[int, ...] = arrayAxisOperation.shape
+	shapeOriginal: tuple[Any, ...] = arrayAxisOperation.shape
 	arrayExpectedMoved: NDArray[numpy.int64] = numpy.moveaxis(arrayOriginal, axisSource, axisOfOperation)
 	valueOffset: int = 13
 
