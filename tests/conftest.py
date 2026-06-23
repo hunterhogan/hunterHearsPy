@@ -5,8 +5,8 @@ from hunterHearsPy import readAudioFile
 from hunterMakesPy.dataStructures import stringItUp
 from more_itertools import one
 from soundfile import dtype_str as Options_dtype_str
-from tests import dtypeTokens, pathDataSamples, pathDataSamplesExpected
-from typing import TYPE_CHECKING
+from tests import pathDataSamples, pathDataSamplesExpected
+from typing import cast, TYPE_CHECKING
 import inspect
 import numpy
 import operator
@@ -14,60 +14,72 @@ import pytest
 
 if TYPE_CHECKING:
 	from hunterHearsPy import Waveform, 形ndarray
+	from inspect import Parameter
 	from pathlib import Path
+	from pytest import FixtureRequest
 	from torch.types import Device
+	from types import MappingProxyType
 
-#================== Settings =====================================================================
+# ================== Test-function parameters ======================================================
 
 @pytest.fixture()
-def approx_abs(request: pytest.FixtureRequest) -> float:
-	"""Return the absolute tolerance for approximate comparisons."""
+def approx_abs(request: FixtureRequest) -> float:
+	"""The `abs` (***abs***olute tolerance) parameter value for `pytest.approx`."""
 	return 1e-12
 
 @pytest.fixture()
-def approx_rel(request: pytest.FixtureRequest) -> float:
-	"""Return the relative tolerance for approximate comparisons."""
+def approx_rel(request: FixtureRequest) -> float:
+	"""The `rel` (***rel***ative tolerance) parameter value for `pytest.approx`."""
 	return 1e-6
 
 @pytest.fixture()
-def atol(request: pytest.FixtureRequest) -> float:
-	"""Return the absolute tolerance for `numpy.allclose` comparisons."""
+def atol(request: FixtureRequest) -> float:
+	"""The `atol` (***a***bsolute ***tol***erance) parameter value for `numpy.allclose`."""
 	return 1e-08
 
 @pytest.fixture()
-def rtol(request: pytest.FixtureRequest) -> float:
-	"""Return the relative tolerance for `numpy.allclose` comparisons."""
+def expected(request: FixtureRequest) -> 形ndarray:
+	"""Test-function and its parameters encoded in a `__` delimited filename.
+
+	Each parameter created with `parametrize` (as opposed to, for example, `fixture`) is encoded as `{parameter}~{value}`.
+	"""
+	request_nodeParameters: MappingProxyType[str, Parameter] = cast('MappingProxyType[str, Parameter]', request.node.callspec.params)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
+	filenameStem: str = '__'.join((
+		request.function.__name__
+		, *(f'{keyAndValue[0]}~{"".join(stringItUp(keyAndValue[1]) or ["None"])}'
+			for keyAndValue in keyfilter(request_nodeParameters.keys().__contains__, merge(inspect.signature(request.function).parameters, request_nodeParameters)).items()
+	)))
+	pathFilename: Path = pathDataSamplesExpected / f'{filenameStem}.npy'
+	return numpy.load(pathFilename, mmap_mode='r', allow_pickle=False)
+
+@pytest.fixture()
+def rtol(request: FixtureRequest) -> float:
+	"""The `rtol` (***r***elative ***tol***erance) parameter value for `numpy.allclose`."""
 	return 1e-05
 
-#================== Parameters ========================================================================
+# ================== Parameter values to test against the package's `Callable` =====================
+
+@pytest.fixture()
+def CPUlimit(request: FixtureRequest) -> int:
+	return 1
 
 @pytest.fixture(params=tuple(map(pytest.param, (None, 'cpu'))))
-def device(request: pytest.FixtureRequest) -> Device | None:
+def device(request: FixtureRequest) -> Device | None:
 	return request.param
 
 @pytest.fixture()
-def expected(request: pytest.FixtureRequest) -> 形ndarray:
-	filenameStemExpected: str = '__'.join((request.function.__name__
-		, *(f'{keyAndValue[0]}~{"".join(stringItUp(keyAndValue[1]) or ["None"])}'
-			for keyAndValue in keyfilter(request.node.callspec.params.keys().__contains__  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType, reportUnknownArgumentType]
-				, merge(inspect.signature(request.function).parameters, request.node.callspec.params)  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
-			).items()
-	)))
-	pathFilenameExpected: Path = pathDataSamplesExpected / f'{filenameStemExpected}.npy'
-	return numpy.load(pathFilenameExpected, mmap_mode='r', allow_pickle=False)
+def dtype_str(pathFilename: Path) -> Options_dtype_str | None:
+	return one(set(Options_dtype_str.__args__).intersection(pathFilename.stem.split('_')), too_short=None)
 
 @pytest.fixture()
-def pathFilename(request: pytest.FixtureRequest) -> Path:
+def pathFilename(request: FixtureRequest) -> Path:
 	filename: str = request.param
 	return pathDataSamples / filename
 
 @pytest.fixture()
 def sampleRateSource(pathFilename: Path) -> float:
-	tokens = pathFilename.stem.split('_')
-	return float(one(filter(str.isdecimal, map(operator.itemgetter(slice(2, None)), filter(lambda string: string.startswith('Hz'), tokens)))))
+	return float(one(filter(str.isdecimal, map(operator.itemgetter(slice(2, None)), filter(lambda string: string.startswith('Hz'), pathFilename.stem.split('_'))))))
 
 @pytest.fixture()
-def waveform(pathFilename: Path, sampleRateSource: float) -> Waveform:
-	tokens = pathFilename.stem.split('_')
-	dtype_str = one(filter(Options_dtype_str.__args__.__contains__, filter(dtypeTokens.__contains__, tokens)))
-	return readAudioFile(pathFilename, sampleRateSource, dtype_str)  # pyright: ignore[reportArgumentType] # ty:ignore[invalid-argument-type]
+def waveform(pathFilename: Path, sampleRateSource: float, dtype_str: Options_dtype_str | None) -> Waveform:
+	return readAudioFile(pathFilename, sampleRateSource, dtype_str)

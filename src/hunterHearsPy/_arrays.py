@@ -7,12 +7,14 @@ from hunterHearsPy import (
 from hunterMakesPy.parseParameters import defineConcurrencyLimit
 from tqdm.auto import tqdm
 from typing import TYPE_CHECKING
+from typing_extensions import Unpack
 import numpy
 import sys
 
 if TYPE_CHECKING:
 	from collections.abc import Sequence
-	from hunterHearsPy import ArraySpectrograms, ArrayWaveforms, FileDescriptorOrPath, OptionsAlign, Waveform
+	from hunterHearsPy import (
+		ArraySpectrograms, ArrayWaveforms, FileDescriptorOrPath, OptionsAlign, Parameters_loadSpectrograms, Parameters_loadWaveforms, Waveform)
 	from numpy.lib._arraypad_impl import _ModeKind
 	from numpy.typing import DTypeLike
 	from soundfile import dtype_str as Options_dtype_str
@@ -59,7 +61,7 @@ def getWaveformMetadata(
 
 	return dictionaryWaveformMetadata, axis
 
-def loadWaveforms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUlimit: bool | float | int | None = None, **keywordArguments: Any) -> ArrayWaveforms:
+def loadWaveforms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUlimit: bool | float | int | None = None, **keywordArguments: Unpack[Parameters_loadWaveforms]) -> ArrayWaveforms:
 	"""Load a list of audio files into a single stacked NumPy array."""
 	#============== Initialize ==========================================================
 	align: OptionsAlign = keywordArguments.get('align', setting.align)

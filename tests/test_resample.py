@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 	from typing import Any
 
 @pytest.mark.parametrize('axisTime', [pytest.param(-1)])
-@pytest.mark.parametrize(
-	'pathFilename,sampleRateDesired'
-	, (
+@pytest.mark.parametrize('pathFilename,sampleRateDesired'
+	, indirect=['pathFilename']
+	, argvalues=(
 		pytest.param('Ambient_ch2_Hz48000_int16_sec60_peak-0.5dB.wav', 96000)
 		, pytest.param('Ambient_ch2_Hz48000_int16_sec60_peak-0.5dB.wav', 48000)
 		, pytest.param('Ambient_ch2_Hz48000_int16_sec60_peak-0.5dB.wav', 44100)
@@ -33,7 +33,6 @@ if TYPE_CHECKING:
 		, pytest.param('Speech_ch1_Hz16000_float32_sec20_peak-3.01dB.wav', 32000)
 		, pytest.param('Speech_ch1_Hz16000_float32_sec20_peak-3.01dB.wav', 16000)
 	)
-	, indirect=['pathFilename']
 )
 def test_resampleWaveform(
 	waveform: ndarray[形Shape, dtype[形floating]] | ndarray[形Shape, dtype[integer[Any]]]

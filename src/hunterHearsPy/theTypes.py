@@ -8,7 +8,10 @@ from soundfile import FileDescriptorOrPath as FileDescriptorOrPath  # noqa: TC00
 from typing import Any, Literal, NamedTuple, TYPE_CHECKING, TypeAlias, TypedDict, TypeVar
 
 if TYPE_CHECKING:
+	from numpy.lib._arraypad_impl import _ModeKind
+	from numpy.typing import DTypeLike
 	from scipy.signal._short_time_fft import _FFTMode1, _PadType, _ScaleTo
+	from soundfile import dtype_str as Options_dtype_str
 
 个 = TypeVar('个')
 形floating = TypeVar('形floating', bound=floating[Any])
@@ -33,6 +36,16 @@ class WaveformShape(NamedTuple):
 	a1: int
 
 OptionsAlign: TypeAlias = Literal['center', 'start', 'stop']
+
+class Parameters_loadWaveforms(TypedDict, total=False):
+	align: OptionsAlign
+	dtype: DTypeLike
+	dtype_str: Options_dtype_str
+	sampleRateDesired: float
+
+class Parameters_loadSpectrograms(Parameters_loadWaveforms, total=False):
+	align_pad_mode: _ModeKind
+	dtypeWaveform: DTypeLike
 
 class AxisMetadata(NamedTuple):
 	number: int

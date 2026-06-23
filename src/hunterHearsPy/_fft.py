@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from humpy_cytoolz.dicttoolz import keyfilter, merge
-from hunterHearsPy import amplitudeIntegerToFloating, Parameters_stft, ParametersShortTimeFFT, setting, Translator
+from hunterHearsPy import amplitudeIntegerToFloating, ParametersShortTimeFFT, setting, Translator
 from scipy.signal import ShortTimeFFT
 from typing import overload, TYPE_CHECKING
 from typing_extensions import Unpack
@@ -9,7 +9,8 @@ import numpy
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
-	from hunterHearsPy import ArraySpectrograms, ArrayWaveforms, ArrayWaveformsFloating, Spectrogram, Waveform, WaveformFloating
+	from hunterHearsPy import (
+		ArraySpectrograms, ArrayWaveforms, ArrayWaveformsFloating, Parameters_stft, Spectrogram, Waveform, WaveformFloating)
 	from pathlib import PurePath
 	from scipy.signal._short_time_fft import _PadType
 
