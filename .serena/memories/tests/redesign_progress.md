@@ -4,7 +4,7 @@ Status as of 2026-06-21 audit; verify worktree state before relying on these not
 
 ## Current Direction
 
-- Migrate pytest tests toward `mem:instructions/testing_conventions` plus the bundled pytest skill: pytest-native parametrization, shared fixtures, deterministic samples under `tests/dataSamples/`, expected contracts under `tests/dataSamples/expected/`.
+- The pytest redesign is in flight; active redesigned tests use the project mechanics below.
 - Use this memory for project-specific mechanics only. The generic pytest skill remains authoritative for test shape, data gates, fixture discipline, and avoiding faux scenario machinery.
 
 ## Current Shared Test Modules
@@ -78,20 +78,15 @@ Status as of 2026-06-21 audit; verify worktree state before relying on these not
 ## Guidance For Adding New Test Functions
 
 1. Read the target implementation, current test file, `tests/conftest.py`, `tests/conftestAnnex.py`, `tests/_theSSOT.py`, and this memory before editing.
-2. Mirror the target function parameters in the test signature, same names and order, with no defaults. Append `expected` after target parameters for success tests.
-3. Use one success test and one `Error` test per target unless there is a strong reason not to.
-4. Use stacked `@pytest.mark.parametrize` for independent dimensions. Use coupled explicit rows only when parameter values must travel together, such as `pathFilename,dtype_str`.
-5. Before writing the test body, resolve the exact expected filename(s) that the `expected` fixture will request. Create or regenerate those `.npy` files first.
-6. Use helpers from `tests`: `assert_array_equal` for exact arrays, `assert_allclose` for approximate arrays, `assertEqualTo` for exact scalar/object equality, and `assert_approx` for approximate scalar equality.
-7. Pass every meaningful target input into the assertion message, using positional arguments for positional target inputs and keyword arguments for named target inputs.
-8. Keep fixtures in `tests/conftest.py`. Put non-fixture helper functions in `tests/conftestAnnex.py` and re-export from `tests/__init__.py` when they are shared.
-9. Do not hide target parameters in dictionaries unless the target itself accepts that dictionary, as `tukey(..., **keywordArguments)` currently does.
-10. Run focused tests for the changed target first, then the active redesigned set when shared fixtures or expected loading changed.
+2. Before writing the test body, resolve the exact expected filename(s) that the `expected` fixture will request. Create or regenerate those `.npy` files first.
+3. Use helpers from `tests`: `assert_array_equal` for exact arrays, `assert_allclose` for approximate arrays, `assertEqualTo` for exact scalar/object equality, and `assert_approx` for approximate scalar equality.
+4. When using the project assertion helpers, pass meaningful target inputs with positional arguments for positional target inputs and keyword arguments for named target inputs.
+5. Put shared non-fixture helper functions in `tests/conftestAnnex.py` and re-export from `tests/__init__.py`.
+6. Do not hide target parameters in dictionaries unless the target itself accepts that dictionary, as `tukey(..., **keywordArguments)` currently does.
+7. Run focused tests for the changed target first, then the active redesigned set when shared fixtures or expected loading changed.
 
 ## Validation Snapshot
 
 - Focused active redesigned validation on 2026-06-21:
   - `pytest tests/test_io.py tests/test_windowingFunctions.py tests/test_windowingFunctionsTensor.py -n0`: 145 passed.
   - `pytest tests/test_io.py tests/test_windowingFunctions.py tests/test_windowingFunctionsTensor.py`: 145 passed with xdist.
-- The local `.venv` Python launcher may point at an inaccessible Python 3.14 install. A workspace uv-managed CPython 3.14.6 with `PYTHONPATH=src;.;.venv/Lib/site-packages` was used for validation.
-- SciPy compiled extensions previously failed to import inside the filesystem sandbox with `Access is denied`; focused pytest and expected-data generation may need unsandboxed execution in this environment.

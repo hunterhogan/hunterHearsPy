@@ -12,20 +12,21 @@
   Folders can mirror project structure (e.g. modules like frontend/backend) or topics like debugging, architecture, etc.
 - Memory references must use a mem: prefix inside backticks, e.g. `mem:frontend/core`.
   The surrounding text should clearly indicate when to read the memory/which content to expect.
-  The text should provide more precise guidance than the memory name alone, 
+  The text should provide more precise guidance than the memory name alone,
   i.e. avoid a reference like "frontend debugging: `mem:frontend/debugging` and instead make clear which aspects of frontend debugging are covered.
 - Memories themselves should not contain information about when to read them; this is the responsibility of the referring memory.
 
 ## Style
 
-Dense agent notes, not prose docs. Prefer invariants, terse bullets. 
-Avoid obvious context, rationale, and examples unless they prevent likely mistakes. 
+Dense agent notes, not prose docs. Prefer invariants, terse bullets.
+Avoid obvious context, rationale, and examples unless they prevent likely mistakes.
 Keep guidance durable and generalizable, not task-local.
 
 ## Add/update threshold
 
 Add or update memories only with stable, non-obvious project conventions that avoid complex rediscovery in the future.
 Do not add: quick-read facts; generic language/framework knowledge; one-off task notes; volatile line-level details; behavior likely to change soon.
+Do not duplicate global Skills or live config files. Point to the authoritative skill or config file and describe the kind of information it owns, not the current rule values.
 
 ## Maintenance Actions
 
