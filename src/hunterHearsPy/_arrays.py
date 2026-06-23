@@ -51,7 +51,7 @@ def getWaveformMetadata(
 
 	#============== Calculate ===========================================================
 
-	multiplicandSamplesStart: float = max((align == 'center') / 2, align == 'start')
+	multiplicandSamplesStart: float = max((align == 'center') / 2, align == 'stop')
 
 	for metadata in dictionaryWaveformMetadata.values():
 		samplesPadding: int = axis['time'].size - metadata['lengthWaveform']
@@ -85,6 +85,22 @@ def loadWaveforms(listPathFilenames: Sequence[FileDescriptorOrPath], *, CPUlimit
 
 	with ThreadPoolExecutor(max_workers=max_workers) as threadManager:
 		tuple(tqdm(threadManager.map(workhorse, dictionaryWaveformMetadata, dictionaryWaveformMetadata.values()), total=len(dictionaryWaveformMetadata)))
+
+	"""# DEVELOPMENT
+	test_loadWaveforms_align: this is an exception to the rule of 1 test function for non-error outcomes per function. The not-commented-out code in align.py is my proof of concept for this test. But I DO NOT want you to mimic the code I wrote. I want you to understand what we want to test, then I want you think about a generalized test function. I designed this ArrayWaveforms such that if all of the waveforms are align=start (which means "pad the end of the shorter waveforms"), then for the duration of the shortest waveform, that data is identical in all of the waveforms. In this case, the shortest is 20 seconds at 44100 Hz, so the first 44100*20 samples of the left channel in all 5 waveforms match each other and the first 44100*20 samples of the right channel in all 5 waveforms match each other. Said, differently, if you truncate to the shortest waveform, then all of the waveforms should be identical.
+
+	If align=stop, then if you truncate to the shortest waveform by removing the beginning of the longer waveforms, then all waveforms are identical.
+
+	If align=center, truncate by removing equal amounts from the beginning and end, and the waveforms are identical.
+
+	That is the test I want you to make. The first three parameters are the same as test_loadWaveforms because they are necessary to get the array. Then use the align parameter in the test function to truncate/trim the array to the shortest waveform. Then do a round-robin assert_array_equal for each waveform in the ArrayWaveforms.
+
+	How long is the shortest waveform? Well, fuck.
+
+	# TODO Do I need to return `dictionaryWaveformMetadata`? In addition to the padding data, it is a convenient way to get the original pathFilename.
+	I wrote a bunch of notes about this. I guess they are in old commits.
+	Instead of returning a simple tuple, I could return a named tuple, which is tuple+, of course.
+	"""
 
 	return arrayWaveforms
 
