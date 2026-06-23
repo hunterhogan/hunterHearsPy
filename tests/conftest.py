@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from hashlib import blake2b
 from humpy_cytoolz.dicttoolz import keyfilter, merge
 from hunterHearsPy import readAudioFile
 from hunterMakesPy.dataStructures import stringItUp
@@ -13,6 +14,7 @@ import operator
 import pytest
 
 if TYPE_CHECKING:
+	from collections.abc import Sequence
 	from hunterHearsPy import Waveform, 形ndarray
 	from inspect import Parameter
 	from pathlib import Path
@@ -49,6 +51,8 @@ def expected(request: FixtureRequest) -> 形ndarray:
 		, *(f'{keyAndValue[0]}~{"".join(stringItUp(keyAndValue[1]) or ["None"])}'
 			for keyAndValue in keyfilter(request_nodeParameters.keys().__contains__, merge(inspect.signature(request.function).parameters, request_nodeParameters)).items()
 	)))
+	if 251 < len(filenameStem):
+		filenameStem = f'{request.function.__name__}__blake2b~{blake2b(filenameStem.encode(), digest_size=16).hexdigest()}'
 	pathFilename: Path = pathDataSamplesExpected / f'{filenameStem}.npy'
 	return numpy.load(pathFilename, mmap_mode='r', allow_pickle=False)
 
@@ -70,6 +74,11 @@ def device(request: FixtureRequest) -> Device | None:
 @pytest.fixture()
 def dtype_str(pathFilename: Path) -> Options_dtype_str | None:
 	return one(set(Options_dtype_str.__args__).intersection(pathFilename.stem.split('_')), too_short=None)
+
+@pytest.fixture()
+def listPathFilenames(request: FixtureRequest) -> tuple[Path, ...]:
+	listFilenames: Sequence[str] = cast('Sequence[str]', request.node.callspec.params['listPathFilenames'])  # pyright: ignore[reportUnknownMemberType]
+	return tuple(map(pathDataSamples.joinpath, listFilenames))
 
 @pytest.fixture()
 def pathFilename(request: FixtureRequest) -> Path:

@@ -13,7 +13,7 @@ Status as of 2026-06-21 audit; verify worktree state before relying on these not
 - `tests/__init__.py` re-exports `_theSSOT` names and assertion helpers from `tests/conftestAnnex.py`.
 - `tests/conftest.py` currently contains fixtures, not assertion helpers:
   - tolerance fixtures: `approx_abs`, `approx_rel`, `atol`, `rtol`
-  - parameter/data fixtures: `device`, `expected`, `pathFilename`, `waveform`
+  - parameter/data fixtures: `CPUlimit`, `device`, `dtype_str`, `expected`, `listPathFilenames`, `pathFilename`, `sampleRateSource`, `waveform`
 - `tests/conftestAnnex.py` contains assertion helpers:
   - `assertEqualTo`
   - `assert_approx`
@@ -48,8 +48,9 @@ Status as of 2026-06-21 audit; verify worktree state before relying on these not
   - `torch.float32` -> `torch.float32`
   - `torch.float64` -> `torch.float64`
 - Indirect fixtures still use the original parametrized value in the expected filename. Example: `pathFilename` returns a `Path`, but expected filenames use the parametrized filename string.
+- If the generated expected filename component exceeds 255 characters, `expected` replaces the full stem with `{request.function.__name__}__blake2b~{digest}`, where `digest` is the BLAKE2b hex digest of the original full stem with `digest_size=16`.
 - `expected` loads arrays with `numpy.load(..., mmap_mode='r', allow_pickle=False)`. Treat returned expected arrays as read-only.
-- If a test function signature, parameter name, or parametrized value changes, regenerate or rename matching `.npy` files. Old expected files become unreachable.
+- If a test function signature, parameter name, parametrized value, or long-stem digest fallback changes, regenerate or rename matching `.npy` files. Old expected files become unreachable.
 
 ## Current Active Redesigned Tests
 
