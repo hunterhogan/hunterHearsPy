@@ -29,6 +29,13 @@ if TYPE_CHECKING:
 			), Parameters_loadWaveforms(align='start', dtype='float32', dtype_str='float32', sampleRateDesired=44100)
 			, id='MusicOnlyVocal__Parameters_loadWaveforms~defaults'
 		)
+		, pytest.param(('MusicNonVocal_bass_ch2_float32_s24_Hz48000_sec59.6.flac'
+				, 'MusicNonVocal_bass_ch2_float32_s24_Hz48000_sec59.4_DC-.111.flac'
+				, 'MusicNonVocal_bass_ch2_float32_s24_Hz48000_sec60.flac'
+				, 'MusicNonVocal_bass_ch2_float32_s24_Hz48000_sec59.8.flac'
+			), Parameters_loadWaveforms(align='center', sampleRateDesired=48000)
+			, id='MusicNonVocal_bass'
+		)
 	)
 )
 def test_loadWaveforms(listPathFilenames: Sequence[Path], CPUlimit: int, keywordArguments: Parameters_loadWaveforms, expected: ArrayWaveforms) -> None:
