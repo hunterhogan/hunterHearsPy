@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from hunterHearsPy import amplitudeToSoundfile, getAxis, resampleWaveform, setting, stft
+from hunterHearsPy.dataBaskets import AxisMetadata
 from hunterMakesPy.filesystemToolkit import makeDirectorySafely
 from pathlib import Path, PurePath
 from soundfile import AudioData
@@ -12,7 +13,7 @@ import tempfile
 import uuid
 
 if TYPE_CHECKING:
-	from hunterHearsPy import AxisMetadata, FileDescriptorOrPath, Parameters_stft, Spectrogram, Waveform
+	from hunterHearsPy import FileDescriptorOrPath, Parameters_stft, Spectrogram, Waveform
 	from numpy import dtype, ndarray
 	from soundfile import AudioData_2d, dtype_str as Options_dtype_str
 	from typing import Any

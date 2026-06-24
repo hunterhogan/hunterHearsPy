@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from hunterHearsPy import ArrayWaveforms, loadWaveforms, normalizeArrayWaveforms, normalizeWaveform, Waveform
+from hunterHearsPy.dataBaskets import WaveformsAndMetadata
 from tests.oldSampleData import pathDataSamples_labeled, sampleData
 from typing import Final, TYPE_CHECKING
 import numpy
@@ -24,7 +25,7 @@ def listPathFilenamesArrayWaveforms() -> list[Path]:
 	return [pathDataSamples_labeled / filename for filename in listFilenamesSameShape]
 
 @pytest.fixture
-def array44100_ch2_sec5_Sine(listPathFilenamesArrayWaveforms: list[Path]) -> ArrayWaveforms:
+def array44100_ch2_sec5_Sine(listPathFilenamesArrayWaveforms: list[Path]) -> WaveformsAndMetadata:
 	"""
 	Load the four WAV files with the same shape into an array.
 
@@ -76,13 +77,13 @@ def test_normalize_preserves_relative_amplitudes(ID: str, waveform: Waveform, sa
 
 		assert numpy.isclose(ratioOriginal, ratioNormalized, rtol=1e-5), f'Relative amplitudes should be preserved for {ID}'
 
-def test_normalizeArrayWaveforms(array44100_ch2_sec5_Sine: ArrayWaveforms) -> None:
+def test_normalizeArrayWaveforms(array44100_ch2_sec5_Sine: WaveformsAndMetadata) -> None:
 	"""Test that normalizeArrayWaveforms scales multiple waveforms to have peak amplitude equal to amplitudeNorm."""
 	# Save a copy of the original array for comparison after reversion
-	arrayOriginal = array44100_ch2_sec5_Sine.copy()
+	arrayOriginal = array44100_ch2_sec5_Sine.array.copy()
 
 	# Apply normalization to all waveforms in the array
-	arrayNormalized, listRevertNormalization = normalizeArrayWaveforms(array44100_ch2_sec5_Sine.copy())
+	arrayNormalized, listRevertNormalization = normalizeArrayWaveforms(array44100_ch2_sec5_Sine.array.copy())
 
 	# Test 1: Check that each waveform is normalized to the correct peak amplitude
 	for indexWaveform in range(arrayNormalized.shape[-1]):

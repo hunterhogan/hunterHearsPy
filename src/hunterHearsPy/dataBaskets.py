@@ -2,12 +2,20 @@
 from __future__ import annotations
 
 from hunterHearsPy import E733TH4X0R, WindowingFunction
-from typing import Literal, TYPE_CHECKING, TypeAlias
+from typing import NamedTuple, TYPE_CHECKING, TypedDict
 import dataclasses
 
 if TYPE_CHECKING:
-	from scipy.signal._short_time_fft import _ScaleTo
-	_FFTMode1: TypeAlias = Literal["onesided", "onesided2X"]
+	from hunterHearsPy.theTypes import ArraySpectrograms, ArrayWaveforms, FileDescriptorOrPath
+	from scipy.signal._short_time_fft import _FFTMode1, _ScaleTo
+
+class AxisMetadata(NamedTuple):
+	number: int
+	size: int
+
+class SpectrogramsAndMetadata(NamedTuple):
+	array: ArraySpectrograms
+	metadata: dict[int, WaveformMetadata]
 
 @dataclasses.dataclass(slots=True)
 class Translator:
@@ -32,3 +40,19 @@ class Translator:
 			, scale_to=self.scale_to
 			, win=self.windowingFunction
 		)
+
+class WaveformMetadata(TypedDict):
+	"""Metadata describing waveform file properties and processing state."""
+
+	channels: int
+	lengthWaveform: int
+	pathFilename: FileDescriptorOrPath
+	# NOTE If the following values were assigned directly to a `slice` object, the slice object would
+	# work as desired. https://docs.python.org/3/library/functions.html#slice Therefore, maintain this
+	# functionality, and keep the semiotics aligned: `slice(start, stop)`.
+	samplesStart: int
+	samplesStop: int
+
+class WaveformsAndMetadata(NamedTuple):
+	array: ArrayWaveforms
+	metadata: dict[int, WaveformMetadata]

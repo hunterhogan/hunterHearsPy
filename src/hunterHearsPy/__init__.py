@@ -2,15 +2,13 @@
 from __future__ import annotations
 
 from hunterHearsPy.theTypes import (
-	ArraySpectrograms as ArraySpectrograms, ArraySpectrogramsShape as ArraySpectrogramsShape, ArrayWaveforms as ArrayWaveforms,
-	ArrayWaveformsFloating as ArrayWaveformsFloating, ArrayWaveformsShape as ArrayWaveformsShape, AxisMetadata as AxisMetadata,
+	ArraySpectrograms as ArraySpectrograms, ArrayWaveforms as ArrayWaveforms, ArrayWaveformsFloating as ArrayWaveformsFloating,
 	callableReturnsNDArray as callableReturnsNDArray, E733TH4X0R as E733TH4X0R, FileDescriptorOrPath as FileDescriptorOrPath,
 	NormalizationReverter as NormalizationReverter, OptionsAlign as OptionsAlign, Parameters_loadSpectrograms as Parameters_loadSpectrograms,
 	Parameters_loadWaveforms as Parameters_loadWaveforms, Parameters_stft as Parameters_stft, ParametersShortTimeFFT as ParametersShortTimeFFT,
 	Spectrogram as Spectrogram, SpectrogramDtype as SpectrogramDtype, Waveform as Waveform, WaveformDtype as WaveformDtype,
-	WaveformFloating as WaveformFloating, WaveformFloatingDtype as WaveformFloatingDtype, WaveformMetadata as WaveformMetadata,
-	WaveformShape as WaveformShape, WindowingFunction as WindowingFunction, WindowingFunctionDtype as WindowingFunctionDtype, 个 as 个,
-	形floating as 形floating, 形ndarray as 形ndarray, 形Shape as 形Shape)
+	WaveformFloating as WaveformFloating, WaveformFloatingDtype as WaveformFloatingDtype, WindowingFunction as WindowingFunction,
+	WindowingFunctionDtype as WindowingFunctionDtype, 个 as 个, 形floating as 形floating, 形ndarray as 形ndarray, 形Shape as 形Shape)
 
 # isort: split
 from hunterHearsPy.windowingFunctions import cosineWings as cosineWings, equalPower as equalPower, halfsine as halfsine, tukey as tukey
@@ -24,10 +22,12 @@ with suppress(ModuleNotFoundError):  # noqa: RUF067
 		tukeyTensor as tukeyTensor)
 
 # isort: split
-from hunterHearsPy.theSSOT import getAxis as getAxis, setting as setting
+from hunterHearsPy.dataBaskets import (
+	AxisMetadata as AxisMetadata, SpectrogramsAndMetadata as SpectrogramsAndMetadata, Translator as Translator,
+	WaveformMetadata as WaveformMetadata, WaveformsAndMetadata as WaveformsAndMetadata)
 
 # isort: split
-from hunterHearsPy.dataBaskets import Translator as Translator
+from hunterHearsPy.theSSOT import getAxis as getAxis, setting as setting
 
 # isort: split
 from hunterHearsPy._resample import resampleWaveform as resampleWaveform

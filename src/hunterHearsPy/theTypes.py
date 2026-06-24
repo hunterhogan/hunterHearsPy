@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from numpy import complex64, complex128, dtype, floating, integer, ndarray, number
-from soundfile import FileDescriptorOrPath as FileDescriptorOrPath  # noqa: TC002
+from soundfile import FileDescriptorOrPath as FileDescriptorOrPath
 from typing import Any, Literal, NamedTuple, TYPE_CHECKING, TypeAlias, TypedDict, TypeVar
 
 if TYPE_CHECKING:
@@ -13,55 +13,41 @@ if TYPE_CHECKING:
 	from scipy.signal._short_time_fft import _FFTMode1, _PadType, _ScaleTo
 	from soundfile import dtype_str as Options_dtype_str
 
+#================== Waveform ======================================================================
+
+WaveformFloatingDtype: TypeAlias = floating[Any]
+WaveformFloating: TypeAlias = ndarray[tuple[int, int], dtype[WaveformFloatingDtype]]
+"""NumPy `ndarray` of audio waveform data; shape (channel, time); mono audio, `channel` = 1."""
+ArrayWaveformsFloating: TypeAlias = ndarray[tuple[int, int, int], dtype[WaveformFloatingDtype]]
+"""NumPy `ndarray` of `WaveformFloating` indexed on the last axis: shape (channel, time, `WaveformFloating`)."""
+
+WaveformDtype: TypeAlias = integer[Any] | WaveformFloatingDtype
+Waveform: TypeAlias = ndarray[tuple[int, int], dtype[WaveformDtype]]
+"""NumPy `ndarray` of audio waveform data; shape (channel, time); mono audio, `channel` = 1."""
+ArrayWaveforms: TypeAlias = ndarray[tuple[int, int, int], dtype[WaveformDtype]]
+"""NumPy `ndarray` of `Waveform` indexed on the last axis: shape (channel, time, `Waveform`)."""
+
+#================== Spectrogram ===================================================================
+
+SpectrogramDtype: TypeAlias = complex64 | complex128
+Spectrogram: TypeAlias = ndarray[tuple[int, int, int], dtype[SpectrogramDtype]]
+"""NumPy `ndarray` of complex-valued spectrogram data; shape (channel, frequencyBin, time); mono audio, `channel` = 1."""
+
+ArraySpectrograms: TypeAlias = ndarray[tuple[int, int, int, int], dtype[SpectrogramDtype]]
+"""NumPy `ndarray` of `Spectrogram` indexed on the last axis: shape (channel, frequencyBin, time, `Spectrogram`)."""
+
+#================== WindowingFunction ==================================================================
+
+WindowingFunctionDtype: TypeAlias = floating[Any]
+WindowingFunction: TypeAlias = ndarray[tuple[int], dtype[WindowingFunctionDtype]]
+
+#================== Function signatures ==================================================================
+
 个 = TypeVar('个')
 形floating = TypeVar('形floating', bound=floating[Any])
 形ndarray = TypeVar('形ndarray', bound=ndarray[tuple[Any, ...], dtype[number]], covariant=True)
 形Shape = TypeVar('形Shape', bound=tuple[Any, ...])
-
-#================== Waveform ======================================================================
-
-class ArraySpectrogramsShape(NamedTuple):
-	a0: int
-	a1: int
-	a2: int
-	a3: int
-
-class ArrayWaveformsShape(NamedTuple):
-	a0: int
-	a1: int
-	a2: int
-
-class WaveformShape(NamedTuple):
-	a0: int
-	a1: int
-
-OptionsAlign: TypeAlias = Literal['center', 'start', 'stop']
-
-class Parameters_loadWaveforms(TypedDict, total=False):
-	align: OptionsAlign
-	dtype: DTypeLike
-	dtype_str: Options_dtype_str
-	sampleRateDesired: float
-
-class Parameters_loadSpectrograms(Parameters_loadWaveforms, total=False):
-	align_pad_mode: _ModeKind
-	dtypeWaveform: DTypeLike
-
-class AxisMetadata(NamedTuple):
-	number: int
-	size: int
-
-WaveformFloatingDtype: TypeAlias = floating[Any]
-WaveformFloating: TypeAlias = ndarray[tuple[int, int], dtype[WaveformFloatingDtype]]
-"""A NumPy `ndarray` of audio waveform data with shape (channel, time); for mono audio, `channel` = 1."""
-ArrayWaveformsFloating: TypeAlias = ndarray[tuple[int, int, int], dtype[WaveformFloatingDtype]]
-"""A NumPy `ndarray` containing `ndarray` of type `WaveformFloating` indexed on the last axis: shape is (channel, time, `WaveformFloating`)."""
-
-WaveformDtype: TypeAlias = integer[Any] | WaveformFloatingDtype
-Waveform: TypeAlias = ndarray[tuple[int, int], dtype[WaveformDtype]]
-"""A NumPy `ndarray` of audio waveform data with shape (channel, time); for mono audio, `channel` = 1."""
-ArrayWaveforms: TypeAlias = ndarray[tuple[int, int, int], dtype[WaveformDtype]]
-"""A NumPy `ndarray` containing `ndarray` of type `Waveform` indexed on the last axis: shape is (channel, time, `Waveform`)."""
+callableReturnsNDArray = TypeVar('callableReturnsNDArray', bound=Callable[..., WindowingFunction])
 
 NormalizationReverter: TypeAlias = Callable[[Waveform], Waveform]
 """Function type for reversing normalization operations.
@@ -70,34 +56,10 @@ Type alias for callable objects that accept a normalized waveform and return the
 its original amplitude scale.
 """
 
-class WaveformMetadata(TypedDict):
-	"""Metadata describing waveform file properties and processing state."""
-
-	channels: int
-	lengthWaveform: int
-	pathFilename: FileDescriptorOrPath
-	# NOTE If the following values were assigned directly to a `slice` object, the slice object would
-	# work as desired. https://docs.python.org/3/library/functions.html#slice Therefore, maintain this
-	# functionality, and keep the semiotics aligned: `slice(start, stop)`.
-	samplesStart: int
-	samplesStop: int
-
-#================== Spectrogram ===================================================================
-
-SpectrogramDtype: TypeAlias = complex64 | complex128
-Spectrogram: TypeAlias = ndarray[tuple[int, int, int], dtype[SpectrogramDtype]]
-"""A NumPy `ndarray` of spectrogram data with shape (channel, frequency_bins, time). For mono audio, `channel` = 1."""
-
-ArraySpectrograms: TypeAlias = ndarray[tuple[int, int, int, int], dtype[SpectrogramDtype]]
-"""A NumPy `ndarray` containing `ndarray` of type `Spectrogram` indexed on the last axis: shape is (channel, frequency_bins, time, `Spectrogram`)."""
-
-#================== ShortTimeFFT ==================================================================
-WindowingFunctionDtype: TypeAlias = floating[Any]
-WindowingFunction: TypeAlias = ndarray[tuple[int], dtype[WindowingFunctionDtype]]
-
-callableReturnsNDArray = TypeVar('callableReturnsNDArray', bound=Callable[..., WindowingFunction])
+OptionsAlign: TypeAlias = Literal['center', 'start', 'stop']
 
 class E733TH4X0R(TypedDict, total=False):
+	"""Low-semantic-value parameter names, used by elite hackers, of `scipy.signal.ShortTimeFFT`."""
 	dual_win: WindowingFunction | None
 	fft_mode: _FFTMode1
 	fs: int | float
@@ -106,6 +68,19 @@ class E733TH4X0R(TypedDict, total=False):
 	phase_shift: int | None
 	scale_to: _ScaleTo | None
 	win: WindowingFunction
+
+class Parameters_loadWaveforms(TypedDict, total=False):
+	align: OptionsAlign
+	# TODO Think about: `dtype` here becomes `dtypeWaveform` in `Parameters_loadSpectrograms` because
+	# `dtype` changes its meaning to "the dtype of the arraySpectrograms".
+	dtype: DTypeLike
+	dtype_str: Options_dtype_str
+	# TODO sampleRate!!!!!! This lexeme is annoying in this package!!!!!
+	sampleRateDesired: float
+
+class Parameters_loadSpectrograms(Parameters_loadWaveforms, total=False):
+	align_pad_mode: _ModeKind
+	dtypeWaveform: DTypeLike
 
 class ParametersShortTimeFFT(TypedDict, total=False):
 	dual_win: WindowingFunction | None

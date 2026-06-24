@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from hunterHearsPy import loadWaveforms, OptionsAlign, Parameters_loadWaveforms
+from hunterHearsPy.dataBaskets import WaveformMetadata
+from itertools import combinations, starmap
+from operator import itemgetter
 from tests import assert_array_equal
 from typing import TYPE_CHECKING
 import pytest
@@ -9,6 +12,7 @@ if TYPE_CHECKING:
 	from collections.abc import Sequence
 	from hunterHearsPy import ArrayWaveforms
 	from pathlib import Path
+	from types import EllipsisType
 
 @pytest.mark.parametrize(('listPathFilenames', 'keywordArguments')
 	, indirect=['listPathFilenames']
@@ -39,13 +43,9 @@ if TYPE_CHECKING:
 	)
 )
 def test_loadWaveforms(listPathFilenames: Sequence[Path], CPUlimit: int, keywordArguments: Parameters_loadWaveforms, expected: ArrayWaveforms) -> None:
-	actual: ArrayWaveforms = loadWaveforms(listPathFilenames, CPUlimit=CPUlimit, **keywordArguments)
+	actual, _metadata = loadWaveforms(listPathFilenames, CPUlimit=CPUlimit, **keywordArguments)
 
 	assert_array_equal(actual, expected, 'loadWaveforms', listPathFilenames, CPUlimit=CPUlimit, **keywordArguments)
-
-
-
-
 
 @pytest.mark.parametrize(('listPathFilenames', 'keywordArguments', 'align')
 	, indirect=['listPathFilenames']
@@ -72,5 +72,12 @@ def test_loadWaveforms(listPathFilenames: Sequence[Path], CPUlimit: int, keyword
 		)
 	)
 )
-def Z0Z_test_loadWaveforms_align(listPathFilenames: Sequence[Path], CPUlimit: int, keywordArguments: Parameters_loadWaveforms, align: OptionsAlign) -> None:
-	pass
+def test_loadWaveforms_align(listPathFilenames: Sequence[Path], CPUlimit: int, keywordArguments: Parameters_loadWaveforms, align: OptionsAlign) -> None:
+	actual, metadata = loadWaveforms(listPathFilenames, CPUlimit=CPUlimit, **keywordArguments)
+	metadataWaveformShortest: WaveformMetadata = min(metadata.values(), key=itemgetter('lengthWaveform'))
+	slicer: tuple[EllipsisType, slice, slice] = (..., slice(metadataWaveformShortest['samplesStart'], metadataWaveformShortest['samplesStop']), slice(None))
+	trimmed: ArrayWaveforms = actual[slicer]
+
+	def assertWaveformsEqual(alfa: int, beta: int) -> None:
+		assert_array_equal(trimmed[..., alfa], trimmed[..., beta], 'loadWaveforms', metadata[alfa]['pathFilename'], metadata[beta]['pathFilename'], keywordArguments=keywordArguments)
+	tuple(starmap(assertWaveformsEqual, combinations(metadata, 2)))
