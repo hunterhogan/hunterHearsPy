@@ -39,6 +39,7 @@ def atol(request: FixtureRequest) -> float:
 	"""The `atol` (***a***bsolute ***tol***erance) parameter value for `numpy.allclose`."""
 	return 1e-08
 
+# TODO expected file sizes are too large.
 @pytest.fixture()
 def expected(request: FixtureRequest) -> 形ndarray:
 	"""Test-function and its parameters encoded in a `__` delimited filename.

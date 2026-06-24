@@ -54,6 +54,13 @@ def stft(
 	def turtleShell(spectrogram: Spectrogram, lengthWaveform: int) -> WaveformFloating:
 		return workhorseSTFT.istft(S=spectrogram, k1=lengthWaveform)
 
+	#============== Initialize ==========================================================
+
+	parametersShortTimeFFT = ParametersShortTimeFFT(**keyfilter(dataclasses.asdict(setting.ShortTimeFFT).keys().__contains__, merge(dataclasses.asdict(setting.ShortTimeFFT), keywordArguments)))
+	padding: _PadType = keywordArguments.get('padding', setting.padding)
+
+	workhorseSTFT: ShortTimeFFT = ShortTimeFFT(**parametersShortTimeFFT.e733T)
+
 	# DEVELOPMENT This assumes I will only run stft on floating-point valued waveform data. But is
 	# that true? Is that necessary? Is that desirable?
 	arrayFloating = arrayTarget
@@ -75,12 +82,8 @@ def stft(
 		)
 		raise ValueError(message)
 
-	parametersShortTimeFFT = ParametersShortTimeFFT(**keyfilter(dataclasses.asdict(setting.ShortTimeFFT).keys().__contains__, merge(dataclasses.asdict(setting.ShortTimeFFT), keywordArguments)))
-
-	workhorseSTFT: ShortTimeFFT = ShortTimeFFT(**parametersShortTimeFFT.e733T)
-
-	padding: _PadType = keywordArguments.get('padding', setting.padding)
-
+	# DEVELOPMENT There are eleventy different systems below because I have been trying to find 1)
+	# efficient logic that 2) the type checkers understand.
 	if arrayFloating.ndim == 2:
 		arrayWaveforms: ArrayWaveformsFloating = numpy.expand_dims(arrayFloating, indexingAxis)
 	elif (arrayTarget.ndim == 3) and (numpy.issubdtype(arrayTarget.dtype, complexfloating)):
