@@ -5,12 +5,13 @@
 from __future__ import annotations
 
 from humpy_cytoolz.dicttoolz import keyfilter, merge
-from hunterHearsPy import amplitudeIntegerToFloating, getAxis, setting, Translator
-from hunterHearsPy.theTypes import ParametersShortTimeFFT
+from hunterHearsPy import amplitudeIntegerToFloating, getAxis, setting
+from hunterHearsPy.dataBaskets import ParametersShortTimeFFT
 from numpy import complexfloating, floating, integer
 from scipy.signal import ShortTimeFFT
 from typing import overload, TYPE_CHECKING
 from typing_extensions import Unpack
+import dataclasses
 import numpy
 
 if TYPE_CHECKING:
@@ -74,23 +75,12 @@ def stft(
 		)
 		raise ValueError(message)
 
-	parametersShortTimeFFT = Translator(
-		**ParametersShortTimeFFT(keyfilter(setting.ShortTimeFFT.keys().__contains__, merge(setting.ShortTimeFFT, keywordArguments))))
-
-	padding: _PadType = keywordArguments.get('padding', setting.padding)
+	parametersShortTimeFFT = ParametersShortTimeFFT(**keyfilter(dataclasses.asdict(setting.ShortTimeFFT).keys().__contains__, merge(dataclasses.asdict(setting.ShortTimeFFT), keywordArguments)))
 
 	workhorseSTFT: ShortTimeFFT = ShortTimeFFT(**parametersShortTimeFFT.e733T)
 
-	# SEMIOTICS `parametersShortTimeFFT` has type `dataclass` `Translator`, AND type `TypedDict`
-	# `ParametersShortTimeFFT` exists, therefore `parametersShortTimeFFT` implies a very different
-	# type than it actually is. This happened when I introduced the `Translator` class to "translate"
-	# (or map) semantic identifiers and labels to the semantically-weak parameter names of
-	# `ShortTimeFFT`.
-	# Something needs to change.
-	# ? Replace the two `TypedDict` with one `dataclass`.
-	# ? Accept and adopt the `ShortTimeFFT` parameter names.
-	# ? Find a completely different system.
-	# ? The situation is a symptom of more fundamental problems with my `stft` function.
+	padding: _PadType = keywordArguments.get('padding', setting.padding)
+
 	if arrayFloating.ndim == 2:
 		arrayWaveforms: ArrayWaveformsFloating = numpy.expand_dims(arrayFloating, indexingAxis)
 	elif (arrayTarget.ndim == 3) and (numpy.issubdtype(arrayTarget.dtype, complexfloating)):

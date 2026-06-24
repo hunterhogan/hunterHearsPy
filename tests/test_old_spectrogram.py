@@ -111,7 +111,7 @@ def listPathFilenamesFromWaveformData(listWaveformDataSameStereoShape: list[Wave
 @pytest.mark.parametrize('sampleRateDesired', [22050, 44100, 48000])
 def test_loadSpectrograms_acceptsSampleRateDesired(listPathFilenamesFromWaveformData: list[Path], sampleRateDesired: int) -> None:
 	"""Test that loadSpectrograms accepts different target sample rates and produces valid spectrograms."""
-	arraySpectrograms, dictionaryWaveformMetadata = loadSpectrograms(listPathFilenamesFromWaveformData, sampleRateDesired=sampleRateDesired)
+	arraySpectrograms, dictionaryWaveformMetadata = loadSpectrograms(listPathFilenamesFromWaveformData, sampleRate=sampleRateDesired)
 
 	expectedCountFiles = len(listPathFilenamesFromWaveformData)
 	actualShape = arraySpectrograms.shape
@@ -136,7 +136,7 @@ def test_loadSpectrograms_singleFile(waveformDataStereo44kHz: WaveformAndMetadat
 	sampleRateDesired = 44100
 	listPathFilenameSingle = [waveformDataStereo44kHz.pathFilename]
 
-	arraySpectrograms, dictionaryWaveformMetadata = loadSpectrograms(listPathFilenameSingle, sampleRateDesired=sampleRateDesired)
+	arraySpectrograms, dictionaryWaveformMetadata = loadSpectrograms(listPathFilenameSingle, sampleRate=sampleRateDesired)
 
 	waveform = readAudioFile(waveformDataStereo44kHz.pathFilename, sampleRateDesired)
 	spectrogramExpected = stft(waveform, sampleRate=sampleRateDesired)
@@ -163,7 +163,7 @@ def test_loadSpectrograms_roundTripReconstructionAccuracy(waveformDataStereo44kH
 	sampleRateDesired = 44100
 	listPathFilenameSingle = [waveformDataStereo44kHz.pathFilename]
 
-	arraySpectrograms, _dictionaryWaveformMetadata = loadSpectrograms(listPathFilenameSingle, sampleRateDesired=sampleRateDesired)
+	arraySpectrograms, _dictionaryWaveformMetadata = loadSpectrograms(listPathFilenameSingle, sampleRate=sampleRateDesired)
 
 	waveformOriginal = readAudioFile(waveformDataStereo44kHz.pathFilename, sampleRateDesired)
 	spectrogramDirect = stft(waveformOriginal, sampleRate=sampleRateDesired)

@@ -1,7 +1,6 @@
 # ruff: noqa: D100, D101, D102
 from __future__ import annotations
 
-from hunterHearsPy.theTypes import E733TH4X0R
 from typing import NamedTuple, TYPE_CHECKING, TypedDict
 import dataclasses
 
@@ -17,8 +16,20 @@ class SpectrogramsAndMetadata(NamedTuple):
 	array: ArraySpectrograms
 	metadata: dict[int, WaveformMetadata]
 
+class E733TH4X0R(TypedDict, total=False):
+	"""Low-semantic-value parameter names, used by elite hackers, of `scipy.signal.ShortTimeFFT`."""
+	dual_win: WindowingFunction | None
+	fft_mode: _FFTMode1
+	fs: int | float
+	hop: int
+	mfft: int | None
+	phase_shift: int | None
+	scale_to: _ScaleTo | None
+	win: WindowingFunction
+
 @dataclasses.dataclass(slots=True)
-class Translator:
+# class Translator:
+class ParametersShortTimeFFT:
 	lengthHop: int
 	sampleRate: int | float
 	windowingFunction: WindowingFunction

@@ -75,39 +75,25 @@ its original amplitude scale.
 
 OptionsAlign: TypeAlias = Literal['center', 'start', 'stop']
 
-class E733TH4X0R(TypedDict, total=False):
-	"""Low-semantic-value parameter names, used by elite hackers, of `scipy.signal.ShortTimeFFT`."""
-	dual_win: WindowingFunction | None
-	fft_mode: _FFTMode1
-	fs: int | float
-	hop: int
-	mfft: int | None
-	phase_shift: int | None
-	scale_to: _ScaleTo | None
-	win: WindowingFunction
-
 class Parameters_loadWaveforms(TypedDict, total=False):
 	align: OptionsAlign
-	# TODO Think about: `dtype` here becomes `dtypeWaveform` in `Parameters_loadSpectrograms` because
-	# `dtype` changes its meaning to "the dtype of the arraySpectrograms".
-	dtype: DTypeLike
+	dtypeWaveform: DTypeLike
 	dtype_str: Options_dtype_str
-	# TODO sampleRate!!!!!! This lexeme is annoying in this package!!!!!
-	sampleRateDesired: float
+	sampleRate: float
 
 class Parameters_loadSpectrograms(Parameters_loadWaveforms, total=False):
 	align_pad_mode: _ModeKind
-	dtypeWaveform: DTypeLike
+	dtypeSpectrogram: DTypeLike
 
-class ParametersShortTimeFFT(TypedDict, total=False):
+# TODO except `padding`, the key names and types are duplicates of the field names and types in
+# dataclass `ParametersShortTimeFFT`. I have NO idea how to make this DRY.
+class Parameters_stft(TypedDict, total=False):
 	dual_win: WindowingFunction | None
 	fft_mode: _FFTMode1
 	lengthFFT: int | None
 	lengthHop: int
+	padding: _PadType
 	phase_shift: int | None
 	sampleRate: int | float
 	scale_to: _ScaleTo | None
 	windowingFunction: WindowingFunction
-
-class Parameters_stft(ParametersShortTimeFFT, total=False):
-	padding: _PadType

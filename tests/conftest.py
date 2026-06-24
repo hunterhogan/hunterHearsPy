@@ -75,6 +75,7 @@ def device(request: FixtureRequest) -> Device | None:
 def dtype_str(pathFilename: Path) -> Options_dtype_str | None:
 	return one(set(Options_dtype_str.__args__).intersection(pathFilename.stem.split('_')), too_short=None)
 
+# TODO Resolving every actual pathFilename MUST be centralized in one function.
 @pytest.fixture()
 def listPathFilenames(request: FixtureRequest) -> tuple[Path, ...]:
 	listFilenames: Sequence[str] = cast('Sequence[str]', request.node.callspec.params['listPathFilenames'])  # pyright: ignore[reportUnknownMemberType]

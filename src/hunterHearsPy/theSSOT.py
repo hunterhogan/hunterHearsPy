@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from hunterHearsPy import AxisMetadata, tukey
-from hunterHearsPy.theTypes import ParametersShortTimeFFT
+from hunterHearsPy.dataBaskets import ParametersShortTimeFFT
 from hunterMakesPy import PackageSettings, raiseIfNone
 from numpy import complex64, float32
 from soundfile import dtype_str as Options_dtype_str

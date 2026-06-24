@@ -16,8 +16,8 @@ with suppress(ModuleNotFoundError):  # noqa: RUF067
 
 # isort: split
 from hunterHearsPy.dataBaskets import (
-	AxisMetadata as AxisMetadata, SpectrogramsAndMetadata as SpectrogramsAndMetadata, Translator as Translator,
-	WaveformMetadata as WaveformMetadata, WaveformsAndMetadata as WaveformsAndMetadata)
+	AxisMetadata as AxisMetadata, SpectrogramsAndMetadata as SpectrogramsAndMetadata, WaveformMetadata as WaveformMetadata,
+	WaveformsAndMetadata as WaveformsAndMetadata)
 
 # isort: split
 from hunterHearsPy.theSSOT import getAxis as getAxis, setting as setting
