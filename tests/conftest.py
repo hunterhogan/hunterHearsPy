@@ -64,6 +64,10 @@ def rtol(request: FixtureRequest) -> float:
 # ================== Parameter values to test against the package's `Callable` =====================
 
 @pytest.fixture()
+def arrayTarget(waveform: Waveform) -> Waveform:
+	return waveform
+
+@pytest.fixture()
 def CPUlimit(request: FixtureRequest) -> int:
 	return 1
 

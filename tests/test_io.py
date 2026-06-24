@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 		, ('Silence_ch1_Hz48000_int16_sec60.flac')
 		, ('Music_chRsilent_Hz44100_int16_sec20.flac')
 		, ('Music_ch2_Hz48000_int16_sec60_LUFS-20.wav')
-		, ('Music_ch2_Hz44100_int16_peak0.wav')
+		, ('Music_ch2_Hz44100_int16_sec60_peak0.wav')
 		, ('Music_ch2_Hz44100_float32_sec20_RMS-20.wav')
 	)
 )
