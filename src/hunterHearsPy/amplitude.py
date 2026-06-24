@@ -1,4 +1,3 @@
-# ruff: noqa: D103
 """Normalize audio waveform amplitudes.
 
 (AI generated docstring)
@@ -19,10 +18,9 @@ Functions
 
 from __future__ import annotations
 
-from hunterMakesPy import zeroIndexed
-from numpy import divide, finfo as numpy_finfo, float32, floating, iinfo as numpy_iinfo, integer, max as numpy_max, multiply
+from numpy import divide, float32, floating, integer, max as numpy_max, multiply
 from soundfile import dtype_str
-from typing import overload, TYPE_CHECKING
+from typing import Final, overload, TYPE_CHECKING
 import numpy
 import sys
 
@@ -33,17 +31,22 @@ if TYPE_CHECKING:
 	from soundfile import AudioData
 	from typing import Any
 
+# WOW! I think this module has set a new record: I hate every function.
+# TODO Assume each function has at least one flaw or bug until its logic is proved to be correct.
+
+# SEMIOTICS
+bits: Final[int] = 8
+
 def amplitudeIntegerToFloating(arrayTarget: ndarray[形Shape, dtype[integer[Any]]]) -> ndarray[形Shape, dtype[floating[Any]]]:
-	# TODO Wait a minute. `iinfo` is "Machine limits for integer types."? Scaling should not be tied to the machine.
-	integerInformation: numpy_iinfo[integer] = numpy_iinfo(arrayTarget.dtype.str)
-	dtypeFloating: dtype[floating[Any]] = numpy.promote_types(arrayTarget.dtype, float32)
+	"""The original purpose of this function was to convert integer PCM waveforms passed to `stft`."""  # noqa: DOC201
+	amplitudeMaximum: int = 2 ** ((arrayTarget.dtype.itemsize * bits) - 1)  # This works for signed (2s complement) and unsigned because the MSD is the sign, right?
+	# TODO Why is this fixed at float32? Can/ought I to derive it or get it from `setting` or something?
+	Z0Z_floatWidth = float32
+	dtypeFloating: dtype[floating[Any]] = numpy.promote_types(arrayTarget.dtype, Z0Z_floatWidth)
 	arrayFloating: ndarray[形Shape, dtype[floating[Any]]] = numpy.astype(arrayTarget, dtypeFloating, copy=False)
-	if integerInformation.min < 0:
-		arrayFloating /= -integerInformation.min
-	else:
-		amplitudeMiddle: float = (integerInformation.max + zeroIndexed) / 2
-		arrayFloating -= amplitudeMiddle
-		arrayFloating /= amplitudeMiddle
+	if numpy.issubdtype(arrayTarget.dtype, numpy.unsignedinteger):
+		arrayFloating -= amplitudeMaximum / 2
+	arrayFloating /= amplitudeMaximum
 	return arrayFloating
 
 def amplitudeToSoundfile(arrayTarget: ndarray[形Shape, dtype[Any]]) -> AudioData:
@@ -100,16 +103,20 @@ def amplitudeToSoundfile(arrayTarget: ndarray[形Shape, dtype[Any]]) -> AudioDat
 		dtypesInteger: frozenset[dtype[integer[Any]]] = frozenset(filter(lambda _dtype: numpy.issubdtype(_dtype, integer), dtypeSoundfile))
 		dtypeNewInteger: dtype[integer[Any]] = min(min(arrayTarget.dtype, *dtypesInteger), max(dtypesInteger))  # noqa: PLW3301
 
-		integerInformation: numpy_iinfo[integer] = numpy_iinfo(arrayTarget.dtype)
+		amplitudeMaximumTarget: int = 2 ** ((arrayTarget.dtype.itemsize * bits) - 1)
+		amplitudeMaximumNew: int = 2 ** ((dtypeNewInteger.itemsize * bits) - 1)
 
-		if integerInformation.min < 0:
-			arrayTarget //= -integerInformation.min
-		else:
-			amplitudeMiddle: int = (integerInformation.max + zeroIndexed) // 2
-			arrayTarget -= amplitudeMiddle
-			arrayTarget //= amplitudeMiddle
+		arraySoundfile = numpy.zeros(arrayTarget.shape, dtypeNewInteger)  # pyright: ignore[reportAssignmentType]
 
-		arraySoundfile = numpy.astype(arrayTarget, dtypeNewInteger, copy=False)  # pyright: ignore[reportAssignmentType]
+		arrayWorkbench = arrayTarget + arraySoundfile
+
+		if numpy.issubdtype(arrayTarget.dtype, numpy.unsignedinteger):
+			arrayWorkbench -= amplitudeMaximumTarget // 2
+
+		# TODO It seems like this should cause an integer overflow for every calculation.
+		arraySoundfile = arrayWorkbench * amplitudeMaximumNew // amplitudeMaximumTarget
+
+		arraySoundfile = arraySoundfile.astype(dtypeNewInteger, copy=True)  # pyright: ignore[reportAssignmentType]
 	else:
 		from hunterHearsPy._io import saveOnError  # noqa: PLC0415
 
@@ -128,89 +135,7 @@ def amplitudeToSoundfile(arrayTarget: ndarray[形Shape, dtype[Any]]) -> AudioDat
 
 	# I could hardcode the potential types 'float32', 'float64', 'int16', 'int32' to make the type annotations align.
 	# I don't know how, or if it is possible, to future-proof the type annotations against changes to `dtype_str.__args__`.
-	return arraySoundfile  # ty:ignore[invalid-return-type]
-
-def normalizeWaveform(waveform: Waveform, amplitudeNorm: float = 1.0) -> tuple[Waveform, NormalizationReverter]:
-	"""Normalize a waveform to a specified peak amplitude.
-
-	(AI generated docstring)
-
-	You can use this function to scale a `Waveform` [1] so that its absolute peak value equals
-	`amplitudeNorm`. This function also returns `revertNormalization`, a `NormalizationReverter` [2]
-	callable that reverses the scaling when applied to any waveform derived from `waveformNormalized`.
-
-	Parameters
-	----------
-	waveform : Waveform
-		The input audio waveform to normalize.
-	amplitudeNorm : float = 1.0
-		Target peak amplitude. The absolute maximum value of `waveformNormalized` equals `amplitudeNorm`.
-
-	Returns
-	-------
-	waveformNormalized : Waveform
-		The scaled waveform with absolute peak value equal to `amplitudeNorm`.
-	revertNormalization : NormalizationReverter
-		A callable that reverses the normalization scaling. Apply `revertNormalization` to any
-		waveform derived from `waveformNormalized` to restore the original amplitude scale.
-
-	Warns
-	-----
-	UserWarning
-		If `amplitudeNorm` is 0, `normalizeWaveform` replaces it with the smallest positive finite
-		value representable in the dtype of `waveform` using `numpy.finfo` [3] and continues.
-	UserWarning
-		If `waveform` contains only zeros, `waveformNormalized` will also be all zeros.
-		`revertNormalization` will divide by `amplitudeNorm` rather than by the waveform peak.
-
-	See Also
-	--------
-	`normalizeArrayWaveforms`
-		Normalize multiple waveforms in an array to a specified peak amplitude.
-
-	Amplitude Scaling
-	-----------------
-	`normalizeWaveform` computes the absolute peak of `waveform` as the maximum of `waveform.max()`
-	and `-waveform.min()`, then multiplies every sample by `amplitudeNorm / peakAbsolute`.
-	`revertNormalization` reverses this by dividing every sample by the same factor.
-
-	Examples
-	--------
-	Normalize a waveform and revert the normalization:
-
-	```python
-		from hunterHearsPy import normalizeWaveform
-
-		waveformNormalized, revertNormalization = normalizeWaveform(waveform.copy())
-		waveformReverted = revertNormalization(waveformNormalized)
-	```
-
-	References
-	----------
-	[1] `hunterHearsPy.theTypes.Waveform`
-
-	[2] `hunterHearsPy.theTypes.NormalizationReverter`
-
-	[3] numpy.finfo - NumPy reference
-		https://numpy.org/doc/stable/reference/generated/numpy.finfo.html
-
-	"""
-	# TODO replace `numpy_finfo`.
-	amplitudeNorm = amplitudeNorm or float(numpy_finfo(waveform.dtype.str).tiny.astype(waveform.dtype))
-
-	peakAbsolute: float = abs(float(numpy_max([waveform.max(), -waveform.min()]))) or 1.0
-	amplitudeAdjustment: float = amplitudeNorm / peakAbsolute
-
-	multiply(waveform, amplitudeAdjustment, out=waveform)
-
-	@overload
-	def revertNormalization(waveformDescendant: Waveform) -> Waveform: ...
-	@overload
-	def revertNormalization(waveformDescendant: ArrayWaveforms) -> ArrayWaveforms: ...
-	def revertNormalization(waveformDescendant: ArrayWaveforms | Waveform) -> ArrayWaveforms | Waveform:
-		return divide(waveformDescendant, amplitudeAdjustment, out=waveformDescendant)
-
-	return waveform, revertNormalization
+	return arraySoundfile
 
 def normalizeArrayWaveforms(arrayWaveforms: ArrayWaveforms, amplitudeNorm: float = 1.0) -> tuple[ArrayWaveforms, tuple[NormalizationReverter, ...]]:
 	"""Normalize multiple waveforms in an array to a specified peak amplitude.
@@ -275,3 +200,66 @@ def normalizeArrayWaveforms(arrayWaveforms: ArrayWaveforms, amplitudeNorm: float
 	for index in range(arrayWaveforms.shape[-1]):
 		arrayWaveforms[..., index], listRevertNormalization[index] = normalizeWaveform(arrayWaveforms[..., index], amplitudeNorm)
 	return arrayWaveforms, tuple(listRevertNormalization)
+
+def normalizeWaveform(waveform: Waveform, amplitudeNorm: float = 1.0) -> tuple[Waveform, NormalizationReverter]:
+	"""Normalize a waveform to a specified peak amplitude.
+
+	(AI generated docstring)
+
+	You can use this function to scale a `Waveform` [1] so that its absolute peak value equals
+	`amplitudeNorm`. This function also returns `revertNormalization`, a `NormalizationReverter` [2]
+	callable that reverses the scaling when applied to any waveform derived from `waveformNormalized`.
+
+	Parameters
+	----------
+	waveform : Waveform
+		The input audio waveform to normalize.
+	amplitudeNorm : float = 1.0
+		Target peak amplitude. The absolute maximum value of `waveformNormalized` equals `amplitudeNorm`.
+
+	Returns
+	-------
+	waveformNormalized : Waveform
+		The scaled waveform with absolute peak value equal to `amplitudeNorm`.
+	revertNormalization : NormalizationReverter
+		A callable that reverses the normalization scaling. Apply `revertNormalization` to any
+		waveform derived from `waveformNormalized` to restore the original amplitude scale.
+
+	See Also
+	--------
+	`normalizeArrayWaveforms`
+		Normalize multiple waveforms in an array to a specified peak amplitude.
+
+	Amplitude Scaling
+	-----------------
+	`normalizeWaveform` computes the absolute peak of `waveform` as the maximum of `waveform.max()`
+	and `-waveform.min()`, then multiplies every sample by `amplitudeNorm / peakAbsolute`.
+	`revertNormalization` reverses this by dividing every sample by the same factor.
+
+	Examples
+	--------
+	Normalize a waveform and revert the normalization:
+
+	```python
+		from hunterHearsPy import normalizeWaveform
+
+		waveformNormalized, revertNormalization = normalizeWaveform(waveform.copy())
+		waveformReverted = revertNormalization(waveformNormalized)
+	```
+	"""
+	amplitudeNearZero: Final[float] = float(float32(1.1754944e-38))
+	amplitudeNorm = amplitudeNorm or amplitudeNearZero
+
+	peakAbsolute: float = abs(float(numpy_max([waveform.max(), -waveform.min()]))) or 1.0
+	amplitudeAdjustment: float = amplitudeNorm / peakAbsolute
+
+	multiply(waveform, amplitudeAdjustment, out=waveform)
+
+	@overload
+	def revertNormalization(waveformDescendant: Waveform) -> Waveform: ...
+	@overload
+	def revertNormalization(waveformDescendant: ArrayWaveforms) -> ArrayWaveforms: ...
+	def revertNormalization(waveformDescendant: ArrayWaveforms | Waveform) -> ArrayWaveforms | Waveform:
+		return divide(waveformDescendant, amplitudeAdjustment, out=waveformDescendant)
+
+	return waveform, revertNormalization
