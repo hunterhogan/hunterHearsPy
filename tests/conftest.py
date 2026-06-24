@@ -47,12 +47,12 @@ def expected(request: FixtureRequest) -> 形ndarray:
 	"""
 	request_nodeParameters: MappingProxyType[str, Parameter] = cast('MappingProxyType[str, Parameter]', request.node.callspec.params)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
 	filenameStem: str = '__'.join((
-		request.function.__name__
+		str(request.function.__name__).removeprefix('test_')
 		, *(f'{keyAndValue[0]}~{"".join(stringItUp(keyAndValue[1]) or ["None"])}'
 			for keyAndValue in keyfilter(request_nodeParameters.keys().__contains__, merge(inspect.signature(request.function).parameters, request_nodeParameters)).items()
 	)))
 	if 251 < len(filenameStem):
-		filenameStem = f'{request.function.__name__}__blake2b~{blake2b(filenameStem.encode(), digest_size=16).hexdigest()}'
+		filenameStem = f'{str(request.function.__name__).removeprefix("test_")}__blake2b~{blake2b(filenameStem.encode(), digest_size=16).hexdigest()}'
 	pathFilename: Path = pathDataSamplesExpected / f'{filenameStem}.npy'
 	return numpy.load(pathFilename, mmap_mode='r', allow_pickle=False)
 
