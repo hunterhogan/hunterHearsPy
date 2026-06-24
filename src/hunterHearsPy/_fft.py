@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from humpy_cytoolz.dicttoolz import keyfilter, merge
-from hunterHearsPy import amplitudeIntegerToFloating, ParametersShortTimeFFT, setting, Translator
+from hunterHearsPy import amplitudeIntegerToFloating, getAxis, ParametersShortTimeFFT, setting, Translator
+from hunterHearsPy.theTypes import Spectrogram
+from numpy import complexfloating, floating, integer
 from scipy.signal import ShortTimeFFT
 from typing import overload, TYPE_CHECKING
 from typing_extensions import Unpack
@@ -15,39 +17,65 @@ if TYPE_CHECKING:
 	from scipy.signal._short_time_fft import _PadType
 
 @overload  # stft 1 ndarray
-def stft(arrayTarget: Waveform, *, lengthWaveform: int = 0, indexingAxis: int = -1, **keywordArguments: Unpack[Parameters_stft]) -> Spectrogram: ...
+def stft(
+	arrayTarget: Waveform, *, lengthWaveform: int = 0
+	, indexingAxis: int = -1, **keywordArguments: Unpack[Parameters_stft]
+) -> Spectrogram: ...
 @overload  # stft many ndarray
-def stft(arrayTarget: ArrayWaveforms, *, lengthWaveform: int = 0, indexingAxis: int = -1, **keywordArguments: Unpack[Parameters_stft]) -> ArraySpectrograms: ...
+def stft(
+	arrayTarget: ArrayWaveforms, *, lengthWaveform: int = 0
+	, indexingAxis: int = -1, **keywordArguments: Unpack[Parameters_stft]
+) -> ArraySpectrograms: ...
 @overload  # istft 1 ndarray
-def stft(arrayTarget: Spectrogram, *, lengthWaveform: int, indexingAxis: int = -1, **keywordArguments: Unpack[Parameters_stft]) -> Waveform: ...
+def stft(
+	arrayTarget: Spectrogram, *, lengthWaveform: int
+	, indexingAxis: int = -1, **keywordArguments: Unpack[Parameters_stft]
+) -> Waveform: ...
 @overload  # istft many ndarray
-def stft(arrayTarget: ArraySpectrograms, *, lengthWaveform: int, indexingAxis: int = -1, **keywordArguments: Unpack[Parameters_stft]) -> ArrayWaveforms: ...
-def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrograms
-		, *
-		, lengthWaveform: int = 0
-		, indexingAxis: int = -1
-		, **keywordArguments: Unpack[Parameters_stft]
-	) -> Waveform | ArrayWaveforms | Spectrogram | ArraySpectrograms:
-	if numpy.issubdtype(arrayTarget.dtype, numpy.integer):
+def stft(
+	arrayTarget: ArraySpectrograms, *, lengthWaveform: int
+	, indexingAxis: int = -1, **keywordArguments: Unpack[Parameters_stft]
+) -> ArrayWaveforms: ...
+def stft(
+	arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrograms
+	, *
+	, lengthWaveform: int = 0
+	, indexingAxis: int = -1
+	, **keywordArguments: Unpack[Parameters_stft]
+) -> Waveform | ArrayWaveforms | Spectrogram | ArraySpectrograms:
+	# DEVELOPMENT This assumes I will only run stft on floating-point valued waveform data. But is
+	# that true? Is that necessary? Is that desirable?
+	if numpy.issubdtype(arrayTarget.dtype, integer):
 		if arrayTarget.ndim == 3:
 			arrayFloating: ArrayWaveformsFloating = amplitudeIntegerToFloating(arrayTarget)
 		if arrayTarget.ndim == 2:
 			arrayFloating: WaveformFloating = amplitudeIntegerToFloating(arrayTarget)
 	else:
 		arrayFloating = arrayTarget
-		if numpy.issubdtype(arrayTarget.dtype, numpy.complexfloating) and (lengthWaveform < 1):
+		if numpy.issubdtype(arrayTarget.dtype, complexfloating) and (lengthWaveform < 1):
 			from hunterHearsPy._io import saveOnError  # noqa: PLC0415
+
 			pathFilename: PurePath = saveOnError(arrayTarget)
 			message: str = (
-				"I did not receive `lengthWaveform`, so I could not perform the inverse STFT. "
+				'I did not receive `lengthWaveform`, so I could not perform the inverse STFT. '
 				"I saved `arrayTarget` to a file in this computer's temporary directory so you might recover the data. "
-				f"{arrayTarget.shape = }, {arrayTarget.dtype = }\n"
-				f"{pathFilename = }"
+				f'{arrayTarget.shape = }, {arrayTarget.dtype = }\n'
+				f'{pathFilename = }'
 			)
 			raise ValueError(message)
 
-	parametersShortTimeFFT = Translator(**ParametersShortTimeFFT(
-		keyfilter(setting.ShortTimeFFT.keys().__contains__, merge(setting.ShortTimeFFT, keywordArguments))))  # pyright: ignore[reportArgumentType] # ty:ignore[invalid-argument-type]
+	# SEMIOTICS `parametersShortTimeFFT` has type `dataclass` `Translator`, AND type `TypedDict`
+	# `ParametersShortTimeFFT` exists, therefore `parametersShortTimeFFT` implies a very different
+	# type than it actually is. This happened when I introduced the `Translator` class to "translate"
+	# (or map) semantic identifiers and labels to the semantically-weak parameter names of
+	# `ShortTimeFFT`.
+	# Something needs to change.
+	# ? Replace the two `TypedDict` with one `dataclass`.
+	# ? Accept and adopt the `ShortTimeFFT` parameter names.
+	# ? Find a completely different system.
+	# ? The situation is a symptom of more fundamental problems with my `stft` function.
+	parametersShortTimeFFT = Translator(
+		**ParametersShortTimeFFT(keyfilter(setting.ShortTimeFFT.keys().__contains__, merge(setting.ShortTimeFFT, keywordArguments))))  # pyright: ignore[reportArgumentType] # ty:ignore[invalid-argument-type]
 
 	padding: _PadType = keywordArguments.get('padding', setting.padding)
 
@@ -61,15 +89,18 @@ def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrogram
 
 	if arrayFloating.ndim == 2:
 		arrayFloating: ArrayWaveformsFloating = numpy.expand_dims(arrayFloating, indexingAxis)
-	elif (arrayTarget.ndim == 3) and (numpy.issubdtype(arrayTarget.dtype, numpy.complexfloating)):
+	elif (arrayTarget.ndim == 3) and (numpy.issubdtype(arrayTarget.dtype, complexfloating)):
 		spectrogram: Spectrogram = arrayTarget
 		return turtleShell(spectrogram, lengthWaveform)
 
-	if (arrayFloating.ndim == 3) and (numpy.issubdtype(arrayFloating.dtype, numpy.floating)):
+	if (arrayFloating.ndim == 3) and (numpy.issubdtype(arrayFloating.dtype, floating)):
 		arrayWaveforms: ArrayWaveformsFloating = arrayFloating
+		# TODO use `moveToAxisOfOperation`
 		arrayWaveforms = numpy.moveaxis(arrayWaveforms, indexingAxis, -1)
 		index = 0
-		arraySpectrograms: ArraySpectrograms = numpy.tile(mushroom(arrayWaveforms[..., index])[..., numpy.newaxis], arrayWaveforms.shape[-1])
+		arraySpectrograms: ArraySpectrograms = numpy.tile(
+			mushroom(arrayWaveforms[..., index])[..., numpy.newaxis], arrayWaveforms.shape[-1]
+		)
 		for index in range(1, arrayWaveforms.shape[-1]):
 			arraySpectrograms[..., index] = mushroom(arrayWaveforms[..., index])
 		arraySpectrograms = numpy.moveaxis(arraySpectrograms, -1, indexingAxis)
@@ -77,11 +108,14 @@ def stft(arrayTarget: Waveform | ArrayWaveforms | Spectrogram | ArraySpectrogram
 			arraySpectrograms = numpy.squeeze(arraySpectrograms, indexingAxis)
 		return arraySpectrograms
 
-	elif (arrayTarget.ndim == 4) and (numpy.issubdtype(arrayTarget.dtype, numpy.complexfloating)):
+	elif (arrayTarget.ndim == 4) and (numpy.issubdtype(arrayTarget.dtype, complexfloating)):
 		arrayTARGET: ArraySpectrograms = arrayTarget
+		# TODO use `moveToAxisOfOperation`
 		arrayTARGET = numpy.moveaxis(arrayTARGET, indexingAxis, -1)
 		index = 0
-		arrayTransformed: ArrayWaveforms = numpy.tile(turtleShell(arrayTARGET[..., index], lengthWaveform)[..., numpy.newaxis], arrayTARGET.shape[-1])
+		arrayTransformed: ArrayWaveforms = numpy.tile(
+			turtleShell(arrayTARGET[..., index], lengthWaveform)[..., numpy.newaxis], arrayTARGET.shape[-1]
+		)
 		for index in range(1, arrayTARGET.shape[-1]):
 			arrayTransformed[..., index] = turtleShell(arrayTARGET[..., index], lengthWaveform)
 		return numpy.moveaxis(arrayTransformed, -1, indexingAxis)
@@ -108,22 +142,10 @@ def waveformSpectrogramWaveform(callableNeedsSpectrogram: Callable[[Spectrogram]
 		A function that accepts a `Waveform` [2], converts it to a `Spectrogram` [1], applies
 		`callableNeedsSpectrogram`, and returns the reconstructed `Waveform` [2] at the original
 		length.
-
-	Time Axis Assumption
-	--------------------
-	The inner function `stft_istft` assumes the time axis of the input `Waveform` [2] is the last axis
-	(`-1`). This matches the `(channels, samples)` shape convention.
-
-	References
-	----------
-	[1] `Spectrogram`
-
-	[2] `Waveform`
-
 	"""
 	def stft_istft(waveform: Waveform) -> Waveform:
-		axisTime = -1
-		arrayTarget = stft(waveform)
-		spectrogram = callableNeedsSpectrogram(arrayTarget)
-		return stft(spectrogram, lengthWaveform=waveform.shape[axisTime])
+		axisWaveformTime: int = getAxis()['time'].number
+
+		return stft(callableNeedsSpectrogram(stft(waveform)), lengthWaveform=waveform.shape[axisWaveformTime])
+
 	return stft_istft
