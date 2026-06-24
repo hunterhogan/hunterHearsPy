@@ -28,7 +28,7 @@ from numpy import absolute, float64, multiply, ones_like
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-	from hunterHearsPy import 形ndarray, 形Shape
+	from hunterHearsPy.theTypes import 形ndarray, 形Shape
 	from numpy import complexfloating, dtype, floating, ndarray
 	from numpy.typing import ArrayLike
 	from typing import Any

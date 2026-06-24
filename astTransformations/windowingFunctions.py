@@ -28,10 +28,12 @@ def make_windowingFunctionsTensor() -> None:
 	ingredientsModule = IngredientsModule()
 
 	ingredientsModule.imports.addImportFrom_asStr('__future__', 'annotations')
-	ingredientsModule.imports.addImportFrom_asStr(settingsPackage.identifierPackage, 'callableReturnsNDArray')
 
 	ingredientsModule.appendPrologue(statement=Make.If(test=Make.Name('TYPE_CHECKING')
-									, body=[Make.ImportFrom('torch.types', [Make.alias('Device')]), Make.ImportFrom('typing', [Make.alias('Any')])]))
+									, body=[Make.ImportFrom('torch.types', [Make.alias('Device')])
+											, Make.ImportFrom('typing', [Make.alias('Any')])
+											, Make.ImportFrom(settingsPackage.identifierPackage + '.theTypes', [Make.alias('callableReturnsNDArray')])
+										]))
 
 	ingredientsModule.appendPrologue(statement=Make.FunctionDef(
 		'_convertToTensor'

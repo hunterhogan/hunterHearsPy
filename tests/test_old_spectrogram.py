@@ -15,6 +15,7 @@ import pytest
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
+	from hunterHearsPy.theTypes import Waveform
 	from numpy.typing import NDArray
 
 pathDataSamples = Path('tests/dataSamples/old')
@@ -200,7 +201,7 @@ def test_loadSpectrograms_rejectsEmptyInput() -> None:
 
 def test_stft_forwardTransform(waveformDataStereo44kHz: WaveformAndMetadata) -> None:
 	"""Test that stft produces complex-valued spectrograms from real waveforms."""
-	waveformSingle = waveformDataStereo44kHz.waveform
+	waveformSingle: Waveform = waveformDataStereo44kHz.waveform
 
 	spectrogram = stft(waveformSingle)
 
@@ -219,7 +220,7 @@ def test_stft_forwardTransform(waveformDataStereo44kHz: WaveformAndMetadata) -> 
 
 def test_stft_inverseTransform(waveformDataStereo44kHz: WaveformAndMetadata) -> None:
 	"""Test that stft inverse transform reconstructs waveforms accurately."""
-	waveformOriginal = waveformDataStereo44kHz.waveform
+	waveformOriginal: Waveform = waveformDataStereo44kHz.waveform
 
 	spectrogram = stft(waveformOriginal)
 	waveformReconstructed = stft(spectrogram, lengthWaveform=waveformOriginal.shape[1])
@@ -228,14 +229,14 @@ def test_stft_inverseTransform(waveformDataStereo44kHz: WaveformAndMetadata) -> 
 
 def test_stft_rejectsInverseWithoutLengthWaveform(waveformDataStereo44kHz: WaveformAndMetadata) -> None:
 	"""Test that stft raises ValueError when inverse=True but lengthWaveform is not provided."""
-	waveformSingle = waveformDataStereo44kHz.waveform
+	waveformSingle: Waveform = waveformDataStereo44kHz.waveform
 	spectrogram = stft(waveformSingle)
 
 	standardizedEqualTo(ValueError, stft, spectrogram)
 
 def test_waveformSpectrogramWaveform_identityTransform(waveformDataStereo44kHz: WaveformAndMetadata) -> None:
 	"""Test that waveformSpectrogramWaveform with identity function preserves waveforms."""
-	waveformOriginal = waveformDataStereo44kHz.waveform
+	waveformOriginal: Waveform = waveformDataStereo44kHz.waveform
 
 	def identitySpectrogram(spectrogram: Any) -> Any:
 		return spectrogram

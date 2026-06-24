@@ -1,11 +1,12 @@
 """Create PyTorch tensor windowing functions."""
 from __future__ import annotations
 
-from hunterHearsPy import callableReturnsNDArray, cosineWings, equalPower, halfsine, tukey
+from hunterHearsPy import cosineWings, equalPower, halfsine, tukey
 from typing import TYPE_CHECKING
 import torch
 
 if TYPE_CHECKING:
+    from hunterHearsPy.theTypes import callableReturnsNDArray
     from torch.types import Device
     from typing import Any
 

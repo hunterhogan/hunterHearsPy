@@ -15,7 +15,7 @@ import pytest
 
 if TYPE_CHECKING:
 	from collections.abc import Sequence
-	from hunterHearsPy import Waveform, 形ndarray
+	from hunterHearsPy.theTypes import Waveform, 形ndarray
 	from inspect import Parameter
 	from pathlib import Path
 	from pytest import FixtureRequest

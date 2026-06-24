@@ -1,11 +1,28 @@
 # ruff: noqa: D101
-"""Type definitions for audio signal processing and waveform analysis."""
+"""Type definitions for audio signal processing and waveform analysis.
+
+I'm starting to feel that for _all_ identifiers in the package, there ought to be a strong correlation
+between how often the identifier is imported in a `if TYPE_CHECKING:` block and whether the identifier
+is defined in this module.
+
+1. If it's almost never imported in any way, maybe it should be defined in the module that uses it.
+2. If it's almost always imported in a `if TYPE_CHECKING:`, it should probably be defined in this
+    module.
+3. If it "feels" like a `type`, but is often not imported in a `if TYPE_CHECKING:`, then consider
+    other module conventions, such as dataBaskets, semiotics, beDRY, and theSSOT.
+
+(Even more meta: I feel like I am likely rediscovering ideas used by competent programmers.)
+
+(More meta than meta: "rediscovering" is partially due to my extreme isolation, which is entirely due
+to my untreated health conditions, and the extreme isolation prevents meaningful social experiences,
+which is one of the major reasons that I hate my life.)
+"""
 from __future__ import annotations
 
 from collections.abc import Callable
 from numpy import complex64, complex128, dtype, floating, integer, ndarray, number
 from soundfile import FileDescriptorOrPath as FileDescriptorOrPath
-from typing import Any, Literal, NamedTuple, TYPE_CHECKING, TypeAlias, TypedDict, TypeVar
+from typing import Any, Literal, TYPE_CHECKING, TypeAlias, TypedDict, TypeVar
 
 if TYPE_CHECKING:
 	from numpy.lib._arraypad_impl import _ModeKind

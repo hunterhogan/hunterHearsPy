@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-	from hunterHearsPy import WindowingFunction
+	from hunterHearsPy.theTypes import WindowingFunction
 
 @pytest.mark.parametrize('ratioTaper', tuple(map(pytest.param, (0.1, 0.05))))
 @pytest.mark.parametrize('lengthSupport', tuple(map(pytest.param, (1024, 485100, 529200))))

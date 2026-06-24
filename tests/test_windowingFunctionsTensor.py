@@ -7,7 +7,7 @@ import pytest
 import torch
 
 if TYPE_CHECKING:
-	from hunterHearsPy import WindowingFunction
+	from hunterHearsPy.theTypes import WindowingFunction
 	from torch import Tensor
 	from torch.types import Device
 

@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from hunterHearsPy import getAxis, readAudioFile, setting, stft
-from hunterHearsPy.dataBaskets import AxisMetadata, SpectrogramsAndMetadata, WaveformMetadata, WaveformsAndMetadata
+from hunterHearsPy import (
+	AxisMetadata, getAxis, readAudioFile, setting, SpectrogramsAndMetadata, stft, WaveformMetadata, WaveformsAndMetadata)
 from hunterMakesPy.parseParameters import defineConcurrencyLimit
 from tqdm.auto import tqdm
 from typing import NamedTuple, TYPE_CHECKING
@@ -13,11 +13,13 @@ import sys
 
 if TYPE_CHECKING:
 	from collections.abc import Sequence
-	from hunterHearsPy import (
+	from hunterHearsPy.theTypes import (
 		ArraySpectrograms, ArrayWaveforms, FileDescriptorOrPath, OptionsAlign, Parameters_loadSpectrograms, Parameters_loadWaveforms, Waveform)
 	from numpy.lib._arraypad_impl import _ModeKind
 	from numpy.typing import DTypeLike
 	from soundfile import dtype_str as Options_dtype_str
+
+#======== Idiosyncratic classes tell type checkers about the shape of arrays ======================
 
 class Axes2(NamedTuple):
 	a0: int
@@ -106,6 +108,7 @@ def loadWaveforms(
 
 	with ThreadPoolExecutor(max_workers=max_workers) as threadManager:
 		tuple(tqdm(threadManager.map(workhorse, dictionaryWaveformMetadata, dictionaryWaveformMetadata.values())
+				, desc='Loading waveforms.'
 				, total=len(dictionaryWaveformMetadata)
 		))
 
@@ -158,7 +161,7 @@ def loadSpectrograms(
 			numpy.pad(
 				readAudioFile(metadata['pathFilename'], sampleRateDesired, dtype_str).astype(dtypeWaveform, copy=False)
 				, pad_widthIntegralType
-				, mode=align_pad_mode
+				, align_pad_mode
 			)
 			, **keywordArguments
 		)
@@ -182,7 +185,7 @@ def loadSpectrograms(
 
 	with ThreadPoolExecutor(max_workers=max_workers) as threadManager:
 		tuple(tqdm(threadManager.map(workhorse, dictionaryWaveformMetadata.keys(), dictionaryWaveformMetadata.values())
-				, desc='Loading spectrograms'
+				, desc='Loading spectrograms.'
 				, total=axisSpectrogram.size
 		))
 

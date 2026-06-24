@@ -1,8 +1,12 @@
+# pyright: reportArgumentType=false
+# pyright: reportAssignmentType=false
+# ty:ignore[invalid-argument-type]
+# ty:ignore[invalid-assignment]
 from __future__ import annotations
 
 from humpy_cytoolz.dicttoolz import keyfilter, merge
-from hunterHearsPy import amplitudeIntegerToFloating, getAxis, ParametersShortTimeFFT, setting, Translator
-from hunterHearsPy.theTypes import Spectrogram
+from hunterHearsPy import amplitudeIntegerToFloating, getAxis, setting, Translator
+from hunterHearsPy.theTypes import ParametersShortTimeFFT
 from numpy import complexfloating, floating, integer
 from scipy.signal import ShortTimeFFT
 from typing import overload, TYPE_CHECKING
@@ -11,7 +15,7 @@ import numpy
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
-	from hunterHearsPy import (
+	from hunterHearsPy.theTypes import (
 		ArraySpectrograms, ArrayWaveforms, ArrayWaveformsFloating, Parameters_stft, Spectrogram, Waveform, WaveformFloating)
 	from pathlib import PurePath
 	from scipy.signal._short_time_fft import _PadType
@@ -43,26 +47,39 @@ def stft(
 	, indexingAxis: int = -1
 	, **keywordArguments: Unpack[Parameters_stft]
 ) -> Waveform | ArrayWaveforms | Spectrogram | ArraySpectrograms:
+	def mushroom(waveform: WaveformFloating) -> Spectrogram:
+		return workhorseSTFT.stft(x=waveform, padding=padding)
+
+	def turtleShell(spectrogram: Spectrogram, lengthWaveform: int) -> WaveformFloating:
+		return workhorseSTFT.istft(S=spectrogram, k1=lengthWaveform)
+
 	# DEVELOPMENT This assumes I will only run stft on floating-point valued waveform data. But is
 	# that true? Is that necessary? Is that desirable?
+	arrayFloating = arrayTarget
+	arrayWaveforms = arrayTarget
 	if numpy.issubdtype(arrayTarget.dtype, integer):
 		if arrayTarget.ndim == 3:
-			arrayFloating: ArrayWaveformsFloating = amplitudeIntegerToFloating(arrayTarget)
+			arrayWaveforms: ArrayWaveformsFloating = amplitudeIntegerToFloating(arrayTarget)
 		if arrayTarget.ndim == 2:
 			arrayFloating: WaveformFloating = amplitudeIntegerToFloating(arrayTarget)
-	else:
-		arrayFloating = arrayTarget
-		if numpy.issubdtype(arrayTarget.dtype, complexfloating) and (lengthWaveform < 1):
-			from hunterHearsPy._io import saveOnError  # noqa: PLC0415
+	elif numpy.issubdtype(arrayTarget.dtype, complexfloating) and (lengthWaveform < 1):
+		from hunterHearsPy._io import saveOnError  # noqa: PLC0415
 
-			pathFilename: PurePath = saveOnError(arrayTarget)
-			message: str = (
-				'I did not receive `lengthWaveform`, so I could not perform the inverse STFT. '
-				"I saved `arrayTarget` to a file in this computer's temporary directory so you might recover the data. "
-				f'{arrayTarget.shape = }, {arrayTarget.dtype = }\n'
-				f'{pathFilename = }'
-			)
-			raise ValueError(message)
+		pathFilename: PurePath = saveOnError(arrayTarget)
+		message: str = (
+			'I did not receive `lengthWaveform`, so I could not perform the inverse STFT. '
+			'I saved `arrayTarget` to a file in the temporary directory of this computer so you might recover the data. '
+			f'{arrayTarget.shape = }, {arrayTarget.dtype = }\n'
+			f'{pathFilename = }'
+		)
+		raise ValueError(message)
+
+	parametersShortTimeFFT = Translator(
+		**ParametersShortTimeFFT(keyfilter(setting.ShortTimeFFT.keys().__contains__, merge(setting.ShortTimeFFT, keywordArguments))))
+
+	padding: _PadType = keywordArguments.get('padding', setting.padding)
+
+	workhorseSTFT: ShortTimeFFT = ShortTimeFFT(**parametersShortTimeFFT.e733T)
 
 	# SEMIOTICS `parametersShortTimeFFT` has type `dataclass` `Translator`, AND type `TypedDict`
 	# `ParametersShortTimeFFT` exists, therefore `parametersShortTimeFFT` implies a very different
@@ -74,27 +91,13 @@ def stft(
 	# ? Accept and adopt the `ShortTimeFFT` parameter names.
 	# ? Find a completely different system.
 	# ? The situation is a symptom of more fundamental problems with my `stft` function.
-	parametersShortTimeFFT = Translator(
-		**ParametersShortTimeFFT(keyfilter(setting.ShortTimeFFT.keys().__contains__, merge(setting.ShortTimeFFT, keywordArguments))))  # pyright: ignore[reportArgumentType] # ty:ignore[invalid-argument-type]
-
-	padding: _PadType = keywordArguments.get('padding', setting.padding)
-
-	workhorseSTFT: ShortTimeFFT = ShortTimeFFT(**parametersShortTimeFFT.e733T)
-
-	def mushroom(waveform: WaveformFloating) -> Spectrogram:
-		return workhorseSTFT.stft(x=waveform, padding=padding)
-
-	def turtleShell(spectrogram: Spectrogram, lengthWaveform: int) -> WaveformFloating:
-		return workhorseSTFT.istft(S=spectrogram, k1=lengthWaveform)
-
 	if arrayFloating.ndim == 2:
-		arrayFloating: ArrayWaveformsFloating = numpy.expand_dims(arrayFloating, indexingAxis)
+		arrayWaveforms: ArrayWaveformsFloating = numpy.expand_dims(arrayFloating, indexingAxis)
 	elif (arrayTarget.ndim == 3) and (numpy.issubdtype(arrayTarget.dtype, complexfloating)):
 		spectrogram: Spectrogram = arrayTarget
 		return turtleShell(spectrogram, lengthWaveform)
 
-	if (arrayFloating.ndim == 3) and (numpy.issubdtype(arrayFloating.dtype, floating)):
-		arrayWaveforms: ArrayWaveformsFloating = arrayFloating
+	if (arrayWaveforms.ndim == 3) and (numpy.issubdtype(arrayWaveforms.dtype, floating)):
 		# TODO use `moveToAxisOfOperation`
 		arrayWaveforms = numpy.moveaxis(arrayWaveforms, indexingAxis, -1)
 		index = 0

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from functools import cache
-from hunterHearsPy import readAudioFile, Waveform
+from hunterHearsPy import readAudioFile
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, TYPE_CHECKING
+
+if TYPE_CHECKING:
+	from hunterHearsPy.theTypes import Waveform
 
 class WaveformAndMetadata:
 	_cacheWaveforms: ClassVar[dict[Path, Waveform]] = {}

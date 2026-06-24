@@ -10,13 +10,12 @@ Functions
 from __future__ import annotations
 
 from contextlib import contextmanager
-from hunterHearsPy import normalizeWaveform
 from numpy import moveaxis
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
 	from collections.abc import Generator
-	from hunterHearsPy import Waveform, 形ndarray
+	from hunterHearsPy.theTypes import 形ndarray
 
 @contextmanager
 def moveToAxisOfOperation(arrayTarget: 形ndarray, axisSource: int, axisOfOperation: int = -1) -> Generator[形ndarray]:
@@ -67,9 +66,9 @@ def moveToAxisOfOperation(arrayTarget: 形ndarray, axisSource: int, axisOfOperat
 	finally:
 		moveaxis(arrayStandardized, axisOfOperation, axisSource)
 
-"""
+""" # TODO
+# Use this in your private, special spectrogram package.
 @contextmanager
 def normalizeUnnormalize(waveform: Waveform, amplitudeNorm: float = 1.0):
 	pass
 """
-# C:\apps\loudnessWeightedSpectrogram\loudnessWeightedSpectrogram\spectrogram.py

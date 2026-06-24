@@ -20,7 +20,7 @@ import numpy
 import scipy.signal.windows as SciPy
 
 if TYPE_CHECKING:
-	from hunterHearsPy import WindowingFunction
+	from hunterHearsPy.theTypes import WindowingFunction
 
 def _getLengthTaper(lengthSupport: int, ratioTaper: float) -> int:
 	"""I use this to compute and validate the taper length for a windowingFunction.

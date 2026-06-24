@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from hunterHearsPy import ArrayWaveforms, loadWaveforms, normalizeArrayWaveforms, normalizeWaveform, Waveform
-from hunterHearsPy.dataBaskets import WaveformsAndMetadata
+from hunterHearsPy import loadWaveforms, normalizeArrayWaveforms, normalizeWaveform
 from tests.oldSampleData import pathDataSamples_labeled, sampleData
 from typing import Final, TYPE_CHECKING
 import numpy
 import pytest
 
 if TYPE_CHECKING:
+	from hunterHearsPy.dataBaskets import WaveformsAndMetadata
+	from hunterHearsPy.theTypes import Waveform
 	from pathlib import Path
 
 rtolDEFAULT: Final[float] = 1e-7

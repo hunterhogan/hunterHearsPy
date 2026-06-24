@@ -1,12 +1,12 @@
 # ruff: noqa: D100, D101, D102
 from __future__ import annotations
 
-from hunterHearsPy import E733TH4X0R, WindowingFunction
+from hunterHearsPy.theTypes import E733TH4X0R
 from typing import NamedTuple, TYPE_CHECKING, TypedDict
 import dataclasses
 
 if TYPE_CHECKING:
-	from hunterHearsPy.theTypes import ArraySpectrograms, ArrayWaveforms, FileDescriptorOrPath
+	from hunterHearsPy.theTypes import ArraySpectrograms, ArrayWaveforms, FileDescriptorOrPath, WindowingFunction
 	from scipy.signal._short_time_fft import _FFTMode1, _ScaleTo
 
 class AxisMetadata(NamedTuple):

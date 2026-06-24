@@ -1,7 +1,8 @@
 # ruff: noqa: D100, D101, D103
 from __future__ import annotations
 
-from hunterHearsPy import AxisMetadata, ParametersShortTimeFFT, tukey
+from hunterHearsPy import AxisMetadata, tukey
+from hunterHearsPy.theTypes import ParametersShortTimeFFT
 from hunterMakesPy import PackageSettings, raiseIfNone
 from numpy import complex64, float32
 from soundfile import dtype_str as Options_dtype_str
@@ -9,7 +10,7 @@ from typing import TYPE_CHECKING
 import dataclasses
 
 if TYPE_CHECKING:
-	from hunterHearsPy import OptionsAlign, WindowingFunction
+	from hunterHearsPy.theTypes import OptionsAlign, WindowingFunction
 	from numpy.lib._arraypad_impl import _ModeKind
 	from numpy.typing import DTypeLike
 	from scipy.signal._short_time_fft import _FFTMode1, _PadType, _ScaleTo

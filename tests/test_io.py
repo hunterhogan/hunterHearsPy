@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-	from hunterHearsPy import Waveform
+	from hunterHearsPy.theTypes import Waveform
 	from pathlib import Path
 	from soundfile import dtype_str as Options_dtype_str
 

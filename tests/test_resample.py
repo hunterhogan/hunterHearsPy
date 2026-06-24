@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-	from hunterHearsPy import 形floating, 形Shape
+	from hunterHearsPy.theTypes import 形floating, 形Shape
 	from numpy import dtype, float32, integer, ndarray
 	from typing import Any
 

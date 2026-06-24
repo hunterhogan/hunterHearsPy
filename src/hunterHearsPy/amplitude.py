@@ -27,13 +27,14 @@ import numpy
 import sys
 
 if TYPE_CHECKING:
-	from hunterHearsPy import ArrayWaveforms, NormalizationReverter, Waveform, 形Shape
+	from hunterHearsPy.theTypes import ArrayWaveforms, NormalizationReverter, Waveform, 形Shape
 	from numpy import dtype, ndarray
 	from pathlib import PurePath
 	from soundfile import AudioData
 	from typing import Any
 
 def amplitudeIntegerToFloating(arrayTarget: ndarray[形Shape, dtype[integer[Any]]]) -> ndarray[形Shape, dtype[floating[Any]]]:
+	# TODO Wait a minute. `iinfo` is "Machine limits for integer types."? Scaling should not be tied to the machine.
 	integerInformation: numpy_iinfo[integer] = numpy_iinfo(arrayTarget.dtype.str)
 	dtypeFloating: dtype[floating[Any]] = numpy.promote_types(arrayTarget.dtype, float32)
 	arrayFloating: ndarray[形Shape, dtype[floating[Any]]] = numpy.astype(arrayTarget, dtypeFloating, copy=False)
@@ -65,22 +66,24 @@ def amplitudeToSoundfile(arrayTarget: ndarray[形Shape, dtype[Any]]) -> AudioDat
 		returned unchanged.
 	"""
 	# Four dtype buckets
-	# 1. `dtype_str`
-	# 2. integer, signed and unsigned
-	# 3. floating, single and double precision
-	# 4. other types (handled by fallback)
+	# 1. `dtype_str`.
+	# 2. integer, signed and unsigned.
+	# 3. floating, single and double precision.
+	# 4. other types I didn't anticipate.
 
 	# Four options
-	# 1. do nothing
-	# 2. shift unsigned to signed, and scale integer range
-	# 3. change the number of significant digits
-	# 4. attempt a forceful conversion to the most forgiving dtype in `dtype_str.__args__`
+	# 1. do nothing.
+	# 2. shift unsigned to signed, and scale integer range.
+	# 3. change the number of significant digits.
+	# 4. attempt a forceful conversion to the most forgiving dtype in `dtype_str.__args__`.
 	# ^^^ WAIT! If I don't know why this happening, I don't know if I need to scale or how to scale.
 	# This isn't a normal `.astype` situation: the values are on a scale and changing the dtype can
 	# change the scale.
+
 	# Some of this stuff should be documented for AI agents and/or contributors. (ha!)
+
 	# I do not use warning if I really want the user to see the message because
-	# PyTorch spams so many warnings that many packages and people silence all warnings.
+	# PyTorch spams so many warnings that many packages and people silence _all_ warnings.
 
 	dtypeSoundfile: tuple[dtype[Any], ...] = tuple(map(numpy.dtype, dtype_str.__args__))
 	dtypeMaximum = max(dtypeSoundfile)
@@ -192,6 +195,7 @@ def normalizeWaveform(waveform: Waveform, amplitudeNorm: float = 1.0) -> tuple[W
 		https://numpy.org/doc/stable/reference/generated/numpy.finfo.html
 
 	"""
+	# TODO replace `numpy_finfo`.
 	amplitudeNorm = amplitudeNorm or float(numpy_finfo(waveform.dtype.str).tiny.astype(waveform.dtype))
 
 	peakAbsolute: float = abs(float(numpy_max([waveform.max(), -waveform.min()]))) or 1.0

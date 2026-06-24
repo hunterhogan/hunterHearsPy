@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from hunterHearsPy import loadWaveforms, OptionsAlign, Parameters_loadWaveforms
-from hunterHearsPy.dataBaskets import WaveformMetadata
+from hunterHearsPy import loadWaveforms
+from hunterHearsPy.theTypes import Parameters_loadWaveforms
 from itertools import combinations, starmap
 from operator import itemgetter
 from tests import assert_array_equal
@@ -10,7 +10,8 @@ import pytest
 
 if TYPE_CHECKING:
 	from collections.abc import Sequence
-	from hunterHearsPy import ArrayWaveforms
+	from hunterHearsPy import WaveformMetadata
+	from hunterHearsPy.theTypes import ArrayWaveforms, OptionsAlign
 	from pathlib import Path
 	from types import EllipsisType
 

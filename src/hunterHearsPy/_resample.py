@@ -7,7 +7,7 @@ from typing import overload, TYPE_CHECKING
 import resampy
 
 if TYPE_CHECKING:
-	from hunterHearsPy import 形floating, 形Shape
+	from hunterHearsPy.theTypes import 形floating, 形Shape
 	from numpy import dtype, float32, integer, ndarray
 	from typing import Any
 
@@ -17,10 +17,6 @@ def resampleWaveform(waveform: ndarray[形Shape, dtype[integer[Any]]], sampleRat
 def resampleWaveform(waveform: ndarray[形Shape, dtype[形floating]], sampleRateDesired: float, sampleRateSource: float, axisTime: int = -1) -> ndarray[形Shape, dtype[形floating]]: ...
 def resampleWaveform(waveform: ndarray[形Shape, dtype[形floating]] | ndarray[形Shape, dtype[integer[Any]]], sampleRateDesired: float, sampleRateSource: float, axisTime: int = -1) -> ndarray[形Shape, dtype[形floating]] | ndarray[形Shape, dtype[float32]]:
 	"""Resample `waveform` array to `sampleRateDesired` along the `axisTime` axis.
-
-	Warning
-	-------
-	The returned `ndarray` always has a floating-point `dtype`, even if the sample rate is unchanged.
 
 	This function is _not_ regulated by the universal settings.
 
