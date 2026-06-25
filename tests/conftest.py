@@ -39,7 +39,6 @@ def atol(request: FixtureRequest) -> float:
 	"""The `atol` (***a***bsolute ***tol***erance) parameter value for `numpy.allclose`."""
 	return 1e-08
 
-# TODO expected file sizes are too large.
 @pytest.fixture()
 def expected(request: FixtureRequest) -> 形ndarray:
 	"""Test-function and its parameters encoded in a `__` delimited filename.
@@ -54,8 +53,9 @@ def expected(request: FixtureRequest) -> 形ndarray:
 	)))
 	if 251 < len(filenameStem):
 		filenameStem = f'{str(request.function.__name__).removeprefix("test_")}__blake2b~{blake2b(filenameStem.encode(), digest_size=16).hexdigest()}'
-	pathFilename: Path = pathDataSamplesExpected / f'{filenameStem}.npy'
-	return numpy.load(pathFilename, mmap_mode='r', allow_pickle=False)
+	pathFilename: Path = pathDataSamplesExpected / f'{filenameStem}.npz'
+	with numpy.load(pathFilename, allow_pickle=False) as archiveExpected:
+		return archiveExpected['expected']
 
 @pytest.fixture()
 def rtol(request: FixtureRequest) -> float:

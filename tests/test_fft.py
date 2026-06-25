@@ -14,13 +14,9 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize('lengthWaveform', [pytest.param(0)])
 @pytest.mark.parametrize('pathFilename'
 	, indirect=['pathFilename']
-	, argvalues=(
-		# pytest.param('Ambient_ch2_Hz48000_int16_sec60_peak-0.5dB.wav')  # noqa: ERA001
-		# ,
-		pytest.param('Discontinuous20-20000Hz_ch2_Hz48000_float32_sec20_peak-0.5dB.wav')
+	, argvalues=(pytest.param('Ambient_ch2_Hz48000_int16_sec60_peak-0.5dB.wav')
+		, pytest.param('Discontinuous20-20000Hz_ch2_Hz48000_float32_sec20_peak-0.5dB.wav')
 		, pytest.param('Music_chRsilent_Hz44100_int16_sec20.flac')
-		# , pytest.param('MusicNonVocal_bass_ch2_float32_s24_Hz48000_sec59.4_DC-.111.flac')
-		# , pytest.param('MusicNonVocal_ch2_Hz96000_float32_sec20_dBTP+0.5.wav')
 		, pytest.param('MusicOnlyVocal_ch2_Hz44100_float32_sec20.wav')
 		, pytest.param('Tone1000Hz_ch2_Hz44100_sec29_LUFS-23_int16.wav')
 	)
