@@ -91,7 +91,6 @@ def stft(
 		return turtleShell(spectrogram, lengthWaveform)
 
 	if (arrayWaveforms.ndim == 3) and (numpy.issubdtype(arrayWaveforms.dtype, floating)):
-		# TODO use `moveToAxisOfOperation`
 		arrayWaveforms = numpy.moveaxis(arrayWaveforms, indexingAxis, -1)
 		index = 0
 		arraySpectrograms: ArraySpectrograms = numpy.tile(
@@ -106,7 +105,6 @@ def stft(
 
 	elif (arrayTarget.ndim == 4) and (numpy.issubdtype(arrayTarget.dtype, complexfloating)):
 		arrayTARGET: ArraySpectrograms = arrayTarget
-		# TODO use `moveToAxisOfOperation`
 		arrayTARGET = numpy.moveaxis(arrayTARGET, indexingAxis, -1)
 		index = 0
 		arrayTransformed: ArrayWaveforms = numpy.tile(

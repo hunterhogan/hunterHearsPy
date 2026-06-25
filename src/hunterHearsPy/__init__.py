@@ -29,6 +29,9 @@ from hunterHearsPy.amplitude import (
 	normalizeArrayWaveforms as normalizeArrayWaveforms, normalizeWaveform as normalizeWaveform)
 
 # isort: split
+from hunterHearsPy.autoRevert import moveToAxisOfOperation as moveToAxisOfOperation
+
+# isort: split
 from hunterHearsPy._fft import stft as stft, waveformSpectrogramWaveform as waveformSpectrogramWaveform
 
 # isort: split
@@ -36,9 +39,6 @@ from hunterHearsPy._io import readAudioFile as readAudioFile, spectrogramToWAV a
 
 # isort: split
 from hunterHearsPy.clippingArrays import applyHardLimit as applyHardLimit, applyHardLimitComplexValued as applyHardLimitComplexValued
-
-# isort: split
-from hunterHearsPy.autoRevert import moveToAxisOfOperation as moveToAxisOfOperation
 
 # isort: split
 from hunterHearsPy._arrays import (

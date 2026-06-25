@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from hashlib import blake2b
 from humpy_cytoolz.dicttoolz import keyfilter, merge
-from hunterHearsPy import readAudioFile
+from hunterHearsPy import loadWaveforms, readAudioFile
 from hunterMakesPy.dataStructures import stringItUp
 from more_itertools import one
 from soundfile import dtype_str as Options_dtype_str
@@ -15,7 +15,7 @@ import pytest
 
 if TYPE_CHECKING:
 	from collections.abc import Sequence
-	from hunterHearsPy.theTypes import Waveform, 形ndarray
+	from hunterHearsPy.theTypes import ArrayWaveforms, Waveform, 形ndarray
 	from inspect import Parameter
 	from pathlib import Path
 	from pytest import FixtureRequest
@@ -65,8 +65,12 @@ def rtol(request: FixtureRequest) -> float:
 # ================== Parameter values to test against the package's `Callable` =====================
 
 @pytest.fixture()
-def arrayTarget(waveform: Waveform) -> Waveform:
-	return waveform
+def arrayTarget(request: FixtureRequest) -> Waveform | ArrayWaveforms:
+	return cast('Waveform | ArrayWaveforms', request.getfixturevalue(getattr(request, 'param', 'waveform')))
+
+@pytest.fixture()
+def arrayWaveforms(listPathFilenames: tuple[Path, ...], CPUlimit: bool | float | int | None) -> ArrayWaveforms:
+	return loadWaveforms(listPathFilenames, CPUlimit=CPUlimit).array
 
 @pytest.fixture()
 def CPUlimit(request: FixtureRequest) -> int:
@@ -80,7 +84,8 @@ def device(request: FixtureRequest) -> Device | None:
 def dtype_str(pathFilename: Path) -> Options_dtype_str | None:
 	return one(set(Options_dtype_str.__args__).intersection(pathFilename.stem.split('_')), too_short=None)
 
-# TODO Resolving every actual pathFilename MUST be centralized in one function.
+# TODO Resolving the actual location for every `pathFilename` and `listPathFilenames` parameter MUST
+# be centralized in one function.
 @pytest.fixture()
 def listPathFilenames(request: FixtureRequest) -> tuple[Path, ...]:
 	listFilenames: Sequence[str] = cast('Sequence[str]', request.node.callspec.params['listPathFilenames'])  # pyright: ignore[reportUnknownMemberType]
