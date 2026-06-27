@@ -58,7 +58,7 @@ class WaveformMetadata(TypedDict):
 	channels: int
 	lengthWaveform: int
 	pathFilename: FileDescriptorOrPath
-	# NOTE If the following values were assigned directly to a `slice` object, the slice object would
+	# DOCUMENT If the following values were assigned directly to a `slice` object, the slice object would
 	# work as desired. https://docs.python.org/3/library/functions.html#slice Therefore, maintain this
 	# functionality, and keep the semiotics aligned: `slice(start, stop)`.
 	samplesStart: int

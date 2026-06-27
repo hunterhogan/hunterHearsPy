@@ -54,6 +54,7 @@ def getWaveformMetadata(
 		sys.stderr.write(message + '\n')
 
 	for index, pathFilename in enumerate(tqdm(listPathFilenames, desc='Preparing combined array', leave=False)):
+		# NOTE Use readAudioFile with the prescribed sampleRate to get the exact length.
 		channels, lengthWaveform = readAudioFile(pathFilename, sampleRate).shape
 		dictionaryWaveformMetadata[index] = WaveformMetadata(
 			channels=channels, lengthWaveform=lengthWaveform, pathFilename=pathFilename, samplesStart=0, samplesStop=0
@@ -71,7 +72,7 @@ def getWaveformMetadata(
 
 	for metadata in dictionaryWaveformMetadata.values():
 		samplesPadding: int = axis['time'].size - metadata['lengthWaveform']
-		# TODO document that if `samplesPadding` is odd, the extra pad-sample is added to samplesStop.
+		# DOCUMENT that if `samplesPadding` is odd, the extra pad-sample is added to samplesStop.
 		metadata['samplesStart'] = int(samplesPadding * multiplicandSamplesStart)
 		metadata['samplesStop'] = metadata['samplesStart'] + metadata['lengthWaveform']
 

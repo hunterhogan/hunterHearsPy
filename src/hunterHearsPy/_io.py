@@ -18,18 +18,21 @@ if TYPE_CHECKING:
 	from soundfile import AudioData_2d, dtype_str as Options_dtype_str
 	from typing import Any
 
-def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRateDesired: float | None = None, dtype_str: Options_dtype_str | None = None) -> Waveform:
+def getSampleRate(pathFilename: FileDescriptorOrPath) -> int:
+	return soundfile.info(pathFilename).samplerate
+
+def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRate: float | None = None, dtype_str: Options_dtype_str | None = None) -> Waveform:
 	"""Read an audio file and return waveform data as a NumPy array.
 
 	You can use this function to load any audio file that `soundfile` [1] supports. The returned
-	`Waveform` [2] is always shaped `(channels, samples)`. When `sampleRateDesired` differs from the file's
+	`Waveform` [2] is always shaped `(channels, samples)`. When `sampleRate` differs from the file's
 	native sample rate, `readAudioFile` resamples using `resampleWaveform`.
 
 	Parameters
 	----------
 	pathFilename : FileDescriptorOrPath
 		Path to the audio file or a binary stream.
-	sampleRateDesired : float | None = 44100
+	sampleRate : float | None = 44100
 		Target sample rate of the returned `Waveform` [2] in Hz. Defaults to `setting.sampleRate`,
 		which is probably 44100, when `None`.
 	dtype_str : Literal["float64", "float32", "int32", "int16"] | None = 'float32'
@@ -40,7 +43,7 @@ def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRateDesired: float |
 	waveform : Waveform
 		Audio data shaped `(channels, samples)` as `setting.dtypeWaveform`.
 	"""
-	sampleRateDesired = sampleRateDesired or setting.sampleRate
+	sampleRateDesired: float = sampleRate or setting.sampleRate
 	with soundfile.SoundFile(pathFilename) as readSoundFile:
 		sampleRateSource: int = readSoundFile.samplerate
 		audioData: AudioData_2d = readSoundFile.read(dtype=dtype_str or setting.dtype_str, always_2d=True)  # ty:ignore[invalid-assignment] https://github.com/astral-sh/ty/issues/2799
@@ -48,6 +51,42 @@ def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRateDesired: float |
 	waveform: Waveform = audioData.transpose((axis['time'].number, axis['channel'].number))
 
 	return resampleWaveform(waveform, sampleRateDesired, sampleRateSource, axis['time'].number)  # ty:ignore[no-matching-overload] https://github.com/astral-sh/ty/issues/2799
+
+def saveOnError(arrayTarget: ndarray[tuple[Any, ...], dtype[Any]], *, identifierTarget: str = 'arrayTarget') -> PurePath:
+	pathFilename: Path = Path(tempfile.mkdtemp(prefix='hunterHearsPy'), f"{identifierTarget}_{uuid.uuid4().hex}.npy").resolve()
+	numpy.save(pathFilename, arrayTarget)
+
+	return PurePath(pathFilename)
+
+def spectrogramToWAV(spectrogram: Spectrogram, pathFilename: FileDescriptorOrPath, lengthWaveform: int, **parametersSTFT: Unpack[Parameters_stft]) -> None:
+	"""Write a complex spectrogram to a WAV file by computing the inverse STFT.
+
+	You can use this function to reconstruct a waveform from a `Spectrogram` [1] and save
+	it directly to a WAV file. `spectrogramToWAV` calls `stft` with `inverse=True` to
+	obtain the reconstructed `Waveform` [2], then passes it to `writeWAV`.
+
+	Parameters
+	----------
+	spectrogram : Spectrogram
+		Complex spectrogram to convert back to a waveform.
+	pathFilename : FileDescriptorOrPath
+		Destination path for the WAV file, or a binary stream.
+	lengthWaveform : int
+		Number of samples in the output waveform. The inverse STFT cannot recover the
+		original length from the spectrogram alone, so `lengthWaveform` is required.
+	sampleRate : float | None = None
+		Sample rate for the output WAV file in Hz. Defaults to `44100` when `None`.
+	**parametersSTFT : Any
+		Keyword parameters forwarded to `stft`, such as `lengthWindowingFunction` and
+		`lengthHop`.
+
+	File Overwrite and Format
+	-------------------------
+	See `writeWAV` for file overwrite behavior and output format details.
+	"""
+	waveform: Waveform = stft(spectrogram, lengthWaveform=lengthWaveform, **parametersSTFT)
+	sampleRate: float = parametersSTFT.get('sampleRate', setting.sampleRate)
+	writeWAV(pathFilename, waveform, sampleRate)
 
 def writeWAV(pathFilename: FileDescriptorOrPath, waveform: Waveform, sampleRate: float | None = None, subtype: str | None = None) -> FileDescriptorOrPath:
 	"""Write a waveform array to a WAV file.
@@ -95,46 +134,3 @@ def writeWAV(pathFilename: FileDescriptorOrPath, waveform: Waveform, sampleRate:
 
 	soundfile.write(file=pathFilename, data=audioData, samplerate=sampleRate, subtype=subtype, format='WAV')
 	return pathFilename
-
-def spectrogramToWAV(spectrogram: Spectrogram, pathFilename: FileDescriptorOrPath, lengthWaveform: int, **parametersSTFT: Unpack[Parameters_stft]) -> None:
-	"""Write a complex spectrogram to a WAV file by computing the inverse STFT.
-
-	You can use this function to reconstruct a waveform from a `Spectrogram` [1] and save
-	it directly to a WAV file. `spectrogramToWAV` calls `stft` with `inverse=True` to
-	obtain the reconstructed `Waveform` [2], then passes it to `writeWAV`.
-
-	Parameters
-	----------
-	spectrogram : Spectrogram
-		Complex spectrogram to convert back to a waveform.
-	pathFilename : FileDescriptorOrPath
-		Destination path for the WAV file, or a binary stream.
-	lengthWaveform : int
-		Number of samples in the output waveform. The inverse STFT cannot recover the
-		original length from the spectrogram alone, so `lengthWaveform` is required.
-	sampleRate : float | None = None
-		Sample rate for the output WAV file in Hz. Defaults to `44100` when `None`.
-	**parametersSTFT : Any
-		Keyword parameters forwarded to `stft`, such as `lengthWindowingFunction` and
-		`lengthHop`.
-
-	File Overwrite and Format
-	-------------------------
-	See `writeWAV` for file overwrite behavior and output format details.
-
-	References
-	----------
-	[1] `Spectrogram`
-
-	[2] `Waveform`
-
-	"""
-	waveform: Waveform = stft(spectrogram, lengthWaveform=lengthWaveform, **parametersSTFT)
-	sampleRate: float = parametersSTFT.get('sampleRate', setting.sampleRate)
-	writeWAV(pathFilename, waveform, sampleRate)
-
-def saveOnError(arrayTarget: ndarray[tuple[Any, ...], dtype[Any]], *, identifierTarget: str = 'arrayTarget') -> PurePath:
-	pathFilename: Path = Path(tempfile.mkdtemp(prefix='hunterHearsPy'), f"{identifierTarget}_{uuid.uuid4().hex}.npy").resolve()
-	numpy.save(pathFilename, arrayTarget)
-
-	return PurePath(pathFilename)

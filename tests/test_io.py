@@ -10,8 +10,8 @@ if TYPE_CHECKING:
 	from pathlib import Path
 	from soundfile import dtype_str as Options_dtype_str
 
-# TODO add `None` to `sampleRateDesired`.
-@pytest.mark.parametrize('sampleRateDesired', (44100, 48000))
+# TODO add `None` to `sampleRate`.
+@pytest.mark.parametrize('sampleRate', (44100, 48000))
 @pytest.mark.parametrize('pathFilename'
 	, indirect=['pathFilename']
 	, argvalues=(
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 		, ('Music_ch2_Hz44100_float32_sec20_RMS-20.wav')
 	)
 )
-def test_readAudioFile(pathFilename: Path, sampleRateDesired: float, dtype_str: Options_dtype_str | None, expected: Waveform) -> None:
-	actual: Waveform = readAudioFile(pathFilename, sampleRateDesired, dtype_str)
+def test_readAudioFile(pathFilename: Path, sampleRate: float, dtype_str: Options_dtype_str | None, expected: Waveform) -> None:
+	actual: Waveform = readAudioFile(pathFilename, sampleRate, dtype_str)
 
-	assert_array_equal(actual, expected, 'readAudioFile', pathFilename.name, sampleRateDesired=sampleRateDesired, dtype_str=dtype_str)
+	assert_array_equal(actual, expected, 'readAudioFile', pathFilename.name, sampleRate=sampleRate, dtype_str=dtype_str)

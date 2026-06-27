@@ -1,4 +1,5 @@
 # ruff: noqa: D104
+# TODO design and implement a namespace.
 from __future__ import annotations
 
 from hunterHearsPy import theTypes as theTypes
@@ -35,7 +36,8 @@ from hunterHearsPy.autoRevert import moveToAxisOfOperation as moveToAxisOfOperat
 from hunterHearsPy._fft import stft as stft, waveformSpectrogramWaveform as waveformSpectrogramWaveform
 
 # isort: split
-from hunterHearsPy._io import readAudioFile as readAudioFile, spectrogramToWAV as spectrogramToWAV, writeWAV as writeWAV
+from hunterHearsPy._io import (
+	getSampleRate as getSampleRate, readAudioFile as readAudioFile, spectrogramToWAV as spectrogramToWAV, writeWAV as writeWAV)
 
 # isort: split
 from hunterHearsPy.clippingArrays import applyHardLimit as applyHardLimit, applyHardLimitComplexValued as applyHardLimitComplexValued
