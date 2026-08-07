@@ -51,7 +51,7 @@ Issues = "https://github.com/hunterhogan/hunterHearsPy/issues"
 Repository = "https://github.com/hunterhogan/hunterHearsPy.git"
 
 [dependency-groups]
-pytorch = ["torch==2.10.0"]
+pytorch = ["torch==2.13.0"]
 
 [build-system]
 requires = ["setuptools"]
@@ -87,7 +87,7 @@ default-groups = ["dev"]
 # uv queries the package index for all `torch` that match all limitations.
 # If the package index returns any matches, uv will install the "best" match.
 # Because the package index only has cuda 12.8 versions, uv installs torch+cu128.
-# I picked torch==2.10.0 + cuda 12.8 because that is the pre-installed package on Google Colab T4.
+# I picked torch==2.13.0 + cuda 12.8 because that is the pre-installed package on Google Colab T4.
 explicit = true
 name = "indexPytorch"
 url = "https://download.pytorch.org/whl/cu128"
