@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 bits: Final[int] = 8
 
 def amplitudeIntegerToFloating(arrayTarget: ndarray[形Shape, dtype[integer[Any]]]) -> ndarray[形Shape, dtype[floating[Any]]]:
-	"""The original purpose of this function was to convert integer PCM waveforms passed to `stft`."""  # noqa: DOC201
+	"""The original purpose of this function was to convert integer PCM waveforms passed to `stft`."""  # ruff:ignore[docstring-missing-returns]
 	amplitudeMaximum: int = 2 ** ((arrayTarget.dtype.itemsize * bits) - 1)  # This works for signed (2s complement) and unsigned because the MSD is the sign, right?
 	# TODO Why is this fixed at float32? Can/ought I to derive it or get it from `setting` or something?
 	Z0Z_floatWidth = float32
@@ -96,12 +96,12 @@ def amplitudeToSoundfile(arrayTarget: ndarray[形Shape, dtype[Any]]) -> AudioDat
 
 	elif numpy.issubdtype(arrayTarget.dtype, numpy.floating):
 		dtypeSoundfileFloating: frozenset[dtype[floating[Any]]] = frozenset(filter(lambda _dtype: numpy.issubdtype(_dtype, floating), dtypeSoundfile))
-		dtypeNewFloating: dtype[floating[Any]] = min(min(arrayTarget.dtype, *dtypeSoundfileFloating), max(dtypeSoundfileFloating))  # noqa: PLW3301
+		dtypeNewFloating: dtype[floating[Any]] = min(min(arrayTarget.dtype, *dtypeSoundfileFloating), max(dtypeSoundfileFloating))  # ruff:ignore[nested-min-max]
 		arraySoundfile = numpy.astype(arrayTarget, dtypeNewFloating, copy=False)
 
 	elif numpy.issubdtype(arrayTarget.dtype, numpy.integer):
 		dtypesInteger: frozenset[dtype[integer[Any]]] = frozenset(filter(lambda _dtype: numpy.issubdtype(_dtype, integer), dtypeSoundfile))
-		dtypeNewInteger: dtype[integer[Any]] = min(min(arrayTarget.dtype, *dtypesInteger), max(dtypesInteger))  # noqa: PLW3301
+		dtypeNewInteger: dtype[integer[Any]] = min(min(arrayTarget.dtype, *dtypesInteger), max(dtypesInteger))  # ruff:ignore[nested-min-max]
 
 		amplitudeMaximumTarget: int = 2 ** ((arrayTarget.dtype.itemsize * bits) - 1)
 		amplitudeMaximumNew: int = 2 ** ((dtypeNewInteger.itemsize * bits) - 1)
@@ -118,7 +118,7 @@ def amplitudeToSoundfile(arrayTarget: ndarray[形Shape, dtype[Any]]) -> AudioDat
 
 		arraySoundfile = arraySoundfile.astype(dtypeNewInteger, copy=True)  # pyright: ignore[reportAssignmentType]
 	else:
-		from hunterHearsPy._io import saveOnError  # noqa: PLC0415
+		from hunterHearsPy._io import saveOnError  # ruff:ignore[import-outside-top-level]
 
 		pathFilename: PurePath = saveOnError(arrayTarget)
 		message: str = (

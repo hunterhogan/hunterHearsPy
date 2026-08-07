@@ -1,6 +1,6 @@
 # pyright: reportUnknownArgumentType=false
 # pyright: reportUnknownLambdaType=false
-# ruff: noqa: DOC501
+# ruff:file-ignore[docstring-missing-exception]
 # ty:ignore[unresolved-attribute]
 """test_waveform or test_spectrogram? if a spectrogram is involved at any point, then test_spectrogram."""
 

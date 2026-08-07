@@ -1,10 +1,10 @@
 # ty:ignore[unresolved-attribute]
-# ruff: noqa: DOC501
+# ruff:file-ignore[docstring-missing-exception]
 from __future__ import annotations
 
 from hunterHearsPy import applyHardLimit, applyHardLimitComplexValued
 from numpy import float64
-from numpy._core._exceptions import _UFuncNoLoopError  # noqa: PLC2701
+from numpy._core._exceptions import _UFuncNoLoopError  # ruff:ignore[import-private-name]
 from tests import messageTestFailure
 from typing import Any, Final, TYPE_CHECKING
 import numpy

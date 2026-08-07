@@ -24,8 +24,8 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "Z0Z_tools>=2.1.0",
-  "hunterMakesPy>=0.7.0",
+  "Z0Z_tools>=2.2.2",
+  "hunterMakesPy>=0.7.2",
   "numpy",
   "resampy",
   "scipy",
@@ -33,12 +33,14 @@ dependencies = [
   "tqdm",
   "typing-extensions>=4.0.0",
 ]
-optional-dependencies = { testing = [
-  "pytest",
-  "pytest-mock",
-  "pytest-xdist",
+optional-dependencies = { development = [
+  "astToolkit",
+  "pytest-cov",
+  "scipy-stubs",
+  "types-resampy"
+], testing = ["pytest", "pytest-mock", "pytest-xdist", "torch"], torch = [
   "torch"
-], torch = ["torch"] }
+] }
 
 [project.urls]
 Context7 = "https://context7.com/hunterhogan/hunterhearspy"
@@ -49,7 +51,6 @@ Issues = "https://github.com/hunterhogan/hunterHearsPy/issues"
 Repository = "https://github.com/hunterhogan/hunterHearsPy.git"
 
 [dependency-groups]
-dev = ["astToolkit", "pytest-cov", "scipy-stubs", "types-resampy"]
 pytorch = ["torch==2.10.0"]
 
 [build-system]
@@ -63,7 +64,7 @@ run = { branch = true, concurrency = ["multiprocessing"], data_file = "tests/cov
 ], parallel = true, source = ["."] }
 
 [tool.pytest]
-addopts = ["--color=auto", "--tb=line", "-n 4"]
+addopts = ["--color=auto", "--tb=line", "-n", "4"]
 log_auto_indent = "On"
 pythonpath = ["src"]
 testpaths = ["tests"]

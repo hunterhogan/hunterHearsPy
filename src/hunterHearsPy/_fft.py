@@ -71,7 +71,7 @@ def stft(
 		if arrayTarget.ndim == 2:
 			arrayFloating: WaveformFloating = amplitudeIntegerToFloating(arrayTarget)
 	elif numpy.issubdtype(arrayTarget.dtype, complexfloating) and (lengthWaveform < 1):
-		from hunterHearsPy._io import saveOnError  # noqa: PLC0415
+		from hunterHearsPy._io import saveOnError  # ruff:ignore[import-outside-top-level]
 
 		pathFilename: PurePath = saveOnError(arrayTarget)
 		message: str = (

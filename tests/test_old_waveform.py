@@ -4,7 +4,7 @@
 # pyright: reportUnknownArgumentType=false
 # pyright: reportUnknownLambdaType=false
 # pyright: reportUnknownVariableType=false
-# ruff: noqa: T201, PERF203, RUF076
+# ruff:file-ignore[print, try-except-in-loop]
 from __future__ import annotations
 
 from hunterHearsPy import getWaveformMetadata, writeWAV

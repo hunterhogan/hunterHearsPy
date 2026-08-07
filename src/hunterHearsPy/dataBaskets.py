@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D101, D102
+# ruff:file-ignore[undocumented-public-module, undocumented-public-class, undocumented-public-method]
 from __future__ import annotations
 
 from typing import NamedTuple, TYPE_CHECKING, TypedDict

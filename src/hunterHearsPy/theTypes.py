@@ -1,4 +1,4 @@
-# ruff: noqa: D101
+# ruff:file-ignore[undocumented-public-class]
 """Type definitions for audio signal processing and waveform analysis.
 
 I'm starting to feel that for _all_ identifiers in the package, there ought to be a strong correlation

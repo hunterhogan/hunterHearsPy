@@ -46,7 +46,7 @@ def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRate: float | None =
 	sampleRateDesired: float = sampleRate or setting.sampleRate
 	with soundfile.SoundFile(pathFilename) as readSoundFile:
 		sampleRateSource: int = readSoundFile.samplerate
-		audioData: AudioData_2d = readSoundFile.read(dtype=dtype_str or setting.dtype_str, always_2d=True)  # ty:ignore[invalid-assignment] https://github.com/astral-sh/ty/issues/2799
+		audioData: AudioData_2d = readSoundFile.read(dtype=dtype_str or setting.dtype_str, always_2d=True)
 	axis: dict[str, AxisMetadata] = getAxis()
 	waveform: Waveform = audioData.transpose((axis['time'].number, axis['channel'].number))
 

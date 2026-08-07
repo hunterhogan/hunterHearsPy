@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D101, D103
+# ruff:file-ignore[undocumented-public-module, undocumented-public-class, undocumented-public-function]
 from __future__ import annotations
 
 from hunterHearsPy import AxisMetadata, tukey

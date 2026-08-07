@@ -1,4 +1,4 @@
-# ruff: noqa: D104
+# ruff:file-ignore[undocumented-public-package]
 # TODO design and implement a namespace.
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from hunterHearsPy.windowingFunctions import cosineWings as cosineWings, equalPo
 # isort: split
 from contextlib import suppress
 
-with suppress(ModuleNotFoundError):  # noqa: RUF067
+with suppress(ModuleNotFoundError):  # ruff:ignore[non-empty-init-module]
 	from hunterHearsPy.windowingFunctionsTensor import (
 		cosineWingsTensor as cosineWingsTensor, equalPowerTensor as equalPowerTensor, halfsineTensor as halfsineTensor,
 		tukeyTensor as tukeyTensor)
