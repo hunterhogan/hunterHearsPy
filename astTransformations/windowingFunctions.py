@@ -6,9 +6,9 @@ tensors instead of NumPy arrays.
 """
 from __future__ import annotations
 
-from astToolkit import Be, Make, NodeTourist, parseLogicalPath2astModule, Then
-from astToolkit.containers import IngredientsModule
-from astToolkit.transformationTools import makeDictionaryFunctionDef
+from astToolkit import Be, Make, NodeTourist, Then
+from astToolkit.changeDef import makeDictionaryFunctionDef
+from astToolkit.filesystem import parseLogicalPath2astModule, write_astModule
 from hunterHearsPy.theSSOT import settingsPackage
 from hunterMakesPy import raiseIfNone
 from typing import TYPE_CHECKING
@@ -25,17 +25,16 @@ pathFilenameSource: Path = pathFilenameDestination.with_stem(moduleSource)
 
 def make_windowingFunctionsTensor() -> None:
 	"""Generate PyTorch tensor windowing functions from NumPy windowing functions."""
-	ingredientsModule = IngredientsModule()
+	listImports: list[ast.stmt] = [Make.ImportFrom('__future__', [Make.alias('annotations')])
+		, Make.ImportFrom('typing', [Make.alias('TYPE_CHECKING')])]
+	listBody: list[ast.stmt] = []
 
-	ingredientsModule.imports.addImportFrom_asStr('__future__', 'annotations')
-
-	ingredientsModule.appendPrologue(statement=Make.If(test=Make.Name('TYPE_CHECKING')
+	listBody.append(Make.If(test=Make.Name('TYPE_CHECKING')  # ruff: ignore[repeated-append]
 									, body=[Make.ImportFrom('torch.types', [Make.alias('Device')])
 											, Make.ImportFrom('typing', [Make.alias('Any')])
 											, Make.ImportFrom(settingsPackage.identifierPackage + '.theTypes', [Make.alias('callableReturnsNDArray')])
 										]))
-
-	ingredientsModule.appendPrologue(statement=Make.FunctionDef(
+	listBody.append(Make.FunctionDef(
 		'_convertToTensor'
 		, Make.arguments(vararg=Make.arg('arguments', annotation=Make.Name('Any'))
 			, kwonlyargs=[Make.arg('callableTarget', annotation=Make.Name('callableReturnsNDArray'))
@@ -76,7 +75,7 @@ def make_windowingFunctionsTensor() -> None:
 			raiseIfNone(ast.get_docstring(astFunctionDef, clean=False), errorMessage="Where's the windowing function docstring?")
 							.replace('\t', ImaIndent).replace(ImaReturnsSection, docstringDevice + docstringDtype + ImaReturnsSection)))
 
-		ingredientsModule.imports.addImportFrom_asStr(settingsPackage.identifierPackage, callableIdentifier)
+		listImports.append(Make.ImportFrom(settingsPackage.identifierPackage, [Make.alias(callableIdentifier)]))
 
 		argumentSpecification: ast.arguments = raiseIfNone(NodeTourist(Be.arguments, Then.extractIt).captureLastMatch(astFunctionDef))
 		args: list[ast.expr] = [Make.Name(ast_arg.arg) for ast_arg in [*argumentSpecification.args, *argumentSpecification.kwonlyargs]]
@@ -92,20 +91,19 @@ def make_windowingFunctionsTensor() -> None:
 		argumentSpecification.args.append(Make.arg('dtype', annotation=Make.BitOr.join([Make.Attribute(Make.Name('torch'), 'dtype'), Make.Constant(None)])))
 		argumentSpecification.defaults.append(Make.Constant(None))
 
-		ingredientsModule.appendPrologue(statement=Make.FunctionDef(callableIdentifier + 'Tensor'
+		listBody.append(Make.FunctionDef(callableIdentifier + 'Tensor'
 			, argumentSpecification
 			, body=[docstring
 				, Make.Return(Make.Call(Make.Name('_convertToTensor'), listParameters=args, list_keyword=list_keyword))]
 			, returns=Make.Attribute(Make.Name('torch'), 'Tensor')
 		))
 
-	ingredientsModule.imports.addImportFrom_asStr('typing', 'TYPE_CHECKING')
-	ingredientsModule.imports.addImport_asStr('torch')
+	listImports.append(Make.Import('torch'))
 
-	ingredientsModule.write_astModule(pathFilenameDestination, settingsPackage.identifierPackage)
+	docstringModule = Make.Expr(Make.Constant("""Create PyTorch tensor windowing functions."""))
+	astModule = Make.Module(body=[docstringModule, *listImports, *listBody])
 
-	docstringModule = '"""Create PyTorch tensor windowing functions."""\n'
-	pathFilenameDestination.write_text(docstringModule + pathFilenameDestination.read_text(encoding="utf-8"), encoding='utf-8')
+	write_astModule(astModule, pathFilenameDestination, identifierPackage=settingsPackage.identifierPackage)
 
 if __name__ == '__main__':
 	make_windowingFunctionsTensor()

@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 bits: Final[int] = 8
 
 def amplitudeIntegerToFloating(arrayTarget: ndarray[形Shape, dtype[integer[Any]]]) -> ndarray[形Shape, dtype[floating[Any]]]:
-	"""The original purpose of this function was to convert integer PCM waveforms passed to `stft`."""  # ruff:ignore[docstring-missing-returns]
+	"""The original purpose of this function was to convert integer PCM waveforms passed to `stft`."""
 	amplitudeMaximum: int = 2 ** ((arrayTarget.dtype.itemsize * bits) - 1)  # This works for signed (2s complement) and unsigned because the MSD is the sign, right?
 	# TODO Why is this fixed at float32? Can/ought I to derive it or get it from `setting` or something?
 	Z0Z_floatWidth = float32

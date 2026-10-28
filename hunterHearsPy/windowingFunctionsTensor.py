@@ -10,13 +10,13 @@ if TYPE_CHECKING:
     from torch.types import Device
     from typing import Any
 
-def _convertToTensor(*arguments: Any, callableTarget: callableReturnsNDArray, device: Device | None=None, dtype: torch.dtype | None=None, **keywordArguments: Any) -> torch.Tensor:
+def _convertToTensor(*arguments: Any, callableTarget: callableReturnsNDArray, device: Device | None = None, dtype: torch.dtype | None = None, **keywordArguments: Any) -> torch.Tensor:
     arrayTarget = callableTarget(*arguments, **keywordArguments)
     if device is None:
         device = torch.device(device='cpu')
     return torch.tensor(data=arrayTarget, dtype=dtype or torch.float32, device=device)
 
-def cosineWingsTensor(lengthSupport: int, ratioTaper: float=0.1, device: Device | None=None, dtype: torch.dtype | None=None) -> torch.Tensor:
+def cosineWingsTensor(lengthSupport: int, ratioTaper: float = 0.1, device: Device | None = None, dtype: torch.dtype | None = None) -> torch.Tensor:
     """Generate a cosine-tapered windowingFunction with a flat center and tapered ends.
 
     You can use this function to produce a 1-D windowingFunction of length `lengthSupport` whose ends
@@ -43,7 +43,7 @@ def cosineWingsTensor(lengthSupport: int, ratioTaper: float=0.1, device: Device 
     """
     return _convertToTensor(lengthSupport, ratioTaper, callableTarget=cosineWings, device=device, dtype=dtype)
 
-def equalPowerTensor(lengthSupport: int, ratioTaper: float=0.1, device: Device | None=None, dtype: torch.dtype | None=None) -> torch.Tensor:
+def equalPowerTensor(lengthSupport: int, ratioTaper: float = 0.1, device: Device | None = None, dtype: torch.dtype | None = None) -> torch.Tensor:
     """Generate an equal-power windowingFunction suitable for crossfades.
 
     You can use this function to build a 1-D windowingFunction whose ends follow a square-root ramp.
@@ -70,7 +70,7 @@ def equalPowerTensor(lengthSupport: int, ratioTaper: float=0.1, device: Device |
     """
     return _convertToTensor(lengthSupport, ratioTaper, callableTarget=equalPower, device=device, dtype=dtype)
 
-def halfsineTensor(lengthSupport: int, device: Device | None=None, dtype: torch.dtype | None=None) -> torch.Tensor:
+def halfsineTensor(lengthSupport: int, device: Device | None = None, dtype: torch.dtype | None = None) -> torch.Tensor:
     """Generate a half-sine windowingFunction of the requested length.
 
     This function returns a 1-D half-sine windowingFunction of length `lengthSupport`. The value at
@@ -99,7 +99,7 @@ def halfsineTensor(lengthSupport: int, device: Device | None=None, dtype: torch.
     """
     return _convertToTensor(lengthSupport, callableTarget=halfsine, device=device, dtype=dtype)
 
-def tukeyTensor(lengthSupport: int, ratioTaper: float=0.1, device: Device | None=None, dtype: torch.dtype | None=None, **keywordArguments: float) -> torch.Tensor:
+def tukeyTensor(lengthSupport: int, ratioTaper: float = 0.1, device: Device | None = None, dtype: torch.dtype | None = None, **keywordArguments: float) -> torch.Tensor:
     """Generate a Tukey windowingFunction.
 
     You can use this function to obtain a tapered windowingFunction where the central region is

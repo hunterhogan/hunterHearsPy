@@ -50,7 +50,7 @@ def readAudioFile(pathFilename: FileDescriptorOrPath, sampleRate: float | None =
 	axis: dict[str, AxisMetadata] = getAxis()
 	waveform: Waveform = audioData.transpose((axis['time'].number, axis['channel'].number))
 
-	return resampleWaveform(waveform, sampleRateDesired, sampleRateSource, axis['time'].number)  # ty:ignore[no-matching-overload] https://github.com/astral-sh/ty/issues/2799
+	return resampleWaveform(waveform, sampleRateDesired, sampleRateSource, axis['time'].number)
 
 def saveOnError(arrayTarget: ndarray[tuple[Any, ...], dtype[Any]], *, identifierTarget: str = 'arrayTarget') -> PurePath:
 	pathFilename: Path = Path(tempfile.mkdtemp(prefix='hunterHearsPy'), f"{identifierTarget}_{uuid.uuid4().hex}.npy").resolve()

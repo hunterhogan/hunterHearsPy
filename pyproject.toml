@@ -1,9 +1,9 @@
 [project]
 name = "hunterHearsPy"
-version = "1.4.0"
+version = "1.4.1"
 description = "Audio processing."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "CC-BY-NC-4.0"
 license-files = ["LICEN[CS]E*"]
 authors = [{ name = "Hunter Hogan", email = "HunterHogan@pm.me" }]
@@ -16,15 +16,15 @@ classifiers = [
   "Intended Audience :: Science/Research",
   "Natural Language :: English",
   "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Typing :: Typed",
 ]
 dependencies = [
-  "Z0Z_tools>=2.2.2",
+  "Z0Z_tools>=4.0.0",
   "hunterMakesPy>=0.7.2",
   "numpy",
   "resampy",
@@ -33,14 +33,7 @@ dependencies = [
   "tqdm",
   "typing-extensions>=4.0.0",
 ]
-optional-dependencies = { development = [
-  "astToolkit",
-  "pytest-cov",
-  "scipy-stubs",
-  "types-resampy"
-], testing = ["pytest", "pytest-mock", "pytest-xdist", "torch"], torch = [
-  "torch"
-] }
+optional-dependencies = { development = ["astToolkit", "pytest-cov", "scipy-stubs", "types-resampy"], testing = ["pytest", "pytest-mock", "pytest-xdist", "torch"], torch = ["torch"] }
 
 [project.urls]
 Context7 = "https://context7.com/hunterhogan/hunterhearspy"
@@ -50,47 +43,23 @@ Homepage = "https://github.com/hunterhogan/hunterHearsPy"
 Issues = "https://github.com/hunterhogan/hunterHearsPy/issues"
 Repository = "https://github.com/hunterhogan/hunterHearsPy.git"
 
-[dependency-groups]
-pytorch = ["torch==2.10.0"]
-
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.coverage]
 report = { exclude_lines = ["if TYPE_CHECKING:", "if __name__ == \"__main__\":"], ignore_errors = false }
-run = { branch = true, concurrency = ["multiprocessing"], data_file = "tests/coverage/.coverage", omit = [
-  "tests/*"
-], parallel = true, source = ["."] }
+run = { branch = true, concurrency = ["multiprocessing"], data_file = "tests/coverage/.coverage", omit = ["tests/*"], parallel = true, source = ["."] }
 
 [tool.pytest]
 addopts = ["--color=auto", "--tb=line", "-n", "4"]
 log_auto_indent = "On"
-pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.setuptools]
+package-data = { "*" = ["py.typed"]}
+packages = { find = {} }
 
 [tool.updateCitation]
 filenameCitationDOTcff = "CITATION.cff"
 pathFilenameCitationSSOT = "citations/CITATION.cff"
-
-[tool.uv]
-build-backend = { module-name = "hunterHearsPy", module-root = "src" }
-default-groups = ["dev"]
-
-[[tool.uv.index]]
-# NOTE I use this to install torch+cuda on my computer that doesn't have cuda. 2026-06-13
-# `uv sync --group pytorch` OR `uv sync --all-groups` will trigger the following.
-# dependency-groups.pytorch amends the dependencies: `torch`, limitation `==2.10.0`, group = "pytorch".
-# At this point, the default source, pypi, is the highest priority on the `torch` sources list. (LIFO)
-# tool.uv.sources sees '`torch`, group = "pytorch"' so pushes "indexPytorch" on top the `torch` sources list.
-# tool.uv.index translates "indexPytorch" to the url of a package index.
-# uv queries the package index for all `torch` that match all limitations.
-# If the package index returns any matches, uv will install the "best" match.
-# Because the package index only has cuda 12.8 versions, uv installs torch+cu128.
-# I picked torch==2.10.0 + cuda 12.8 because that is the pre-installed package on Google Colab T4.
-explicit = true
-name = "indexPytorch"
-url = "https://download.pytorch.org/whl/cu128"
-
-[tool.uv.sources]
-torch = { group = "pytorch", index = "indexPytorch" }
