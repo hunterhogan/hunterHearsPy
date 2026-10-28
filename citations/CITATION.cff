@@ -9,16 +9,16 @@ contact:
 - given-names: Hunter
   family-names: Hogan
   email: HunterHogan@pm.me
-date-released: '2026-06-27'
+date-released: '2026-10-28'
 identifiers:
 - type: url
-  value: https://github.com/hunterhogan/hunterHearsPy/releases/tag/1.4.0
-  description: The URL for hunterHearsPy 1.4.0.
+  value: https://github.com/hunterhogan/hunterHearsPy/releases/tag/1.4.1
+  description: The URL for hunterHearsPy 1.4.1.
 license: CC-BY-NC-4.0
 message: Cite this software with the metadata in this file.
 repository: https://github.com/hunterhogan/hunterHearsPy.git
-repository-artifact: https://pypi.org/project/hunterhearspy/1.4.0/
-repository-code: https://github.com/hunterhogan/hunterHearsPy/releases/tag/1.4.0
+repository-artifact: https://pypi.org/project/hunterhearspy/1.4.1/
+repository-code: https://github.com/hunterhogan/hunterHearsPy/releases/tag/1.4.1
 title: hunterHearsPy
 url: https://github.com/hunterhogan/hunterHearsPy
-version: 1.4.0
+version: 1.4.1
