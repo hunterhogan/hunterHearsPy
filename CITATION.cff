@@ -9,7 +9,7 @@ contact:
 - given-names: Hunter
   family-names: Hogan
   email: HunterHogan@pm.me
-date-released: '2026-10-28'
+date-released: '2026-11-09'
 identifiers:
 - type: url
   value: https://github.com/hunterhogan/hunterHearsPy/releases/tag/1.4.1
