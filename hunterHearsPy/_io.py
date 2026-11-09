@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from hunterHearsPy import amplitudeToSoundfile, getAxis, resampleWaveform, setting, stft
-from hunterMakesPy.filesystemToolkit import makeDirectorySafely
+from hunterMakesPy.kitFilesystem import makeDirectorySafely
 from pathlib import Path, PurePath
 from soundfile import AudioData
 from typing import TYPE_CHECKING
-from typing_extensions import Unpack
 import numpy
 import soundfile
 import tempfile
@@ -16,7 +15,7 @@ if TYPE_CHECKING:
 	from hunterHearsPy.theTypes import FileDescriptorOrPath, Parameters_stft, Spectrogram, Waveform
 	from numpy import dtype, ndarray
 	from soundfile import AudioData_2d, dtype_str as Options_dtype_str
-	from typing import Any
+	from typing import Any, Unpack
 
 def getSampleRate(pathFilename: FileDescriptorOrPath) -> int:
 	return soundfile.info(pathFilename).samplerate
