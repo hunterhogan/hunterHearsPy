@@ -48,7 +48,7 @@ development = [{ include-group = "testing" }, "astToolkit", "pytest-cov", "scipy
 testing = ["pytest", "pytest-mock", "pytest-xdist", "torch"]
 
 [build-system]
-requires = ["setuptools>=77.0.0"]
+requires = ["setuptools>=77.0.1"]
 build-backend = "setuptools.build_meta"
 
 [tool.coverage]
@@ -314,11 +314,8 @@ skip-magic-trailing-comma = true
 # === OK_EDIT: path-sync hunterhogan ===
 
 [tool.setuptools]
-package-data = { hunterHearsPy = ["py.typed"] }
-
-[tool.setuptools.packages.find]
-include = ["hunterHearsPy*"]
-namespaces = false
+package-data = { "*" = ["py.typed"] }
+packages = { find = { include = ["hunterHearsPy", "hunterHearsPy.*"], namespaces = false } }
 
 # === DO_NOT_EDIT: path-sync hunterhogan ===
 [tool.tombi.format.rules]

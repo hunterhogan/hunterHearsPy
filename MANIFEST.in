@@ -1,2 +1,0 @@
-graft astTransformations
-global-exclude __pycache__ *.py[cod]

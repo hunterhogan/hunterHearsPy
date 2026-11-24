@@ -136,12 +136,6 @@ I don't know a good way to implement user-configurable universal settings. There
 pip install hunterHearsPy
 ```
 
-The PyTorch tensor versions of the windowing functions need PyTorch:
-
-```bash
-pip install "hunterHearsPy[torch]"
-```
-
 ### Contributing
 
 The `testing` and `development` [dependency groups](https://peps.python.org/pep-0735/) (pip 25.1
