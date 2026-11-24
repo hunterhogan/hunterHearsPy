@@ -33,7 +33,7 @@ dependencies = [
   "tqdm",
   "typing-extensions>=4.0.0",
 ]
-optional-dependencies = { development = ["astToolkit", "pytest-cov", "scipy-stubs", "types-resampy", "types-tqdm"], testing = ["pytest", "pytest-mock", "pytest-xdist", "torch"], torch = ["torch"] }
+optional-dependencies = { torch = ["torch"] }
 
 [project.urls]
 Context7 = "https://context7.com/hunterhogan/hunterhearspy"
@@ -43,8 +43,12 @@ Homepage = "https://github.com/hunterhogan/hunterHearsPy"
 Issues = "https://github.com/hunterhogan/hunterHearsPy/issues"
 Repository = "https://github.com/hunterhogan/hunterHearsPy.git"
 
+[dependency-groups]
+development = [{ include-group = "testing" }, "astToolkit", "pytest-cov", "scipy-stubs", "types-resampy", "types-tqdm"]
+testing = ["pytest", "pytest-mock", "pytest-xdist", "torch"]
+
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=77.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.coverage]
@@ -310,8 +314,11 @@ skip-magic-trailing-comma = true
 # === OK_EDIT: path-sync hunterhogan ===
 
 [tool.setuptools]
-package-data = { "*" = ["py.typed"] }
-packages = { find = {} }
+package-data = { hunterHearsPy = ["py.typed"] }
+
+[tool.setuptools.packages.find]
+include = ["hunterHearsPy*"]
+namespaces = false
 
 # === DO_NOT_EDIT: path-sync hunterhogan ===
 [tool.tombi.format.rules]

@@ -136,6 +136,30 @@ I don't know a good way to implement user-configurable universal settings. There
 pip install hunterHearsPy
 ```
 
+The PyTorch tensor versions of the windowing functions need PyTorch:
+
+```bash
+pip install "hunterHearsPy[torch]"
+```
+
+### Contributing
+
+The `testing` and `development` [dependency groups](https://peps.python.org/pep-0735/) (pip 25.1
+or newer) are not extras of the published distribution. From a clone of the repository, install the
+tests' requirements and run the tests:
+
+```bash
+pip install -e . --group testing
+pytest
+```
+
+The `development` group includes the `testing` group, and adds the tools and type stubs for
+working on the code:
+
+```bash
+pip install -e . --group development
+```
+
 ## My recovery
 
 [![Static Badge](https://img.shields.io/badge/2011_August-Homeless_since-blue?style=flat)](https://HunterThinks.com/support)
